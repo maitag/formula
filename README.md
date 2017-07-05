@@ -5,7 +5,7 @@ This work is >in progress<
 to recode old [symbolic Math Stuff](https://github.com/maitag/lyapunov-c)  
 in haxe language.  
 
-###how to build up new math term
+### how to build up new math term
 ```
 	var left:Term  = new Term();
 	left.setOpValue(2);    trace(left.result); // -> 2
