@@ -1,15 +1,19 @@
 package;
-import haxe.ds.Vector;
+
 /**
  * knot of a Tree to do math operations at runtime
  * by Sylvio Sell 2017
  */
 
-class Term { // knot of a tree
-	
-	// TESTING first
+// knot of a tree that represents a math formula
+class Term {
+
+	// TESTING first ( todo: put into autotest later )
 	public static function test() {
 		
+		// WORKS:
+		
+		// building terms manual
 		var left:Term  = new Term();
 		left.setOpValue(2);    trace(left.result); // -> 2
 
@@ -23,7 +27,7 @@ class Term { // knot of a tree
 		f.setOp("*", left ,right);  trace(f.result); // 2*3 -> 6
 		trace("f="+f.toString());
 		
-		try	f.setOp("§", left , right) catch (msg:String) trace('Error: $msg'); // Error
+		try	f.setOp("§", left , right) catch (msg:String) trace('Error: $msg'); // Error (todo)
 		
 		var x:Term = new Term();
 		x.setOpValue(4);   trace(x.result); // -> 4
@@ -35,10 +39,14 @@ class Term { // knot of a tree
 		left.setOpValue(3); trace(g.result); // 5+3*3 -> 14
 		trace("g=" + g.toString());
 		
-		// TODO
+		// --------------------------------------------------------------------------
+		//TODO:
+		
+		// read from string
 		Term.fromString("-3.13 +1");
 		Term.fromString(" 1 + 2 * 3");
 		Term.fromString("sin(5/2)");
+		Term.fromString("max(5,4)");
 		Term.fromString("(1+2)*3");
 		Term.fromString(" (3*(1+2))");
 		Term.fromString("((1+2)*3)");
@@ -46,6 +54,8 @@ class Term { // knot of a tree
 		try	Term.fromString("(1+(2*3)+(4-5)") catch (msg:String) trace('Error: $msg'); // Bracket Error
 		try	Term.fromString("()") catch (msg:String) trace('Error: $msg'); // empty Bracket Error
 	}
+	// -----------------------------------------------------------------------------------------------
+	// -----------------------------------------------------------------------------------------------
 
 	// PROPERTIES -------------------------------------------
 	var operation:Term->Float; // math operation  (todo: <N> ;)
@@ -87,26 +97,28 @@ class Term { // knot of a tree
 		else throw ('"$s" is no valid operation');
 	}
 	
-	// ---- static Function Pointers (to stored in this.operation) --------
+	// -----------------------------------------------------------------------------------------------
+	// ---- static Function Pointers (to stored in this.operation) -----------------------------------
+	// -----------------------------------------------------------------------------------------------
 	
 	static function opValue(t:Term):Float return t.value;
 	static function opParam(t:Term):Float return t.left.result;
 	
 	static var MathOp:Map<String, Term->Float> = [
-		"+" => function(t) return t.left.result + t.right.result,
-		"-" => function(t) return t.left.result - t.right.result,
-		"*" => function(t) return t.left.result * t.right.result,
-		"/" => function(t) return t.left.result / t.right.result,
-		"^" => function(t) return Math.pow(t.left.result, t.right.result),
-		"%" => function(t) return t.left.result % t.right.result,
-		
-		"abs" => function(t) return Math.abs(t.left.result),
-		"ln"  => function(t) return Math.log(t.left.result),
-		"sin" => function(t) return Math.sin(t.left.result),
-		"cos" => function(t) return Math.cos(t.left.result),
-		"tan" => function(t) return Math.tan(t.left.result),
-		"asin"=> function(t) return Math.asin(t.left.result),
-		"acos"=> function(t) return Math.acos(t.left.result),
+		"+"    => function(t) return t.left.result + t.right.result,
+		"-"    => function(t) return t.left.result - t.right.result,
+		"*"    => function(t) return t.left.result * t.right.result,
+		"/"    => function(t) return t.left.result / t.right.result,
+		"^"    => function(t) return Math.pow(t.left.result, t.right.result),
+		"%"    => function(t) return t.left.result % t.right.result,
+		       
+		"abs"  => function(t) return Math.abs(t.left.result),
+		"ln"   => function(t) return Math.log(t.left.result),
+		"sin"  => function(t) return Math.sin(t.left.result),
+		"cos"  => function(t) return Math.cos(t.left.result),
+		"tan"  => function(t) return Math.tan(t.left.result),
+		"asin" => function(t) return Math.asin(t.left.result),
+		"acos" => function(t) return Math.acos(t.left.result),
 		"atan" => function(t) return Math.atan(t.left.result),
 		
 		"atan2"=> function(t) return Math.atan2(t.left.result, t.right.result),
@@ -114,23 +126,26 @@ class Term { // knot of a tree
 		"max"  => function(t) return Math.max(t.left.result, t.right.result),
 		"min"  => function(t) return Math.min(t.left.result, t.right.result),		
 	];
-	public static var atomOps:EReg = ~/^[+\-\*\/\^%]$/;
-	public static var par2Ops:EReg = ~/^atan2|log|max|min$/;
-	public static var par1Ops:EReg = ~/^abs|ln|sin|cos|tan|asin|acos|atan$/;
-
+	static var twoSideOp  = "^,*,/,+,-,%";  // <- order here determines the operator precedence
+	static var oneParamOp = "abs,ln,sin,cos,tan,asin,acos,atan"; // functions with one parameter like "sin(2)"
+	static var twoParamOp = "atan2,log,max,min";                 // functions with two parameters like "max(a,b)"
 	
-	// ------ Build Tree up from String Math Expression -------
 	
-	public static var clearSpaces:EReg = ~/\s+/g;
-	public static var twoSideExp:EReg = ~/^[+\-\*\/\^%]/;
-	public static var numberExp:EReg = ~/^(\+|\-?\d+?\.?\d*)/;
-	public static var functionExp:EReg = ~/^(atan2|log|max|min|abs|ln|sin|cos|tan|asin|acos|atan)/i;
+	// -----------------------------------------------------------------------------------------------
+	// ------ Build Tree up from String Math Expression ----------------------------------------------
+	// -----------------------------------------------------------------------------------------------
+	
+	static var clearSpaces:EReg = ~/\s+/g;
+	static var numberExp:EReg = ~/^(\+|\-?\d+?\.?\d*)/;
+	static var twoSideOpReg:EReg  = new EReg("^(" + "\\"+ twoSideOp.split(',').join("|\\") + ")" , "");
+	static var oneParamOpReg:EReg = new EReg("^("       + oneParamOp.split(',').join("|")  + ")" , "i");
+	static var twoParamOpReg:EReg = new EReg("^("       + twoParamOp.split(',').join("|")  + ")" , "i");
+	
 	public static function fromString(s:String):Term
 	{
 		var t:Term = new Term();
-		var operators:Array<String>  = new Array<String>();
-		var innerTerms:Array<String> = new Array<String>();
-		var brackets:Array<Int>;
+		var subterms:Array<Term> = new Array<Term>();
+		var operations:Array<String> = new Array<String>();
 		
 		s = clearSpaces.replace(s, ''); // clear whitespaces
 		trace('fromString: $s');
@@ -148,14 +163,23 @@ class Term { // knot of a tree
 				s = s.substr(e.length);
 				trace("   number: " + e + " | rest:" + s);
 				// TODO
-				// check two side operation
+				var vt:Term = new Term(); vt.setOpValue(Std.parseFloat(e));
+				subterms.push( t );
 			}
-			else if (functionExp.match(s)) {
-				e = functionExp.matched(1);
+			else if (oneParamOpReg.match(s)) {
+				e = oneParamOpReg.matched(1);
 				s = s.substr(e.length);
-				trace("   function: " + e + " | rest:" + s);
+				trace("   function(): " + e + " | rest:" + s);
 				// TODO
-				// check two side operation
+				// check inside brackets (...) and recursive inner term
+			}
+			else if (twoParamOpReg.match(s)) {
+				e = twoParamOpReg.matched(1);
+				s = s.substr(e.length);
+				trace("   function(a,b): " + e + " | rest:" + s);
+				// TODO
+				// check for "," on same bracket level (.(..(.)).. , ...)
+				// // recursive inner terms
 			}
 			else {
 				e = getBracketExp(s);
@@ -164,11 +188,17 @@ class Term { // knot of a tree
 					s = s.substr(e.length);
 					trace("   bracket: " + e + " | rest:" + s);
 					// TODO
-					// check two side operation
+					// recursive inner term
 				}
 				
 			}
+			// TODO
+			// else -> if some new symbol (like "x" or something) -> new parameter key!
 			
+		
+			// TODO
+			// check for two side operation like "+","-" and so on
+
 			
 			
 		//}
@@ -205,9 +235,15 @@ class Term { // knot of a tree
 		return null;
 	}
 	
+
 	
-	// ------ Put out Math Expression as a String -------------
+	// -----------------------------------------------------------------------------------------------
+	// ------ Put out Math Expression as a String ----------------------------------------------------
+	// -----------------------------------------------------------------------------------------------
 	
+	public static var twoSideOpReg1:EReg  = new EReg("^(" + "\\"+ twoSideOp.split(',').join("|\\") + ")$" , "");
+	public static var twoParamOpReg1:EReg = new EReg("^("       + twoParamOp.split(',').join("|")  + ")$" , "i");
+
 	public function toString():String
 	{
 		var out:String = "";
@@ -215,12 +251,12 @@ class Term { // knot of a tree
 			out += value;
 		}
 		else if (symbol == "t") {
-			out += "f"; // TODO
+			out += "f"; // TODO: bind to other term
 		}
-		else if ( atomOps.match(symbol) ) {
+		else if ( twoSideOpReg1.match(symbol) ) {
 			out += "(" + left.toString() + symbol + right.toString() + ")";
 		}
-		else if ( par2Ops.match(symbol) ) {
+		else if ( twoParamOpReg1.match(symbol) ) {
 			out += symbol + "(" + left.toString() + ", " + right.toString() + ")";
 		}
 		else {
