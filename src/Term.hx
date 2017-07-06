@@ -19,14 +19,24 @@ class Term {
 
 		var right:Term = new Term();
 		right.setOpValue(3);   trace(right.result); // -> 3
+		
 
 		var f:Term = new Term();
 		f.setOp("+", left , right); trace(f.result); // 2+3 -> 5
 		trace("f="+f.toString());
 		
+
 		f.setOp("*", left ,right);  trace(f.result); // 2*3 -> 6
 		trace("f="+f.toString());
-		
+	
+
+		var p:Term=new Term();
+		p.setOp("^", f, f);
+		var psin:Term=new Term();
+		psin.setOp("sin", p);
+		trace(psin.result);
+
+
 		try	f.setOp("§", left , right) catch (msg:String) trace('Error: $msg'); // Error (todo)
 		
 		var x:Term = new Term();

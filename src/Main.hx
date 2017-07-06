@@ -1,6 +1,7 @@
 package;
 
 import Term;
+import Utility;
 
 
 class Main 
@@ -9,6 +10,11 @@ class Main
 	{
 		Term.test();
 		
+
+		var x:String="135A";
+		var y:String="+";
+		trace(Utility.isNumber(x));
+		trace(Utility.isOperator("+"));
 		// TODO:
 		// --------------------
 		/*
