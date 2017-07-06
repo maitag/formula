@@ -3,12 +3,12 @@ package;
 /**
  * knot of a Tree to do math operations at runtime
  * by Sylvio Sell 2017
- */
+ * 
+ **/
 
-// knot of a tree that represents a math formula
 class Term {
 
-	// TESTING first ( todo: put into autotest later )
+	// TESTING first ( todo: put into other file later )
 	public static function test() {
 		
 		// WORKS:
@@ -39,7 +39,6 @@ class Term {
 		left.setOpValue(3); trace(g.result); // 5+3*3 -> 14
 		trace("g=" + g.toString());
 		
-		// --------------------------------------------------------------------------
 		//TODO:
 		
 		// read from string
@@ -54,24 +53,29 @@ class Term {
 		try	Term.fromString("(1+(2*3)+(4-5)") catch (msg:String) trace('Error: $msg'); // Bracket Error
 		try	Term.fromString("()") catch (msg:String) trace('Error: $msg'); // empty Bracket Error
 	}
-	// -----------------------------------------------------------------------------------------------
-	// -----------------------------------------------------------------------------------------------
+	
 
-	// PROPERTIES -------------------------------------------
+	/*
+	 * Properties
+	 * 
+	 */
 	var operation:Term->Float; // math operation  (todo: <N> ;)
-	var symbol:String;  //operator like "+"
+	var symbol:String; //operator like "+"
 
-	var left:Term;   // left branch of tree
-	var right:Term;  // right branch of tree
+	var left:Term;  // left branch of tree
+	var right:Term; // right branch of tree
 	
 	var value:Float; // leaf of the tree (todo: <N> ;)
 	
-	public var id:String;  // term identifier, like "f" or "x"
+	public var id:String; // term identifier, like "f" or "x"
 	
 	public var result(get, null):Float; // result of tree calculation (todo: <N> ;)
-	inline function get_result() return operation(this); // getter
+	inline function get_result() return operation(this);
 
-	// METHODS -------------------------------------------------
+	/*
+	 * Methods
+	 * 
+	 */
 	public function new() {}
 	
 	public function setOpValue(f:Float) {
@@ -96,11 +100,12 @@ class Term {
 		}
 		else throw ('"$s" is no valid operation');
 	}
+
 	
-	// -----------------------------------------------------------------------------------------------
-	// ---- static Function Pointers (to stored in this.operation) -----------------------------------
-	// -----------------------------------------------------------------------------------------------
-	
+	/*
+	 * static Function Pointers (to stored in this.operation)
+	 * 
+	 */	
 	static function opValue(t:Term):Float return t.value;
 	static function opParam(t:Term):Float return t.left.result;
 	
@@ -131,12 +136,12 @@ class Term {
 	static var twoParamOp = "atan2,log,max,min";                 // functions with two parameters like "max(a,b)"
 	
 	
-	// -----------------------------------------------------------------------------------------------
-	// ------ Build Tree up from String Math Expression ----------------------------------------------
-	// -----------------------------------------------------------------------------------------------
-	
-	static var clearSpaces:EReg = ~/\s+/g;
-	static var numberExp:EReg = ~/^(\+|\-?\d+?\.?\d*)/;
+	/*
+	 * Build Tree up from String Math Expression
+	 * 
+	 */	
+	static var clearSpacesReg:EReg = ~/\s+/g;
+	static var numberReg:EReg = ~/^(\+|\-?\d+?\.?\d*)/;
 	static var twoSideOpReg:EReg  = new EReg("^(" + "\\"+ twoSideOp.split(',').join("|\\") + ")" , "");
 	static var oneParamOpReg:EReg = new EReg("^("       + oneParamOp.split(',').join("|")  + ")" , "i");
 	static var twoParamOpReg:EReg = new EReg("^("       + twoParamOp.split(',').join("|")  + ")" , "i");
@@ -147,7 +152,7 @@ class Term {
 		var subterms:Array<Term> = new Array<Term>();
 		var operations:Array<String> = new Array<String>();
 		
-		s = clearSpaces.replace(s, ''); // clear whitespaces
+		s = clearSpacesReg.replace(s, ''); // clear whitespaces
 		trace('fromString: $s');
 		
 		
@@ -158,8 +163,8 @@ class Term {
 			var e:String;
 			
 			
-			if (numberExp.match(s)) {
-				e = numberExp.matched(1);
+			if (numberReg.match(s)) {
+				e = numberReg.matched(1);
 				s = s.substr(e.length);
 				trace("   number: " + e + " | rest:" + s);
 				// TODO
@@ -235,36 +240,23 @@ class Term {
 		return null;
 	}
 	
-
 	
-	// -----------------------------------------------------------------------------------------------
-	// ------ Put out Math Expression as a String ----------------------------------------------------
-	// -----------------------------------------------------------------------------------------------
-	
+	/*
+	 * Puts out Math Expression as a String
+	 * 
+	 */	
 	public static var twoSideOpReg1:EReg  = new EReg("^(" + "\\"+ twoSideOp.split(',').join("|\\") + ")$" , "");
 	public static var twoParamOpReg1:EReg = new EReg("^("       + twoParamOp.split(',').join("|")  + ")$" , "i");
 
 	public function toString():String
 	{
-		var out:String = "";
-		if (symbol == "v") {
-			out += value;
+		return switch(symbol) {
+			case "v": Std.string(value);
+			case "t": "f"; // TODO: bind to other term
+			case s if (twoSideOpReg1.match(s)) : "(" + left.toString() + symbol + right.toString() + ")";
+			case s if (twoParamOpReg1.match(s)): symbol + "(" + left.toString() + ", " + right.toString() + ")";
+			default: symbol + "(" + left.toString() +  ")";
 		}
-		else if (symbol == "t") {
-			out += "f"; // TODO: bind to other term
-		}
-		else if ( twoSideOpReg1.match(symbol) ) {
-			out += "(" + left.toString() + symbol + right.toString() + ")";
-		}
-		else if ( twoParamOpReg1.match(symbol) ) {
-			out += symbol + "(" + left.toString() + ", " + right.toString() + ")";
-		}
-		else {
-			out += symbol + "(" + left.toString() +  ")";
-		}
-		
-		return out;
-
-	} //end print_tree  ---------------------------------
+	}
 
 }
