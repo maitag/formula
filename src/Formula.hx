@@ -4,7 +4,7 @@ import Term;
  * puts Math Formular into a Tree Structure of Terms
  * to calculate at runtime
  * 
- * by Sylvio Sell 2017
+ * by Sylvio Sell, Rostock 2017
  */
 
 typedef F = Formula; // shortkey

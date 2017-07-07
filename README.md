@@ -5,41 +5,16 @@ This work is >in progress<
 to recode old [symbolic Math Stuff](https://github.com/maitag/lyapunov-c)  
 in haxe language.  
 
-### how to build up new math term
+### How to use
 ```
-	var left:Term  = new Term();
-	left.setOpValue(2);    trace(left.result); // -> 2
-
-	var right:Term = new Term();
-	right.setOpValue(3);   trace(right.result); // -> 3
-
-	var f:Term = new Term();
-	f.setOp("+", left , right); trace(f.result); // 2+3 -> 5
-	trace("f="+f.toString());
-	
-	f.setOp("*", left ,right);  trace(f.result); // 2*3 -> 6
-	trace("f="+f.toString());
-	
-	try	f.setOp("§", left , right) catch (msg:String) trace('Error: $msg'); // Error 20 (todo;)
-	
-	var x:Term = new Term();
-	x.setOpValue(4);   trace(x.result); // -> 4
-	
-	var g:Term = new Term();
-	g.setOp("+", x, f); trace(g.result); // 4+2*3 -> 10
-	
-	x.setOpValue(5);    trace(g.result); // 5+2*3 -> 11
-	left.setOpValue(3); trace(g.result); // 5+3*3 -> 14
-	trace("g=" + g.toString());
-
+	var x:Term = Term.newValue(7);
+	var a:Term = Term.fromString("1 + 2 * 3");
+	var f:Term = Term.fromString("2.5 * sin(x - a) ^ 2", ["x"=>x, "a"=>a] );
+	trace( "f=" + f.toString(0) + " -> " + f.toString(1) + " -> " + f.result );
+	// -> f=2.5*(sin(x-a)^2) -> 2.5*(sin(7-(1+(2*3)))^2) -> 0
 ```
 
+### Todo
 
-
-
-Sure, i did this to learn more haxe kung fu ~  
-
-Please commit ideas here  
-for what little tool this lib  
-could be useful :)=
-
+- trim and derivation functions
+- abstract Formula class around Term to type more easy

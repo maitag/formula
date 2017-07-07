@@ -2,98 +2,81 @@ package;
 
 /**
  * knot of a Tree to do math operations at runtime
- * by Sylvio Sell 2017
+ * by Sylvio Sell, Rostock 2017
  * 
  **/
+	
+typedef OperationNode = {symbol:String, left:Term, right:Term, leftOperation:OperationNode, rightOperation:OperationNode, precedence:Int};
 
 class Term {
-
-	// TESTING first ( todo: put into other file later )
-	public static function test() {
-		
-		// WORKS:
-		
-		// building terms manual
-		var left:Term  = new Term();
-		left.setOpValue(2);    trace(left.result); // -> 2
-
-		var right:Term = new Term();
-		right.setOpValue(3);   trace(right.result); // -> 3
-
-		var f:Term = new Term();
-		f.setOp("+", left , right); trace(f.result); // 2+3 -> 5
-		trace("f="+f.toString());
-		
-		f.setOp("*", left ,right);  trace(f.result); // 2*3 -> 6
-		trace("f="+f.toString());
-		
-		try	f.setOp("§", left , right) catch (msg:String) trace('Error: $msg'); // Error (todo)
-		
-		var x:Term = new Term();
-		x.setOpValue(4);   trace(x.result); // -> 4
-		
-		var g:Term = new Term();
-		g.setOp("+", x, f); trace(g.result); // 4+2*3 -> 10
-		
-		x.setOpValue(5);    trace(g.result); // 5+2*3 -> 11
-		left.setOpValue(3); trace(g.result); // 5+3*3 -> 14
-		trace("g=" + g.toString());
-		
-		//TODO:
-		
-		// read from string
-		Term.fromString("-3.13 +1");
-		Term.fromString(" 1 + 2 * 3");
-		Term.fromString("sin(5/2)");
-		Term.fromString("max(5,4)");
-		Term.fromString("(1+2)*3");
-		Term.fromString(" (3*(1+2))");
-		Term.fromString("((1+2)*3)");
-		try	Term.fromString("((1+2*3)") catch (msg:String) trace('Error: $msg'); // Bracket Error
-		try	Term.fromString("(1+(2*3)+(4-5)") catch (msg:String) trace('Error: $msg'); // Bracket Error
-		try	Term.fromString("()") catch (msg:String) trace('Error: $msg'); // empty Bracket Error
-	}
-	
 
 	/*
 	 * Properties
 	 * 
 	 */
-	var operation:Term->Float; // math operation  (todo: <N> ;)
-	var symbol:String; //operator like "+"
+	var operation:Term->Float; // operation function pointer
+	var symbol:String; //operator like "+" or parameter name like "x"
 
 	var left:Term;  // left branch of tree
 	var right:Term; // right branch of tree
 	
-	var value:Float; // leaf of the tree (todo: <N> ;)
+	var value:Float;  // leaf of the tree
 	
-	public var id:String; // term identifier, like "f" or "x"
+	public var isValue(get, null):Bool; // true ->  it's a value (no left and right)
+	inline function get_isValue() return Reflect.compareMethods(operation, opValue);
 	
-	public var result(get, null):Float; // result of tree calculation (todo: <N> ;)
+	public var isParam(get, null):Bool; // true -> it's a parameter
+	inline function get_isParam() return Reflect.compareMethods(operation, opParam);
+	
+	public var result(get, null):Float; // result of tree calculation
 	inline function get_result() return operation(this);
 
+	
 	/*
-	 * Methods
+	 * Constructors
 	 * 
 	 */
 	public function new() {}
 	
-	public function setOpValue(f:Float) {
+	public static inline function newValue(f:Float):Term {
+		var t:Term = new Term();
+		t.setValue(f);
+		return t;
+	}
+	
+	public static inline function newParam(id:String, ?term:Term):Term {
+		var t:Term = new Term();
+		t.setParam(id, term);
+		return t;
+	}
+	
+	public static inline function newOperation(s:String, left:Term, ?right:Term):Term {
+		var t:Term = new Term();
+		t.setOperation(s, left, right);
+		return t;
+	}
+
+	
+	/*
+	 * Methods
+	 * 
+	 */
+	public inline function setValue(f:Float) {
 		operation = opValue;
-		symbol = "v"; // <- helper to put into String
 		value = f;
+		left = null; right = null;
 	}
 	
-	public function setOpTerm(t:Term) {
+	public inline function setParam(id:String, ?term:Term) {
 		operation = opParam;
-		symbol = "t"; // <- helper to put into String
-		left = t;
+		symbol = id;
+		left = term; right = null;
 	}
 	
-	public function setOp(s:String, left:Term, ?right:Term) {
-		if (MathOp.exists(s))
+	public inline function setOperation(s:String, left:Term, ?right:Term) {
+		operation = MathOp.get(s);
+		if (operation != null)
 		{
-			operation = MathOp.get(s);
 			symbol = s;
 			this.left = left;
 			this.right = right;
@@ -101,13 +84,22 @@ class Term {
 		else throw ('"$s" is no valid operation');
 	}
 
+	public inline function bind(?params:Map<String, Term>) {
+		if (isParam && params.exists(symbol)) left = params.get(symbol);
+		else {
+			if (left != null) left.bind(params);
+			if (right != null) right.bind(params);
+		}
+		
+	}
+	
 	
 	/*
 	 * static Function Pointers (to stored in this.operation)
 	 * 
 	 */	
 	static function opValue(t:Term):Float return t.value;
-	static function opParam(t:Term):Float return t.left.result;
+	static function opParam(t:Term):Float if(t.left!=null) return t.left.result else throw('Missing parameter "${t.symbol}"');
 	
 	static var MathOp:Map<String, Term->Float> = [
 		"+"    => function(t) return t.left.result + t.right.result,
@@ -132,94 +124,137 @@ class Term {
 		"min"  => function(t) return Math.min(t.left.result, t.right.result),		
 	];
 	static var twoSideOp  = "^,*,/,+,-,%";  // <- order here determines the operator precedence
+	static var twoSideOpArray:Array<String> = twoSideOp.split(',');
+	static var precedence:Map<String,Int> = [ for (i in 0...twoSideOpArray.length) twoSideOpArray[i] => i ];
+	
 	static var oneParamOp = "abs,ln,sin,cos,tan,asin,acos,atan"; // functions with one parameter like "sin(2)"
 	static var twoParamOp = "atan2,log,max,min";                 // functions with two parameters like "max(a,b)"
+
 	
+	/*
+	 * Regular Expressions for parsing
+	 * 
+	 */	
+	static var clearSpacesReg:EReg = ~/\s+/g;
 	
+	static var numberReg:EReg = ~/^([-+]?\d+\.?\d*)/;
+	static var paramReg:EReg = ~/^([a-z]+)/i;
+
+	static var oneParamOpReg:EReg = new EReg("^(" + oneParamOp.split(',').join("|")  + ")" , "i");
+	static var twoParamOpReg:EReg = new EReg("^(" + twoParamOp.split(',').join("|")  + ")" , "i");
+	static var twoSideOpReg: EReg = new EReg("^(" + "\\"+ twoSideOpArray.join("|\\") + ")" , "");
+
+	static var oneParamOpRegFull:EReg = new EReg("^(" + oneParamOp.split(',').join("|")  + ")$" , "i");
+	static var twoParamOpRegFull:EReg = new EReg("^(" + twoParamOp.split(',').join("|")  + ")$" , "i");
+	static var twoSideOpRegFull: EReg = new EReg("^(" + "\\"+ twoSideOpArray.join("|\\") + ")$" , "");
+
+
 	/*
 	 * Build Tree up from String Math Expression
 	 * 
 	 */	
-	static var clearSpacesReg:EReg = ~/\s+/g;
-	static var numberReg:EReg = ~/^(\+|\-?\d+?\.?\d*)/;
-	static var twoSideOpReg:EReg  = new EReg("^(" + "\\"+ twoSideOp.split(',').join("|\\") + ")" , "");
-	static var oneParamOpReg:EReg = new EReg("^("       + oneParamOp.split(',').join("|")  + ")" , "i");
-	static var twoParamOpReg:EReg = new EReg("^("       + twoParamOp.split(',').join("|")  + ")" , "i");
-	
-	public static function fromString(s:String):Term
+	public static function fromString(s:String, ?params:Map<String, Term>):Term
 	{
-		var t:Term = new Term();
-		var subterms:Array<Term> = new Array<Term>();
-		var operations:Array<String> = new Array<String>();
+		var t:Term = null;
+		var operations:Array<OperationNode> = new Array();
+		var e, f:String;
+		var negate:Bool;
 		
 		s = clearSpacesReg.replace(s, ''); // clear whitespaces
-		trace('fromString: $s');
-		
-		
-		//while (s.length != 0)
-		//{
+
+		while (s.length != 0) // read in terms from left
+		{
+			negate = false;
 			
-			 // check full term starting from left
-			var e:String;
-			
-			
-			if (numberReg.match(s)) {
+			if (numberReg.match(s)) {        // float number
 				e = numberReg.matched(1);
-				s = s.substr(e.length);
-				trace("   number: " + e + " | rest:" + s);
-				// TODO
-				var vt:Term = new Term(); vt.setOpValue(Std.parseFloat(e));
-				subterms.push( t );
+				t = newValue(Std.parseFloat(e));
 			}
-			else if (oneParamOpReg.match(s)) {
-				e = oneParamOpReg.matched(1);
-				s = s.substr(e.length);
-				trace("   function(): " + e + " | rest:" + s);
-				// TODO
-				// check inside brackets (...) and recursive inner term
-			}
-			else if (twoParamOpReg.match(s)) {
-				e = twoParamOpReg.matched(1);
-				s = s.substr(e.length);
-				trace("   function(a,b): " + e + " | rest:" + s);
-				// TODO
-				// check for "," on same bracket level (.(..(.)).. , ...)
-				// // recursive inner terms
-			}
-			else {
-				e = getBracketExp(s);
-				if (e != "") {
-					if (e == "()") throw("empty bracket");
-					s = s.substr(e.length);
-					trace("   bracket: " + e + " | rest:" + s);
-					// TODO
-					// recursive inner term
-				}
+			else if (oneParamOpReg.match(s)) {  // like sin(...)
+				f = oneParamOpReg.matched(1);
+				s = oneParamOpReg.matchedRight();
+				e = getBrackets(s);
+				t = newOperation(f, fromString(e.substring(1, e.length-1), params) );
 				
 			}
-			// TODO
-			// else -> if some new symbol (like "x" or something) -> new parameter key!
+			else if (twoParamOpReg.match(s)) { // like atan2(... , ...)
+				f = twoParamOpReg.matched(1);
+				s = twoParamOpReg.matchedRight();
+				e = getBrackets(s);
+				if (comataPos == -1) throw(f+"() needs two parameter separated by comma");
+				t = newOperation(f, fromString(e.substring(1, comataPos), params), fromString(e.substring(comataPos+1, e.length-1), params) );
+				
+			}
+			else if (paramReg.match(s)) { // parameter
+				e = paramReg.matched(1);
+				t = newParam(e, (params==null) ? null : params.get(e));
+			}
+			else if (twoSideOpReg.match(s)) { // start with +- 
+				e = twoSideOpReg.matched(1);
+				if (e == "-") {
+					t = newValue(0); e = ""; negate = true;
+				}
+				else if (e != "+") throw("Missing left operand.");
+			}
+			else {
+				e = getBrackets(s);    // term inside brackets
+				t = fromString(e.substring(1, e.length - 1), params);				
+			}
 			
-		
-			// TODO
-			// check for two side operation like "+","-" and so on
+			s = s.substr(e.length);
+			
+			if (operations.length > 0) operations[operations.length - 1].right = t;
 
-			
-			
-		//}
+			if (twoSideOpReg.match(s)) {   // two side operation symbol
+				e = twoSideOpReg.matched(1);
+				s = twoSideOpReg.matchedRight();
+				operations.push( { symbol:e, left:t, right:null, leftOperation:null, rightOperation:null, precedence:((negate) ? -1 :precedence.get(e)) } );
+				if (operations.length > 1) {
+					operations[operations.length - 2].rightOperation = operations[operations.length - 1];
+					operations[operations.length - 1].leftOperation = operations[operations.length - 2];
+				}
+			}
+		}
 		
-		return t;
+		if ( operations.length > 0 ) {
+			if ( operations[operations.length-1].right == null ) throw("Missing right operand.");
+			else {
+				operations.sort(function(a:OperationNode, b:OperationNode):Int
+				{
+					if (a.precedence < b.precedence) return -1;
+					if (a.precedence > b.precedence) return 1;
+					return 0;
+				});
+				
+				for (op in operations) {
+					op.left = Term.newOperation(op.symbol, op.left, op.right);
+					if (op.leftOperation  != null) op.leftOperation.right = op.left;
+					if (op.rightOperation != null) op.rightOperation.left = op.left;
+				}
+				return operations[operations.length - 1].left;
+			}
+		}
+		else return t;
 	}
 	
-	public static function getBracketExp(s:String):String
+	static var comataPos:Int;
+	static function getBrackets(s:String):String
 	{
 		var pos:Int = 1;
 		if (s.indexOf("(") == 0) // check that s starts with opening bracket
 		{ 
-			var i:Int;
+			var i,j:Int;
 			var openBrackets:Int = 1;
+			comataPos = -1;
 			while ( openBrackets > 0 )
 			{	
+
+				// check for commata position
+				if (openBrackets == 1) {
+					j = s.indexOf(",", pos);
+					if (j < s.indexOf(")", pos)) comataPos = j;
+				}
+				
 				i = s.indexOf("(", pos);
 				if (i > 0) { // found open bracket
 					openBrackets++; pos = i + 1;
@@ -230,32 +265,33 @@ class Term {
 						openBrackets--; pos = i + 1;
 					}
 					else { // no close or open found
-						throw("Error with brackets.");
-						return null;
+						throw("Wrong bracket nesting.");
+						//return null;
 					}
 				}
 			}
-			return s.substring(0, pos);
+			if (pos < 3) {
+				 throw("Empty brackets.");
+				 //return null;
+			} else return s.substring(0, pos);
 		}
-		return null;
+		throw("No opening bracket.");
 	}
 	
 	
 	/*
 	 * Puts out Math Expression as a String
 	 * 
-	 */	
-	public static var twoSideOpReg1:EReg  = new EReg("^(" + "\\"+ twoSideOp.split(',').join("|\\") + ")$" , "");
-	public static var twoParamOpReg1:EReg = new EReg("^("       + twoParamOp.split(',').join("|")  + ")$" , "i");
-
-	public function toString():String
-	{
+	 */
+	public function toString(?depth:Null<Int>=null, ?isFirst:Bool=true):String
+	{	
+		if (depth == null) depth = -1;
 		return switch(symbol) {
-			case "v": Std.string(value);
-			case "t": "f"; // TODO: bind to other term
-			case s if (twoSideOpReg1.match(s)) : "(" + left.toString() + symbol + right.toString() + ")";
-			case s if (twoParamOpReg1.match(s)): symbol + "(" + left.toString() + ", " + right.toString() + ")";
-			default: symbol + "(" + left.toString() +  ")";
+			case s if (isValue): Std.string(value);
+			case s if (isParam): (depth == 0 || left == null) ? symbol : left.toString(depth-1, false); // recursive
+			case s if (twoSideOpRegFull.match(s)) : ((isFirst)?'':"(") + left.toString(depth, false) + symbol + right.toString(depth, false) + ((isFirst)?'':")");
+			case s if (twoParamOpRegFull.match(s)): symbol + "(" + left.toString(depth) + ", " + right.toString(depth) + ")";
+			default: symbol + "(" + left.toString(depth) +  ")";
 		}
 	}
 
