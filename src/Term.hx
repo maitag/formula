@@ -30,8 +30,8 @@ class Term {
 	
 	public var result(get, null):Float; // result of tree calculation
 	inline function get_result() return operation(this);
-
 	
+
 	/*
 	 * Constructors
 	 * 
@@ -110,6 +110,19 @@ class Term {
 	}
 
 	
+	/*
+	 * number of Term nodes
+	 * 
+	 */	
+	public function length(?depth:Null<Int>=null) {
+		if (depth == null) depth = -1;
+		return switch(symbol) {
+			case s if (isValue): 1;
+			case s if (isParam): (depth == 0 || left == null) ? 1 : left.length(depth-1); // recursive
+			case s if (oneParamOpRegFull.match(s)): 1 + left.length(depth);
+			default: 1 + left.length(depth) + right.length(depth);
+		}		
+	}
 	/*
 	 * static Function Pointers (to stored in this.operation)
 	 * 
@@ -309,6 +322,75 @@ class Term {
 		}
 	}
 	
+	
+	/*
+	 * Trim length of math expression
+	 * 
+	 */
+	public function trim():Void
+	{
+		var len:Int = -1;
+		var len_old:Int = 0;
+		while (len != len_old) {
+			trimFull();
+			len_old = len;
+			len = length();
+		}
+	}
+	
+	function trimFull():Void
+	{	
+		if (isParam || isValue) return;
+		
+		switch(symbol) {
+			case '+':
+				if (left.isValue) {
+					if (right.isValue) setValue(result);
+					else if (left.value == 0) cutNode(right);
+				} else if (right.isValue) {
+					if (right.value == 0) cutNode(left);
+				}
+			case '-':
+				if (right.isValue) {
+					if (left.isValue) setValue(result);
+					else if (right.value == 0) cutNode(left);
+				}
+			case '*':
+				if (left.isValue) {
+					if (right.isValue) setValue(result);
+					else if (left.value == 1) cutNode(right);
+					else if (left.value == 0) setValue(0);
+				} else if (right.isValue) {
+					if (right.value == 1) cutNode(left);
+					else if (right.value == 0) setValue(0);
+				}
+			case '/':
+				if (left.isValue) {
+					if (right.isValue) setValue(result);
+					else if (left.value == 0) setValue(0);
+				} else if (right.isValue) {
+					if (right.value == 1) cutNode(left);
+				}
+			case '^':
+				if (left.isValue) {
+					if (right.isValue) setValue(result);
+					else if (left.value == 1) setValue(1);
+					else if (left.value == 0) setValue(0);
+				} else if (right.isValue) {
+					if (right.value == 1) cutNode(left);
+					else if (right.value == 0) setValue(1);
+				}
+		}
+		if (left != null) left.trimFull();
+		if (right != null) right.trimFull();
+	}
+	
+	inline function cutNode(t:Term)
+	{
+		if (t.isValue) setValue(value);
+		else if (t.isParam) setParam(t.symbol, t.left);
+		else return setOperation(t.symbol, t.left, t.right);
+	}
 	
 	/*
 	 * creates the derivate of a term

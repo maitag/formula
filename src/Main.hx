@@ -102,8 +102,34 @@ class Main
 		var a:Term = Term.fromString("1 + 2 * 3");
 		var f:Term = Term.fromString("2.5 * sin(x - a) ^ 2", ["x"=>x, "a"=>a] );
 		trace( "f=" + f.toString(0) + " -> " + f.toString(1) + " -> " + f.result );	// -> f=2.5*(sin(x-a)^2) -> 2.5*(sin(7-(1+(2*3)))^2) -> 0
-		
+		trace( "length(0):"+f.length(0),"length(1):"+f.length(1),"length():"+f.length() );
 
+		// cloning a Term
+		var g:Term = f.copy();
+		var b:Term = Term.fromString("x+1", ["x" => x] ); trace( "b=" + b.toString(0) + " -> " + b.toString(1) + " -> " + b.result );
+		g.bind(["a"=>b]);
+		trace( "g=" + g.toString(0) + " -> " + g.toString(1) + " -> " + g.toString(2) + " -> " + g.result );
+
+		//derivate
+		var g1:Term = g.derivate("x");
+		trace( "g'(x) = " + g1.toString(0));
+
+		//trim function
+		g1.trim();
+		trace( "g'(x) = " + g1.toString(0));
+		s = "0+x"; t = Term.fromString(s); t.trim(); trace(s +' -> ' + t.toString());
+		s = "x+0"; t = Term.fromString(s); t.trim(); trace(s +' -> ' + t.toString());
+		s = "1*x"; t = Term.fromString(s); t.trim(); trace(s +' -> ' + t.toString());
+		s = "x*1"; t = Term.fromString(s); t.trim(); trace(s +' -> ' + t.toString());
+		s = "x*0"; t = Term.fromString(s); t.trim(); trace(s +' -> ' + t.toString());
+		s = "0*x"; t = Term.fromString(s); t.trim(); trace(s +' -> ' + t.toString());
+		s = "x/1"; t = Term.fromString(s); t.trim(); trace(s +' -> ' + t.toString());
+		s = "1/x"; t = Term.fromString(s); t.trim(); trace(s +' -> ' + t.toString());
+		s = "0/x"; t = Term.fromString(s); t.trim(); trace(s +' -> ' + t.toString());
+		s = "0^x"; t = Term.fromString(s); t.trim(); trace(s +' -> ' + t.toString());
+		s = "1^x"; t = Term.fromString(s); t.trim(); trace(s +' -> ' + t.toString());
+		s = "x^0"; t = Term.fromString(s); t.trim(); trace(s +' -> ' + t.toString());
+		s = "x^1"; t = Term.fromString(s); t.trim(); trace(s +' -> ' + t.toString());
 	}
 
 }
