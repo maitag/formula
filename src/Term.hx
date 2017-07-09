@@ -84,6 +84,10 @@ class Term {
 		else throw ('"$s" is no valid operation.');
 	}
 
+	/*
+	 * bind terms to parameters
+	 * 
+	 */	
 	public inline function bind(?params:Map<String, Term>) {
 		if (isParam && params.exists(symbol)) left = params.get(symbol);
 		else {
@@ -93,6 +97,18 @@ class Term {
 		
 	}
 	
+	
+	/*
+	 * clones the Term Tree
+	 * 
+	 */	
+	public function copy():Term
+	{
+		if (isValue) return Term.newValue(value);
+		else if (isParam) return Term.newParam(symbol, (left!=null) ? left.copy() : null);
+		else return Term.newOperation(symbol, left.copy(), (right!=null) ? right.copy() : null);
+	}
+
 	
 	/*
 	 * static Function Pointers (to stored in this.operation)
@@ -292,5 +308,56 @@ class Term {
 			default: symbol + "(" + left.toString(depth) +  ")";
 		}
 	}
+	
+	
+	/*
+	 * creates the derivate of a term
+	 * 
+	 */
+	public function derivate(p:String):Term
+	{	
+		return switch (symbol) 
+		{
+			case s if (isValue): newValue(0);
+			case s if (isParam): (symbol==p) ? newValue(1) : newValue(0);
+			case '+' | '-':
+				newOperation(symbol, left.derivate(p), right.derivate(p) );
+			case '*':
+				newOperation('+',
+					newOperation('*', left.derivate(p), right.copy() ),
+					newOperation('*', left.copy(), right.derivate(p) )
+				);
+			case '/':
+				newOperation('/',
+					newOperation('-',
+						newOperation('*', left.derivate(p) , right.copy() ),
+						newOperation('*', left.copy(), right.derivate(p) )
+					),
+					newOperation('^', right.copy(), newValue(2) )
+				);
+			case '^':
+				newOperation('*',
+					newOperation('*',
+						right.copy(),
+						newOperation('^',
+							left.copy(),
+							newOperation('-', right.copy(), newValue(1) )
+						)
+					),
+					left.derivate(p)
+				);
+			case 'sin':
+				newOperation('*',
+					newOperation('cos', left.copy() ),
+					left.derivate(p)
+				);
+				
+			default: null;	
+		}
+
+	}
+	
+	
+	
 
 }
