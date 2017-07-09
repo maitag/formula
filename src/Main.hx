@@ -1,7 +1,7 @@
 package;
 
 /**
- * knot of a Tree to do math operations at runtime
+ * build Terms at runtime to do math operations
  * by Sylvio Sell, Rostock 2017
  * 
  **/
@@ -72,7 +72,9 @@ class Main
 		s = "5 - -1 "; try {t = Term.fromString(s); trace(s +' -> ' + t.toString() +' -> ' + t.result); } catch (msg:String) trace(s, 'Error: $msg');
 		s = "5 + -1 "; try {t = Term.fromString(s); trace(s +' -> ' + t.toString() +' -> ' + t.result); } catch (msg:String) trace(s, 'Error: $msg');
 		s = "+min(2,5) "; try {t = Term.fromString(s); trace(s +' -> ' + t.toString() +' -> ' + t.result); } catch (msg:String) trace(s,'Error: $msg');
-		s = "3* -max(2,3) - 5"; try {t = Term.fromString(s); trace(s +' -> ' + t.toString() +' -> ' + t.result); } catch (msg:String) trace(s,'Error: $msg');
+		s = "3* -max(2,3) + 5"; try {t = Term.fromString(s); trace(s +' -> ' + t.toString() +' -> ' + t.result); } catch (msg:String) trace(s,'Error: $msg');
+		s = "3* 0-max(2,3) + 5"; try {t = Term.fromString(s); trace(s +' -> ' + t.toString() +' -> ' + t.result); } catch (msg:String) trace(s,'Error: $msg');
+		s = "3* (0-max(2,3)) + 5"; try {t = Term.fromString(s); trace(s +' -> ' + t.toString() +' -> ' + t.result); } catch (msg:String) trace(s,'Error: $msg');
 		
 		s = "1.5+2*3";       t = Term.fromString(s); trace(s +' -> '+ t.toString() +' -> '+ t.result);
 		s = " (1+2)*3";      t = Term.fromString(s); trace(s +' -> '+ t.toString() +' -> '+ t.result);
@@ -81,9 +83,14 @@ class Main
 		s = "-1+((2*3))";    t = Term.fromString(s); trace(s +' -> '+ t.toString() +' -> '+ t.result);
 		s = "-1.5+((2*3))";  t = Term.fromString(s); trace(s +' -> '+ t.toString() +' -> '+ t.result);
 		
+		s = "(2)+(3)"; t = Term.fromString(s); trace(s +' -> ' + t.toString() +' -> ' + t.result);
+		
 		s = "sin(3.14159)";  t = Term.fromString(s); trace(s +' -> '+ t.toString() +' -> '+ t.result);
 		s = "1+cos(3.141)";  t = Term.fromString(s); trace(s +' -> '+ t.toString() +' -> '+ t.result);
 		s = "max( 1.9 , 2)"; t = Term.fromString(s); trace(s +' -> '+ t.toString() +' -> '+ t.result);
+		s = "2 + -max(1,2) * 3 - 1"; t = Term.fromString(s); trace(s +' -> ' + t.toString() +' -> ' + t.result);
+		
+		s = "(2+1)^(3-1)"; t = Term.fromString(s); trace(s +' -> ' + t.toString() +' -> ' + t.result);
 		
 		t = Term.fromString("100");
 		s = "a + 2";  t = Term.fromString(s,["a"=>t]); trace(s +' -> '+ t.toString(0) +' -> '+ t.toString(1) +' -> '+ t.result);

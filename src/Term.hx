@@ -81,7 +81,7 @@ class Term {
 			this.left = left;
 			this.right = right;
 		}
-		else throw ('"$s" is no valid operation');
+		else throw ('"$s" is no valid operation.');
 	}
 
 	public inline function bind(?params:Map<String, Term>) {
@@ -99,7 +99,7 @@ class Term {
 	 * 
 	 */	
 	static function opValue(t:Term):Float return t.value;
-	static function opParam(t:Term):Float if(t.left!=null) return t.left.result else throw('Missing parameter "${t.symbol}"');
+	static function opParam(t:Term):Float if(t.left!=null) return t.left.result else throw('Missing parameter "${t.symbol}".');
 	
 	static var MathOp:Map<String, Term->Float> = [
 		"+"    => function(t) return t.left.result + t.right.result,
@@ -123,7 +123,7 @@ class Term {
 		"max"  => function(t) return Math.max(t.left.result, t.right.result),
 		"min"  => function(t) return Math.min(t.left.result, t.right.result),		
 	];
-	static var twoSideOp  = "^,*,/,+,-,%";  // <- order here determines the operator precedence
+	static var twoSideOp  = "^,*,/,-,+,%";  // <- order here determines the operator precedence
 	static var twoSideOpArray:Array<String> = twoSideOp.split(',');
 	static var precedence:Map<String,Int> = [ for (i in 0...twoSideOpArray.length) twoSideOpArray[i] => i ];
 	
@@ -181,7 +181,7 @@ class Term {
 				f = twoParamOpReg.matched(1);
 				s = twoParamOpReg.matchedRight();
 				e = getBrackets(s);
-				if (comataPos == -1) throw(f+"() needs two parameter separated by comma");
+				if (comataPos == -1) throw(f+"() needs two parameter separated by comma.");
 				t = newOperation(f, fromString(e.substring(1, comataPos), params), fromString(e.substring(comataPos+1, e.length-1), params) );
 				
 			}
@@ -198,7 +198,7 @@ class Term {
 			}
 			else {
 				e = getBrackets(s);    // term inside brackets
-				t = fromString(e.substring(1, e.length - 1), params);				
+				t = fromString(e.substring(1, e.length - 1), params);
 			}
 			
 			s = s.substr(e.length);
@@ -225,13 +225,16 @@ class Term {
 					if (a.precedence > b.precedence) return 1;
 					return 0;
 				});
-				
 				for (op in operations) {
-					op.left = Term.newOperation(op.symbol, op.left, op.right);
-					if (op.leftOperation  != null) op.leftOperation.right = op.left;
-					if (op.rightOperation != null) op.rightOperation.left = op.left;
+					t = Term.newOperation(op.symbol, op.left, op.right);
+					if (op.leftOperation  != null && op.rightOperation != null) {
+						op.rightOperation.leftOperation = op.leftOperation;
+						op.leftOperation.rightOperation = op.rightOperation;
+					}
+					if (op.leftOperation  != null) op.leftOperation.right = t;
+					if (op.rightOperation != null) op.rightOperation.left = t;
 				}
-				return operations[operations.length - 1].left;
+				return t;
 			}
 		}
 		else return t;
@@ -243,36 +246,31 @@ class Term {
 		var pos:Int = 1;
 		if (s.indexOf("(") == 0) // check that s starts with opening bracket
 		{ 
-			var i,j:Int;
+			var i,j,k:Int;
 			var openBrackets:Int = 1;
 			comataPos = -1;
 			while ( openBrackets > 0 )
 			{	
+				i = s.indexOf("(", pos);
+				j = s.indexOf(")", pos);
 
 				// check for commata position
 				if (openBrackets == 1) {
-					j = s.indexOf(",", pos);
-					if (j < s.indexOf(")", pos)) comataPos = j;
+					k = s.indexOf(",", pos);
+					if (k<j && j>0) comataPos = k;
 				}
 				
-				i = s.indexOf("(", pos);
-				if (i > 0) { // found open bracket
+				if ((i>0 && j>0 && i<j)||(i>0 && j<0)) { // found open bracket
 					openBrackets++; pos = i + 1;
 				}
-				else {
-					i = s.indexOf(")", pos);
-					if (i > 0) { // found close bracket
-						openBrackets--; pos = i + 1;
-					}
-					else { // no close or open found
-						throw("Wrong bracket nesting.");
-						//return null;
-					}
+				else if ((j>0 && i>0 && j<i)||(j>0 && i<0)) { // found close bracket
+					openBrackets--; pos = j + 1;
+				} else { // no close or open found
+					throw("Wrong bracket nesting.");
 				}
 			}
 			if (pos < 3) {
 				 throw("Empty brackets.");
-				 //return null;
 			} else return s.substring(0, pos);
 		}
 		throw("No opening bracket.");
