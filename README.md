@@ -16,5 +16,9 @@ in haxe language.
 
 ### Todo
 
-- trim and derivation functions
+- full working derivatation
+- special parameters like "e" and "pi"
+- comparing terms for equality and term transformation
+- more functions to trim formula
+- handle recursive parameter bindings (for something like x(n+1) = x(n) ...)
 - abstract Formula class around Term to type more easy

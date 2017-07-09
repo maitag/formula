@@ -143,6 +143,7 @@ class Term {
 		"sin"  => function(t) return Math.sin(t.left.result),
 		"cos"  => function(t) return Math.cos(t.left.result),
 		"tan"  => function(t) return Math.tan(t.left.result),
+		"cot"  => function(t) return 1/Math.tan(t.left.result),
 		"asin" => function(t) return Math.asin(t.left.result),
 		"acos" => function(t) return Math.acos(t.left.result),
 		"atan" => function(t) return Math.atan(t.left.result),
@@ -156,7 +157,7 @@ class Term {
 	static var twoSideOpArray:Array<String> = twoSideOp.split(',');
 	static var precedence:Map<String,Int> = [ for (i in 0...twoSideOpArray.length) twoSideOpArray[i] => i ];
 	
-	static var oneParamOp = "abs,ln,sin,cos,tan,asin,acos,atan"; // functions with one parameter like "sin(2)"
+	static var oneParamOp = "abs,ln,sin,cos,tan,cot,asin,acos,atan"; // functions with one parameter like "sin(2)"
 	static var twoParamOp = "atan2,log,max,min";                 // functions with two parameters like "max(a,b)"
 
 	
@@ -403,35 +404,67 @@ class Term {
 			case s if (isValue): newValue(0);
 			case s if (isParam): (symbol==p) ? newValue(1) : newValue(0);
 			case '+' | '-':
-				newOperation(symbol, left.derivate(p), right.derivate(p) );
+				newOperation(symbol, left.derivate(p), right.derivate(p));
 			case '*':
 				newOperation('+',
-					newOperation('*', left.derivate(p), right.copy() ),
-					newOperation('*', left.copy(), right.derivate(p) )
+					newOperation('*', left.derivate(p), right.copy()),
+					newOperation('*', left.copy(), right.derivate(p))
 				);
 			case '/':
 				newOperation('/',
 					newOperation('-',
-						newOperation('*', left.derivate(p) , right.copy() ),
-						newOperation('*', left.copy(), right.derivate(p) )
+						newOperation('*', left.derivate(p) , right.copy()),
+						newOperation('*', left.copy(), right.derivate(p))
 					),
 					newOperation('^', right.copy(), newValue(2) )
 				);
 			case '^':
-				newOperation('*',
-					newOperation('*',
-						right.copy(),
-						newOperation('^',
-							left.copy(),
-							newOperation('-', right.copy(), newValue(1) )
+				newOperation('*', left.derivate(p),
+					newOperation('*', right.copy(),
+						newOperation('^', left.copy(),
+							newOperation('-', right.copy(), newValue(1))
 						)
-					),
-					left.derivate(p)
+					)
 				);
 			case 'sin':
-				newOperation('*',
-					newOperation('cos', left.copy() ),
-					left.derivate(p)
+				newOperation('*', left.derivate(p),
+					newOperation('cos', left.copy())
+				);
+			case 'cos':
+				newOperation('*', left.derivate(p),
+					newOperation('-', newValue(0),
+						newOperation('sin', left.copy() )
+					)
+				);
+			case 'tan':
+				newOperation('*', left.derivate(p),
+					newOperation('+', newValue(1),
+						newOperation('^',
+							newOperation('tan', left.copy() ),
+							newValue(2)
+						)
+					)
+				);
+			case 'cot':
+				newOperation('*', left.derivate(p),
+					newOperation('+', newValue(-1),
+						newOperation('^',
+							newOperation('cot', left.copy() ),
+							newValue(2)
+						)
+					)
+				);
+			case 'log':
+				newOperation('*', left.derivate(p),
+					newOperation('/', newValue(1),
+						newOperation('*', right.copy(),
+							newOperation('ln', newValue(0), left.copy() )
+						)
+					)
+				);
+			case 'ln':
+				newOperation('*', left.derivate(p),
+					newOperation('/', newValue(1), left.copy())
 				);
 				
 			default: null;	
