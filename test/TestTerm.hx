@@ -43,9 +43,9 @@ class TestTerm extends haxe.unit.TestCase
 		assertEquals(derivate("cos(x)"), "-sin(x)");
 		assertEquals(derivate("tan(x)"), "1+(tan(x)^2)");
 
-		assertEquals(derivate("x^a")   , "a*(x^(a-1))");
+		assertEquals(derivate("x^a")   , "(x^a)*(a*(1/x))");
 		
-		assertEquals(derivate("a^x")   , "e()^(ln(a)*x)");
+		assertEquals(derivate("a^x")   , "(a^x)*ln(a)");
 		/*
 		assertEquals(derivate("a^(x+b)")     , "");
 		assertEquals(derivate("a^(x-b)")     , "");

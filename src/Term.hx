@@ -437,6 +437,7 @@ class Term {
 					newOperation('^', right.copy(), newValue(2) )
 				);
 			case '^':
+				/*
 				newOperation('*', left.derivate(p),
 					newOperation('*', right.copy(),
 						newOperation('^', left.copy(),
@@ -444,19 +445,19 @@ class Term {
 						)
 					)
 				);
-				// TODO:
-				/*
+				*/
 				if (left.symbol == 'e')
 					newOperation('*', right.derivate(p),
 						newOperation('^', newOperation('e'), left.copy())
-					)
+					);
 				else
-					newOperation('^', newOperation('e'),
-						newOperation('*', right.copy(),
+					newOperation('*', 
+						newOperation('^', left.copy(), right.copy()),
+						newOperation('*',
+							right.copy(),
 							newOperation('ln', left.copy())
-						)
-					).derivate(p);
-				*/
+						).derivate(p)
+					);
 			case 'sin':
 				newOperation('*', left.derivate(p),
 					newOperation('cos', left.copy())
