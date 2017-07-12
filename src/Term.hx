@@ -50,7 +50,7 @@ class Term {
 		return t;
 	}
 	
-	public static inline function newOperation(s:String, left:Term, ?right:Term):Term {
+	public static inline function newOperation(s:String, ?left:Term, ?right:Term):Term {
 		var t:Term = new Term();
 		t.setOperation(s, left, right);
 		return t;
@@ -73,7 +73,7 @@ class Term {
 		left = term; right = null;
 	}
 	
-	public inline function setOperation(s:String, left:Term, ?right:Term) {
+	public inline function setOperation(s:String, ?left:Term, ?right:Term) {
 		operation = MathOp.get(s);
 		if (operation != null)
 		{
@@ -131,13 +131,19 @@ class Term {
 	static function opParam(t:Term):Float if(t.left!=null) return t.left.result else throw('Missing parameter "${t.symbol}".');
 	
 	static var MathOp:Map<String, Term->Float> = [
+		// two side operations
 		"+"    => function(t) return t.left.result + t.right.result,
 		"-"    => function(t) return t.left.result - t.right.result,
 		"*"    => function(t) return t.left.result * t.right.result,
 		"/"    => function(t) return t.left.result / t.right.result,
 		"^"    => function(t) return Math.pow(t.left.result, t.right.result),
 		"%"    => function(t) return t.left.result % t.right.result,
-		       
+		
+		// function without params (constants)
+		"e"    => function(t) return Math.exp(1),
+		"pi"   => function(t) return Math.PI,
+
+		// function with one param
 		"abs"  => function(t) return Math.abs(t.left.result),
 		"ln"   => function(t) return Math.log(t.left.result),
 		"sin"  => function(t) return Math.sin(t.left.result),
@@ -148,6 +154,7 @@ class Term {
 		"acos" => function(t) return Math.acos(t.left.result),
 		"atan" => function(t) return Math.atan(t.left.result),
 		
+		// function with two params
 		"atan2"=> function(t) return Math.atan2(t.left.result, t.right.result),
 		"log"  => function(t) return Math.log(t.left.result) / Math.log(t.right.result),
 		"max"  => function(t) return Math.max(t.left.result, t.right.result),
@@ -157,6 +164,7 @@ class Term {
 	static var twoSideOpArray:Array<String> = twoSideOp.split(',');
 	static var precedence:Map<String,Int> = [ for (i in 0...twoSideOpArray.length) twoSideOpArray[i] => i ];
 	
+	static var constantOp = "e,pi"; // functions without parameters like "e() or pi()"
 	static var oneParamOp = "abs,ln,sin,cos,tan,cot,asin,acos,atan"; // functions with one parameter like "sin(2)"
 	static var twoParamOp = "atan2,log,max,min";                 // functions with two parameters like "max(a,b)"
 
@@ -170,10 +178,12 @@ class Term {
 	static var numberReg:EReg = ~/^([-+]?\d+\.?\d*)/;
 	static var paramReg:EReg = ~/^([a-z]+)/i;
 
+	static var constantOpReg:EReg = new EReg("^(" + constantOp.split(',').join("|")  + ")" , "i");
 	static var oneParamOpReg:EReg = new EReg("^(" + oneParamOp.split(',').join("|")  + ")" , "i");
 	static var twoParamOpReg:EReg = new EReg("^(" + twoParamOp.split(',').join("|")  + ")" , "i");
 	static var twoSideOpReg: EReg = new EReg("^(" + "\\"+ twoSideOpArray.join("|\\") + ")" , "");
 
+	static var constantOpRegFull:EReg = new EReg("^(" + constantOp.split(',').join("|")  + ")$" , "i");
 	static var oneParamOpRegFull:EReg = new EReg("^(" + oneParamOp.split(',').join("|")  + ")$" , "i");
 	static var twoParamOpRegFull:EReg = new EReg("^(" + twoParamOp.split(',').join("|")  + ")$" , "i");
 	static var twoSideOpRegFull: EReg = new EReg("^(" + "\\"+ twoSideOpArray.join("|\\") + ")$" , "");
@@ -199,6 +209,10 @@ class Term {
 			if (numberReg.match(s)) {        // float number
 				e = numberReg.matched(1);
 				t = newValue(Std.parseFloat(e));
+			}
+			else if (constantOpReg.match(s)) {  // like e() or pi()
+				e = constantOpReg.matched(1);
+				t = newOperation(e);				
 			}
 			else if (oneParamOpReg.match(s)) {  // like sin(...)
 				f = oneParamOpReg.matched(1);
@@ -317,8 +331,11 @@ class Term {
 		return switch(symbol) {
 			case s if (isValue): Std.string(value);
 			case s if (isParam): (depth == 0 || left == null) ? symbol : left.toString(depth-1, false); // recursive
-			case s if (twoSideOpRegFull.match(s)) : ((isFirst)?'':"(") + left.toString(depth, false) + symbol + right.toString(depth, false) + ((isFirst)?'':")");
+			case s if (twoSideOpRegFull.match(s)) :
+				if (symbol == '-' && left.isValue && left.value == 0) symbol + right.toString(depth, false);
+				else ((isFirst)?'':"(") + left.toString(depth, false) + symbol + right.toString(depth, false) + ((isFirst)?'':")");
 			case s if (twoParamOpRegFull.match(s)): symbol + "(" + left.toString(depth) + ", " + right.toString(depth) + ")";
+			case s if (constantOpRegFull.match(s)): symbol + "()";
 			default: symbol + "(" + left.toString(depth) +  ")";
 		}
 	}
@@ -328,18 +345,19 @@ class Term {
 	 * Trim length of math expression
 	 * 
 	 */
-	public function trim():Void
+	public function simplify():Term
 	{
 		var len:Int = -1;
 		var len_old:Int = 0;
 		while (len != len_old) {
-			trimFull();
+			simplifyStep();
 			len_old = len;
 			len = length();
 		}
+		return this;
 	}
 	
-	function trimFull():Void
+	function simplifyStep():Void
 	{	
 		if (isParam || isValue) return;
 		
@@ -382,8 +400,8 @@ class Term {
 					else if (right.value == 0) setValue(1);
 				}
 		}
-		if (left != null) left.trimFull();
-		if (right != null) right.trimFull();
+		if (left != null) left.simplifyStep();
+		if (right != null) right.simplifyStep();
 	}
 	
 	inline function cutNode(t:Term)
@@ -401,8 +419,8 @@ class Term {
 	{	
 		return switch (symbol) 
 		{
-			case s if (isValue): newValue(0);
-			case s if (isParam): (symbol==p) ? newValue(1) : newValue(0);
+			case s if (isValue || constantOpRegFull.match(s)): newValue(0);
+			case s if (isParam): (symbol == p) ? newValue(1) : newValue(0);
 			case '+' | '-':
 				newOperation(symbol, left.derivate(p), right.derivate(p));
 			case '*':
@@ -413,7 +431,7 @@ class Term {
 			case '/':
 				newOperation('/',
 					newOperation('-',
-						newOperation('*', left.derivate(p) , right.copy()),
+						newOperation('*', left.derivate(p), right.copy()),
 						newOperation('*', left.copy(), right.derivate(p))
 					),
 					newOperation('^', right.copy(), newValue(2) )
@@ -426,6 +444,19 @@ class Term {
 						)
 					)
 				);
+				// TODO:
+				/*
+				if (left.symbol == 'e')
+					newOperation('*', right.derivate(p),
+						newOperation('^', newOperation('e'), left.copy())
+					)
+				else
+					newOperation('^', newOperation('e'),
+						newOperation('*', right.copy(),
+							newOperation('ln', left.copy())
+						)
+					).derivate(p);
+				*/
 			case 'sin':
 				newOperation('*', left.derivate(p),
 					newOperation('cos', left.copy())
@@ -454,6 +485,36 @@ class Term {
 						)
 					)
 				);
+			case 'atan':
+				newOperation('*', left.derivate(p),
+					newOperation('/', newValue(1),
+						newOperation('+', newValue(1),
+							newOperation('^', left.copy(), newValue(2))
+						)
+					)
+				);
+			case 'asin':
+				newOperation('*', left.derivate(p),
+					newOperation('/', newValue(1),
+						newOperation('^',
+							newOperation('-', newValue(1),
+								newOperation('^', left.copy(), newValue(2))
+							), newOperation('/', newValue(1), newValue(2))
+						)
+					)
+				);
+			case 'acos':
+				newOperation('*', left.derivate(p),
+					newOperation('-', newValue(0),
+						newOperation('/', newValue(1),
+							newOperation('^',
+								newOperation('-', newValue(1),
+									newOperation('^', left.copy(), newValue(2))
+								), newOperation('/', newValue(1), newValue(2))
+							)
+						)
+					)
+				);
 			case 'log':
 				newOperation('*', left.derivate(p),
 					newOperation('/', newValue(1),
@@ -467,7 +528,7 @@ class Term {
 					newOperation('/', newValue(1), left.copy())
 				);
 				
-			default: null;	
+			default: throw('derivation of "$symbol" not implemented');	
 		}
 
 	}

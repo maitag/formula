@@ -50,86 +50,28 @@ class Main
 		 * construct Term Tree from String Input
 		 * 
 		 */	
-		var s:String;
-		var t:Term;
+		var a,b,x,f,g:Term;
 		
-		// test error handling
-		s = "((1+2*3)";       try Term.fromString(s) catch (msg:String) trace(s, ' Error: $msg'); // Error: Bracket nesting
-		s = "(1+(2*3)+(4-5)"; try Term.fromString(s) catch (msg:String) trace(s, ' Error: $msg'); // Error: Bracket nesting
-		s = "()";             try Term.fromString(s) catch (msg:String) trace(s, ' Error: $msg'); // Error: Empty brackets
-		s = "5+ "; try Term.fromString(s) catch (msg:String) trace(s, ' Error: $msg'); // Error: Missing right operand
-		s = "5- "; try Term.fromString(s) catch (msg:String) trace(s, ' Error: $msg'); // Error: Missing right operand
-		s = "5* "; try Term.fromString(s) catch (msg:String) trace(s, ' Error: $msg'); // Error: Missing right operand
-		s = "*5 "; try Term.fromString(s) catch (msg:String) trace(s, ' Error: $msg'); // Error: Missing left operand
-
-		s = "3 * p + 2";  t = Term.fromString(s); trace(s +' -> ' + t.toString(0) +' -> ' + t.toString(1)); // no bindings to "p"
-		try trace(t.result) catch (msg:String) trace('Error: $msg'); // Error: Missing parameter "p"
-		t.bind(["p" => Term.newValue(2)]);
-		trace('p=2 -> ' + s +' -> ' + t.toString(0) +' -> ' + t.toString(1) + '->' + t.result); // OK
+		// terms with other terms as parameters
 		
-		// more tests
-		s = "2 * -3 "; try {t = Term.fromString(s); trace(s +' -> ' + t.toString() +' -> ' + t.result); } catch (msg:String) trace(s, 'Error: $msg');
-		s = "5 - -1 "; try {t = Term.fromString(s); trace(s +' -> ' + t.toString() +' -> ' + t.result); } catch (msg:String) trace(s, 'Error: $msg');
-		s = "5 + -1 "; try {t = Term.fromString(s); trace(s +' -> ' + t.toString() +' -> ' + t.result); } catch (msg:String) trace(s, 'Error: $msg');
-		s = "+min(2,5) "; try {t = Term.fromString(s); trace(s +' -> ' + t.toString() +' -> ' + t.result); } catch (msg:String) trace(s,'Error: $msg');
-		s = "3* -max(2,3) + 5"; try {t = Term.fromString(s); trace(s +' -> ' + t.toString() +' -> ' + t.result); } catch (msg:String) trace(s,'Error: $msg');
-		s = "3* 0-max(2,3) + 5"; try {t = Term.fromString(s); trace(s +' -> ' + t.toString() +' -> ' + t.result); } catch (msg:String) trace(s,'Error: $msg');
-		s = "3* (0-max(2,3)) + 5"; try {t = Term.fromString(s); trace(s +' -> ' + t.toString() +' -> ' + t.result); } catch (msg:String) trace(s,'Error: $msg');
+		a = Term.fromString("1 + 2 * 3");
+		x = Term.newValue(7);
+		f = Term.fromString("2.5 * sin(x - a) ^ 2", ["x"=>x, "a"=>a] );
 		
-		s = "1.5+2*3";       t = Term.fromString(s); trace(s +' -> '+ t.toString() +' -> '+ t.result);
-		s = " (1+2)*3";      t = Term.fromString(s); trace(s +' -> '+ t.toString() +' -> '+ t.result);
-		s = "(1+2*3)";       t = Term.fromString(s); trace(s +' -> '+ t.toString() +' -> '+ t.result);
-		s = "((1+2))*3";     t = Term.fromString(s); trace(s +' -> '+ t.toString() +' -> '+ t.result);
-		s = "-1+((2*3))";    t = Term.fromString(s); trace(s +' -> '+ t.toString() +' -> '+ t.result);
-		s = "-1.5+((2*3))";  t = Term.fromString(s); trace(s +' -> '+ t.toString() +' -> '+ t.result);
-		
-		s = "(2)+(3)"; t = Term.fromString(s); trace(s +' -> ' + t.toString() +' -> ' + t.result);
-		
-		s = "sin(3.14159)";  t = Term.fromString(s); trace(s +' -> '+ t.toString() +' -> '+ t.result);
-		s = "1+cos(3.141)";  t = Term.fromString(s); trace(s +' -> '+ t.toString() +' -> '+ t.result);
-		s = "max( 1.9 , 2)"; t = Term.fromString(s); trace(s +' -> '+ t.toString() +' -> '+ t.result);
-		s = "2 + -max(1,2) * 3 - 1"; t = Term.fromString(s); trace(s +' -> ' + t.toString() +' -> ' + t.result);
-		
-		s = "(2+1)^(3-1)"; t = Term.fromString(s); trace(s +' -> ' + t.toString() +' -> ' + t.result);
-		
-		t = Term.fromString("100");
-		s = "a + 2";  t = Term.fromString(s,["a"=>t]); trace(s +' -> '+ t.toString(0) +' -> '+ t.toString(1) +' -> '+ t.result);
-		
-		var pi:Term = Term.fromString("3.14159265359");
-		s = "2.5 * sin(a + pi) ^ 2";  t = Term.fromString(s,["pi"=>pi, "a"=>Term.newValue(4)]); trace(s +' -> '+ t.toString(0) +' -> '+ t.toString(1) +' -> '+ t.result);
-		
-		var x:Term = Term.newValue(7);
-		var a:Term = Term.fromString("1 + 2 * 3");
-		var f:Term = Term.fromString("2.5 * sin(x - a) ^ 2", ["x"=>x, "a"=>a] );
+		trace( "x=" + x.toString(0) );
+		trace( "a=" + a.toString(0) );
 		trace( "f=" + f.toString(0) + " -> " + f.toString(1) + " -> " + f.result );	// -> f=2.5*(sin(x-a)^2) -> 2.5*(sin(7-(1+(2*3)))^2) -> 0
-		trace( "length(0):"+f.length(0),"length(1):"+f.length(1),"length():"+f.length() );
 
 		// cloning a Term
-		var g:Term = f.copy();
-		var b:Term = Term.fromString("x+1", ["x" => x] ); trace( "b=" + b.toString(0) + " -> " + b.toString(1) + " -> " + b.result );
+		g = f.copy();
+		
+		b = Term.fromString("x+1", ["x" => x] ); trace( "b=" + b.toString(0) + " -> " + b.toString(1) + " -> " + b.result );
 		g.bind(["a"=>b]);
 		trace( "g=" + g.toString(0) + " -> " + g.toString(1) + " -> " + g.toString(2) + " -> " + g.result );
 
-		//derivate
-		var g1:Term = g.derivate("x");
-		trace( "g'(x) = " + g1.toString(0));
+		// derivate g'(x)
+		trace( "g'(x) = " + g.derivate("x").simplify().toString(0));
 
-		//trim function
-		g1.trim();
-		trace( "g'(x) = " + g1.toString(0));
-		s = "0+x"; t = Term.fromString(s); t.trim(); trace(s +' -> ' + t.toString());
-		s = "x+0"; t = Term.fromString(s); t.trim(); trace(s +' -> ' + t.toString());
-		s = "1*x"; t = Term.fromString(s); t.trim(); trace(s +' -> ' + t.toString());
-		s = "x*1"; t = Term.fromString(s); t.trim(); trace(s +' -> ' + t.toString());
-		s = "x*0"; t = Term.fromString(s); t.trim(); trace(s +' -> ' + t.toString());
-		s = "0*x"; t = Term.fromString(s); t.trim(); trace(s +' -> ' + t.toString());
-		s = "x/1"; t = Term.fromString(s); t.trim(); trace(s +' -> ' + t.toString());
-		s = "1/x"; t = Term.fromString(s); t.trim(); trace(s +' -> ' + t.toString());
-		s = "0/x"; t = Term.fromString(s); t.trim(); trace(s +' -> ' + t.toString());
-		s = "0^x"; t = Term.fromString(s); t.trim(); trace(s +' -> ' + t.toString());
-		s = "1^x"; t = Term.fromString(s); t.trim(); trace(s +' -> ' + t.toString());
-		s = "x^0"; t = Term.fromString(s); t.trim(); trace(s +' -> ' + t.toString());
-		s = "x^1"; t = Term.fromString(s); t.trim(); trace(s +' -> ' + t.toString());
 	}
 
 }
