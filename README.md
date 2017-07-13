@@ -7,18 +7,23 @@ in haxe language.
 
 ### How to use
 ```
-	var x:Term = Term.newValue(7);
-	var a:Term = Term.fromString("1 + 2 * 3");
-	var f:Term = Term.fromString("2.5 * sin(x - a) ^ 2", ["x"=>x, "a"=>a] );
-	trace( "f=" + f.toString(0) + " -> " + f.toString(1) + " -> " + f.result );
-	// -> f=2.5*(sin(x-a)^2) -> 2.5*(sin(7-(1+(2*3)))^2) -> 0
+	var x: Formula;
+	var a: Formula;
+	var f: Formula;
+	
+	x = 7.0;
+	a = "1 + 2 * 3";
+	f = "2.5 * sin(x - a) ^ 2";
+	f.bind(["x" => x, "a" => a]);
+		
+	trace( f , f.result );	//   2.5*(sin(x-a)^2)  ,  0
 ```
 
 ### Todo
 
-- more unit tests
-- full working derivatation
-- comparing terms for equality and term transformation
-- more ways to simplify formula
+- more useful unit tests
+- full working derivatation (i feel bug ;)
 - handle recursive parameter bindings (for something like x(n+1) = x(n) ...)
-- abstract Formula class around Term to type more easy
+- more easy typing/constructing with Formular abstract
+- comparing terms for equality (more algorithms for term transformations or for normalizations?)
+- more ways to simplify formulas

@@ -6,19 +6,19 @@ package;
  * 
  **/
 	
-typedef OperationNode = {symbol:String, left:Term, right:Term, leftOperation:OperationNode, rightOperation:OperationNode, precedence:Int};
+typedef OperationNode = {symbol:String, left:TermNode, right:TermNode, leftOperation:OperationNode, rightOperation:OperationNode, precedence:Int};
 
-class Term {
+class TermNode {
 
 	/*
 	 * Properties
 	 * 
 	 */
-	var operation:Term->Float; // operation function pointer
+	var operation:TermNode->Float; // operation function pointer
 	var symbol:String; //operator like "+" or parameter name like "x"
 
-	var left:Term;  // left branch of tree
-	var right:Term; // right branch of tree
+	var left:TermNode;  // left branch of tree
+	var right:TermNode; // right branch of tree
 	
 	var value:Float;  // leaf of the tree
 	
@@ -38,27 +38,27 @@ class Term {
 	 */
 	public function new() {}
 	
-	public static inline function newValue(f:Float):Term {
-		var t:Term = new Term();
+	public static inline function newValue(f:Float):TermNode {
+		var t:TermNode = new TermNode();
 		t.setValue(f);
 		return t;
 	}
 	
-	public static inline function newParam(id:String, ?term:Term):Term {
-		var t:Term = new Term();
+	public static inline function newParam(id:String, ?term:TermNode):TermNode {
+		var t:TermNode = new TermNode();
 		t.setParam(id, term);
 		return t;
 	}
 	
-	public static inline function newOperation(s:String, ?left:Term, ?right:Term):Term {
-		var t:Term = new Term();
+	public static inline function newOperation(s:String, ?left:TermNode, ?right:TermNode):TermNode {
+		var t:TermNode = new TermNode();
 		t.setOperation(s, left, right);
 		return t;
 	}
 
 	
 	/*
-	 * Methods
+	 * atomic methods
 	 * 
 	 */
 	public inline function setValue(f:Float) {
@@ -67,13 +67,13 @@ class Term {
 		left = null; right = null;
 	}
 	
-	public inline function setParam(id:String, ?term:Term) {
+	public inline function setParam(id:String, ?term:TermNode) {
 		operation = opParam;
 		symbol = id;
 		left = term; right = null;
 	}
 	
-	public inline function setOperation(s:String, ?left:Term, ?right:Term) {
+	public inline function setOperation(s:String, ?left:TermNode, ?right:TermNode) {
 		operation = MathOp.get(s);
 		if (operation != null)
 		{
@@ -88,7 +88,7 @@ class Term {
 	 * bind terms to parameters
 	 * 
 	 */	
-	public inline function bind(?params:Map<String, Term>) {
+	public inline function bind(params:Map<String, TermNode>) {
 		if (isParam && params.exists(symbol)) left = params.get(symbol);
 		else {
 			if (left != null) left.bind(params);
@@ -102,16 +102,16 @@ class Term {
 	 * clones the Term Tree
 	 * 
 	 */	
-	public function copy():Term
+	public function copy():TermNode
 	{
-		if (isValue) return Term.newValue(value);
-		else if (isParam) return Term.newParam(symbol, (left!=null) ? left.copy() : null);
-		else return Term.newOperation(symbol, left.copy(), (right!=null) ? right.copy() : null);
+		if (isValue) return TermNode.newValue(value);
+		else if (isParam) return TermNode.newParam(symbol, (left!=null) ? left.copy() : null);
+		else return TermNode.newOperation(symbol, left.copy(), (right!=null) ? right.copy() : null);
 	}
 
 	
 	/*
-	 * number of Term nodes
+	 * number of TermNodes inside Tree
 	 * 
 	 */	
 	public function length(?depth:Null<Int>=null) {
@@ -127,10 +127,10 @@ class Term {
 	 * static Function Pointers (to stored in this.operation)
 	 * 
 	 */	
-	static function opValue(t:Term):Float return t.value;
-	static function opParam(t:Term):Float if(t.left!=null) return t.left.result else throw('Missing parameter "${t.symbol}".');
+	static function opValue(t:TermNode):Float return t.value;
+	static function opParam(t:TermNode):Float if(t.left!=null) return t.left.result else throw('Missing parameter "${t.symbol}".');
 	
-	static var MathOp:Map<String, Term->Float> = [
+	static var MathOp:Map<String, TermNode->Float> = [
 		// two side operations
 		"+"    => function(t) return t.left.result + t.right.result,
 		"-"    => function(t) return t.left.result - t.right.result,
@@ -193,9 +193,9 @@ class Term {
 	 * Build Tree up from String Math Expression
 	 * 
 	 */	
-	public static function fromString(s:String, ?params:Map<String, Term>):Term
+	public static function fromString(s:String, ?params:Map<String, TermNode>):TermNode
 	{
-		var t:Term = null;
+		var t:TermNode = null;
 		var operations:Array<OperationNode> = new Array();
 		var e, f:String;
 		var negate:Bool;
@@ -270,7 +270,7 @@ class Term {
 					return 0;
 				});
 				for (op in operations) {
-					t = Term.newOperation(op.symbol, op.left, op.right);
+					t = TermNode.newOperation(op.symbol, op.left, op.right);
 					if (op.leftOperation  != null && op.rightOperation != null) {
 						op.rightOperation.leftOperation = op.leftOperation;
 						op.leftOperation.rightOperation = op.rightOperation;
@@ -345,7 +345,7 @@ class Term {
 	 * Trim length of math expression
 	 * 
 	 */
-	public function simplify():Term
+	public function simplify():TermNode
 	{
 		var len:Int = -1;
 		var len_old:Int = 0;
@@ -404,7 +404,7 @@ class Term {
 		if (right != null) right.simplifyStep();
 	}
 	
-	inline function cutNode(t:Term)
+	inline function cutNode(t:TermNode)
 	{
 		if (t.isValue) setValue(value);
 		else if (t.isParam) setParam(t.symbol, t.left);
@@ -412,10 +412,10 @@ class Term {
 	}
 	
 	/*
-	 * creates the derivate of a term
+	 * creates a new term that is derivate of a given term 
 	 * 
 	 */
-	public function derivate(p:String):Term
+	public function derivate(p:String):TermNode
 	{	
 		return switch (symbol) 
 		{
@@ -437,15 +437,6 @@ class Term {
 					newOperation('^', right.copy(), newValue(2) )
 				);
 			case '^':
-				/*
-				newOperation('*', left.derivate(p),
-					newOperation('*', right.copy(),
-						newOperation('^', left.copy(),
-							newOperation('-', right.copy(), newValue(1))
-						)
-					)
-				);
-				*/
 				if (left.symbol == 'e')
 					newOperation('*', right.derivate(p),
 						newOperation('^', newOperation('e'), left.copy())

@@ -1,4 +1,4 @@
-class TestTerm extends haxe.unit.TestCase
+class TestTermNode extends haxe.unit.TestCase
 {
 	public function testValue()
 	{
@@ -14,7 +14,7 @@ class TestTerm extends haxe.unit.TestCase
 	}*/
 	
 	inline function simplify(s:String):String {
-		return Term.fromString(s).simplify().toString();
+		return TermNode.fromString(s).simplify().toString();
 	}
 	public function testSimplify()
 	{
@@ -34,7 +34,7 @@ class TestTerm extends haxe.unit.TestCase
 	}
 	
 	inline function derivate(s:String):String {
-		return Term.fromString(s).derivate("x").simplify().toString();
+		return TermNode.fromString(s).derivate("x").simplify().toString();
 	}
 	public function testDerivate()
 	{
@@ -46,6 +46,8 @@ class TestTerm extends haxe.unit.TestCase
 		assertEquals(derivate("x^a")   , "(x^a)*(a*(1/x))");
 		
 		assertEquals(derivate("a^x")   , "(a^x)*ln(a)");
+		
+		// TODO:
 		/*
 		assertEquals(derivate("a^(x+b)")     , "");
 		assertEquals(derivate("a^(x-b)")     , "");
@@ -60,7 +62,7 @@ class TestTerm extends haxe.unit.TestCase
 	
 	inline function errorFromString(s:String):Int {
 		var e:Int = 0;
-		try Term.fromString(s) catch (msg:String) e = 1;
+		try TermNode.fromString(s) catch (msg:String) e = 1;
 		return e;
 	}
 	public function testErrorFromString()
