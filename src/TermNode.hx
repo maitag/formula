@@ -201,7 +201,7 @@ class TermNode {
 		var negate:Bool;
 		
 		s = clearSpacesReg.replace(s, ''); // clear whitespaces
-
+		
 		while (s.length != 0) // read in terms from left
 		{
 			negate = false;
@@ -224,10 +224,11 @@ class TermNode {
 			else if (twoParamOpReg.match(s)) { // like atan2(... , ...)
 				f = twoParamOpReg.matched(1);
 				s = twoParamOpReg.matchedRight();
-				e = getBrackets(s);
+				e = getBrackets(s); trace("e=" + e);
+				var p1:String = e.substring(1, comataPos);
+				var p2:String = e.substring(comataPos + 1, e.length - 1);
 				if (comataPos == -1) throw(f+"() needs two parameter separated by comma.");
-				t = newOperation(f, fromString(e.substring(1, comataPos), params), fromString(e.substring(comataPos+1, e.length-1), params) );
-				
+				t = newOperation(f, fromString(p1, params), fromString(p2, params) );
 			}
 			else if (paramReg.match(s)) { // parameter
 				e = paramReg.matched(1);
@@ -299,7 +300,7 @@ class TermNode {
 				j = s.indexOf(")", pos);
 
 				// check for commata position
-				if (openBrackets == 1) {
+				if (openBrackets == 1 && comataPos == -1) {
 					k = s.indexOf(",", pos);
 					if (k<j && j>0) comataPos = k;
 				}
