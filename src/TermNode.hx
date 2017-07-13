@@ -224,7 +224,7 @@ class TermNode {
 			else if (twoParamOpReg.match(s)) { // like atan2(... , ...)
 				f = twoParamOpReg.matched(1);
 				s = twoParamOpReg.matchedRight();
-				e = getBrackets(s); trace("e=" + e);
+				e = getBrackets(s);
 				var p1:String = e.substring(1, comataPos);
 				var p2:String = e.substring(comataPos + 1, e.length - 1);
 				if (comataPos == -1) throw(f+"() needs two parameter separated by comma.");
