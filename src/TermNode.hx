@@ -156,11 +156,11 @@ class TermNode {
 		
 		// function with two params
 		"atan2"=> function(t) return Math.atan2(t.left.result, t.right.result),
-		"log"  => function(t) return Math.log(t.left.result) / Math.log(t.right.result),
+		"log"  => function(t) return Math.log(t.right.result) / Math.log(t.left.result),
 		"max"  => function(t) return Math.max(t.left.result, t.right.result),
 		"min"  => function(t) return Math.min(t.left.result, t.right.result),		
 	];
-	static var twoSideOp  = "^,*,/,-,+,%";  // <- order here determines the operator precedence
+	static var twoSideOp  = "^,/,*,-,+,%";  // <- order here determines the operator precedence
 	static var twoSideOpArray:Array<String> = twoSideOp.split(',');
 	static var precedence:Map<String,Int> = [ for (i in 0...twoSideOpArray.length) twoSideOpArray[i] => i ];
 	
@@ -178,9 +178,9 @@ class TermNode {
 	static var numberReg:EReg = ~/^([-+]?\d+\.?\d*)/;
 	static var paramReg:EReg = ~/^([a-z]+)/i;
 
-	static var constantOpReg:EReg = new EReg("^(" + constantOp.split(',').join("|")  + ")" , "i");
-	static var oneParamOpReg:EReg = new EReg("^(" + oneParamOp.split(',').join("|")  + ")" , "i");
-	static var twoParamOpReg:EReg = new EReg("^(" + twoParamOp.split(',').join("|")  + ")" , "i");
+	static var constantOpReg:EReg = new EReg("^(" + constantOp.split(',').join("|")  + ")\\(" , "i");
+	static var oneParamOpReg:EReg = new EReg("^(" + oneParamOp.split(',').join("|")  + ")\\(" , "i");
+	static var twoParamOpReg:EReg = new EReg("^(" + twoParamOp.split(',').join("|")  + ")\\(" , "i");
 	static var twoSideOpReg: EReg = new EReg("^(" + "\\"+ twoSideOpArray.join("|\\") + ")" , "");
 
 	static var constantOpRegFull:EReg = new EReg("^(" + constantOp.split(',').join("|")  + ")$" , "i");
@@ -216,14 +216,14 @@ class TermNode {
 			}
 			else if (oneParamOpReg.match(s)) {  // like sin(...)
 				f = oneParamOpReg.matched(1);
-				s = oneParamOpReg.matchedRight();
+				s = "("+oneParamOpReg.matchedRight();
 				e = getBrackets(s);
 				t = newOperation(f, fromString(e.substring(1, e.length-1), params) );
 				
 			}
 			else if (twoParamOpReg.match(s)) { // like atan2(... , ...)
 				f = twoParamOpReg.matched(1);
-				s = twoParamOpReg.matchedRight();
+				s = "("+twoParamOpReg.matchedRight();
 				e = getBrackets(s);
 				var p1:String = e.substring(1, comataPos);
 				var p2:String = e.substring(comataPos + 1, e.length - 1);
@@ -335,7 +335,7 @@ class TermNode {
 			case s if (twoSideOpRegFull.match(s)) :
 				if (symbol == '-' && left.isValue && left.value == 0) symbol + right.toString(depth, false);
 				else ((isFirst)?'':"(") + left.toString(depth, false) + symbol + right.toString(depth, false) + ((isFirst)?'':")");
-			case s if (twoParamOpRegFull.match(s)): symbol + "(" + left.toString(depth) + ", " + right.toString(depth) + ")";
+			case s if (twoParamOpRegFull.match(s)): symbol + "(" + left.toString(depth) + "," + right.toString(depth) + ")";
 			case s if (constantOpRegFull.match(s)): symbol + "()";
 			default: symbol + "(" + left.toString(depth) +  ")";
 		}
@@ -512,7 +512,7 @@ class TermNode {
 				newOperation('*', left.derivate(p),
 					newOperation('/', newValue(1),
 						newOperation('*', right.copy(),
-							newOperation('ln', newValue(0), left.copy() )
+							newOperation('ln', left.copy() )
 						)
 					)
 				);
