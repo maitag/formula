@@ -49,11 +49,11 @@ class TestTermNode extends haxe.unit.TestCase
 		
 		assertEquals(derivate("ln(x)"), "1/x");
 		
-		// TODO
+		// TODO: atan2 gives 2 derivates or complex log
 		//assertEquals(derivate("atan2(x,a)"), "a/(a^2+x^2)");
 		//assertEquals(derivate("atan2(a,x)"), "-(a/(a^2+x^2))");
-		//assertEquals(derivate("log(a,x)"), "1/(x*ln(a))");
-		//assertEquals(derivate("log(x,a)"), "-(ln(a)/x*(ln(x)^2))");
+		assertEquals(derivate("log(a,x)"), "((1/x)*ln(a))/(ln(a)^2)");
+		assertEquals(derivate("log(x,a)"), "-(ln(a)*(1/x))/(ln(x)^2)");
 
 		assertEquals(derivate("x^a")         , "(x^a)*(a*(1/x))");
 		assertEquals(derivate("a^x")         , "(a^x)*ln(a)");

@@ -509,13 +509,10 @@ class TermNode {
 					)
 				);
 			case 'log':
-				newOperation('*', left.derivate(p),
-					newOperation('/', newValue(1),
-						newOperation('*', right.copy(),
-							newOperation('ln', left.copy() )
-						)
-					)
-				);
+				newOperation('/',
+					newOperation('ln', right.copy()),
+					newOperation('ln', left.copy())
+				).derivate(p);
 			case 'ln':
 				newOperation('*', left.derivate(p),
 					newOperation('/', newValue(1), left.copy())
