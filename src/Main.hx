@@ -112,19 +112,18 @@ class Main
 		var f: Formula;
 		
 		x = 7.0;
-		a = "1 + 2 * 3";
+		a = "a:1 + 2 * 3";
 		f = "2.5 * sin(x - a) ^ 2";
 		f.bind(["x" => x, "a" => a]);
 			
 		trace( f , f.result );	//   2.5*(sin(x-a)^2)  ,  0
 		
-		// in not so abstract Future:
-		// y = f + x;
-		
-		// but what is with:
-		// f = f + x ????? :)=
-		
-	
+		// test operator overloading:
+		var y: Formula = "a+1";
+		var g: Formula = y + f;	trace(g);
+		f.name = "f";
+		f = f + x;  trace(f); trace(g);
+		trace(f.name);
 	}
 
 }
