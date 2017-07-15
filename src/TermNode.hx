@@ -470,14 +470,10 @@ class TermNode {
 					)
 				);
 			case 'cot':
-				newOperation('*', left.derivate(p),
-					newOperation('+', newValue(-1),
-						newOperation('^',
-							newOperation('cot', left.copy() ),
-							newValue(2)
-						)
-					)
-				);
+				newOperation('/',
+					newValue(1),
+					newOperation('tan', left.copy())
+				).derivate(p);				
 			case 'atan':
 				newOperation('*', left.derivate(p),
 					newOperation('/', newValue(1),

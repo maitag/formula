@@ -104,26 +104,27 @@ class Main
 		 * 
 		 */
 		
-		// i wonder why i can not use:
-		// var x, a, f : Formula;
-		 
-		var x: Formula;
-		var a: Formula;
-		var f: Formula;
-		
+		// var x, a, f : Formula; <-- this did NOT work in haxe!
+		var x:Formula, a:Formula, f:Formula, b:Formula, c:Formula, f:Formula;
+
 		x = 7.0;
-		a = "a:1 + 2 * 3";
+		a = "a: 1 + 2 * 3";
 		f = "2.5 * sin(x - a) ^ 2";
 		f.bind(["x" => x, "a" => a]);
 			
-		trace( f , f.result );	//   2.5*(sin(x-a)^2)  ,  0
+		trace( f.toString(0) , f.result );	//   2.5*(sin(x-a)^2)  ,  0
 		
 		// test operator overloading:
-		var y: Formula = "a+1";
-		var g: Formula = y + f;	trace(g);
-		f.name = "f";
-		f = f + x;  trace(f); trace(g);
-		trace(f.name);
+		a = "a: 3*4";
+		x = "x: 1-2";
+		c = "c: 7";
+		f = a + x * c;
+		trace(f.toString(0), f);
+		a.simplify();
+		trace(f.toString(0), f);
+		
+		trace(Formula.sin(c*a + Formula.max(f, 3) ).toString(0));
+		
 	}
 
 }

@@ -42,6 +42,7 @@ class TestTermNode extends haxe.unit.TestCase
 		assertEquals(derivate("sin(x)"), "cos(x)");
 		assertEquals(derivate("cos(x)"), "-sin(x)");
 		assertEquals(derivate("tan(x)"), "1+(tan(x)^2)");
+		assertEquals(derivate("cot(x)"), "-(1+(tan(x)^2))/(tan(x)^2)");
 
 		assertEquals(derivate("asin(x)"), "1/((1-(x^2))^0.5)");
 		assertEquals(derivate("acos(x)"), "-(1/((1-(x^2))^0.5))");
