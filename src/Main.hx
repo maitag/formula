@@ -105,26 +105,36 @@ class Main
 		 */
 		
 		// var x, a, f : Formula; <-- this did NOT work in haxe!
-		var x:Formula, a:Formula, f:Formula, b:Formula, c:Formula, f:Formula;
+		var x:Formula, a:Formula, b:Formula, c:Formula, f:Formula;
 
 		x = 7.0;
-		a = "a: 1 + 2 * 3";
-		f = "2.5 * sin(x - a) ^ 2";
+		a = "a: 1+2*3";
+		
+		f = "2.5 * sin(x-a)^2";
 		f.bind(["x" => x, "a" => a]);
 			
-		trace( f.toString(0) , f.result );	//   2.5*(sin(x-a)^2)  ,  0
+		trace( f.toString(0) );	// 2.5*(sin(x-a)^2)
+		trace( f.result );      // 0
 		
-		// test operator overloading:
-		a = "a: 3*4";
-		x = "x: 1-2";
-		c = "c: 7";
-		f = a + x * c;
-		trace(f.toString(0), f);
+		a = "a: 1-2";
+		x = "x: 3*4";
+		c = "c: 5";
+		
+		// operations with Formulas
+		f = a + x / c;
+		
+		trace( f.toString(0) ); // a+(x/c)
+		trace( f );             // (1-2)+((3*4)/5)
+		trace( f.result );      // 1.4
+		
 		a.simplify();
-		trace(f.toString(0), f);
+		trace( f );             // -1+((3*4)/5)
+		trace( f.result );      // 1.4
 		
-		trace(Formula.sin(c*a + Formula.max(f, 3) ).toString(0));
+		f = Formula.sin(c * a) + Formula.max(f, 3);
 		
+		trace( f.toString(0) ); // sin(c*a)+max(a+(x/c),3)
+		trace( f );             // sin(5*-1)+max(-1+((3*4)/5),3)
 	}
 
 }
