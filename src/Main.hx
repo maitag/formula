@@ -97,7 +97,7 @@ class Main
 		
 		f = TermNode.fromString("atan2(x,y)");
 		f=f.derivate("x");
-		trace(f.toString(0));	
+		trace("d/dx atan2(x,y)= " + f.simplify().toString(0));	
 		
 		
 		
