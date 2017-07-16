@@ -95,9 +95,9 @@ class Main
 		f=f.derivate("x");
 		trace("a^x ->" + f.simplify().toString(0) );
 		
-		f = TermNode.fromString("atan2(y,x)");
+		f = TermNode.fromString("atan2(x,y)");
 		f=f.derivate("x");
-		trace("d/dx atan2(y,x)= " + f.simplify().toString(0));	
+		trace("d/dx atan2(x,y)= " + f.simplify().toString(0));	
 		
 		
 		
