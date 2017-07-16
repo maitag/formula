@@ -482,6 +482,17 @@ class TermNode {
 						)
 					)
 				);
+			case 'atan2':
+				newOperation('/', 
+					newOperation('-',
+						newOperation('*', left.copy(), right.derivate(p)),
+						newOperation('*', right.copy(), left.derivate(p))
+					),
+					newOperation('+',
+						newOperation('*', left.copy(), left.copy()),
+						newOperation('*', right.copy(), right.copy())
+					)
+				);
 			case 'asin':
 				newOperation('*', left.derivate(p),
 					newOperation('/', newValue(1),
