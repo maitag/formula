@@ -41,7 +41,6 @@ in haxe language.
 
 ### Todo
 
-- derivatation of atan2
 - more useful unit tests
 - more easy typing/constructing with Formula
 - handle recursive parameter bindings (something like x(n+1) = x(n) ...)
