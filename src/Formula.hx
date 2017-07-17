@@ -31,7 +31,7 @@ private class Term
 
 	public function set(t:Term):Term
 	{
-		//if (t.name != null) name = t.name;
+		//if (t.name != null) name = t.name; // TODO: check side effects of bindings
 		node = t.node.copy();
 		//if (t.bindings != null) bindings = [for (k in t.bindings.keys()) k => t.bindings.get(k)];
 		for (t in bindTo.keys()) {
@@ -129,6 +129,7 @@ private class Term
 	public function debugBindings() {
 		trace(name + ": " + node.toString(0));// + " -> " + node.toString());
 		for (k in bindTo.keys()) trace("   " + bindTo.get(k) + " --> " + k.node.toString(0));
+		for (k in bindings.keys()) trace("   " + bindings.get(k).node.toString(0) + " <-- " + k);
 	}
 
 }
@@ -145,22 +146,42 @@ abstract Formula(Term) from Term to Term
 	public inline function set(a:Formula):Formula return this.set(a);
 
 	public inline function bind(params:Dynamic):Formula {
-		var ret:Map<String, Formula> = new Map();
+		var map:Map<String, Formula> = new Map();
 		var arr:Array<Formula> = new Array();
-		if( Std.is(params, Type.getClass(ret)) ) {
-			ret = cast params;// cast(params, Map<String, Formula>);
+		
+		if( Std.is(params, Type.getClass(map)) ) {
+			map = cast params;
 		}
 		else if ( Std.is(params, Type.getClass(arr)) ) {
-			//ar arr:Array<Formula> = cast params;
 			arr = cast params;
 			for (p in arr) if (p.name == null) throw "Can't bind to unnamed parameters";
-			ret = [ for (p in arr) p.name => p ];
-		} else {
-			throw "The value isn't an Array or Map";
+			map = [ for (p in arr) p.name => p ];
+		} 
+		else if ( Std.is(params, Term) || Std.is(params, Formula) ) {
+			var val:Formula = cast params;
+			if (val.name == null) throw "Can't bind to unnamed parameter";
+			map = [ val.name => val ];
+		} 
+		else {
+			throw "The value isn't an Formula, Array or Map";
 		}
-		return this.bind(ret);
+		return this.bind(map);
 	}
-	public inline function unbind(_):Formula return this.unbind(_);
+	public inline function unbind(params:Dynamic):Formula {
+		var arr:Array<String> = new Array();
+		
+		if( Std.is(params, Type.getClass(arr)) ) {
+			arr = cast params;
+		}
+		else if ( Std.is(params, String)) {
+			var val:String = cast params;
+			arr = [ val ];
+		} 
+		else {
+			throw "The value isn't an String or Array<String>";
+		}
+		return this.unbind(arr);
+	}
 	public inline function unbindAll():Formula return this.unbindAll();
 	
 	public inline function copy():Formula return this.copy();
