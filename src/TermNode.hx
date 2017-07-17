@@ -99,6 +99,20 @@ class TermNode {
 	
 	
 	/*
+	 * unbind terms from parameters
+	 * 
+	 */	
+	public inline function unbind(params:Array<String>) {
+		if (isParam && params.indexOf(symbol)>=0) left = null;
+		else {
+			if (left != null) left.unbind(params);
+			if (right != null) right.unbind(params);
+		}
+		
+	}
+	
+	
+	/*
 	 * clones the Term Tree
 	 * 
 	 */	

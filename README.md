@@ -42,7 +42,6 @@ in haxe language.
 ### Todo
 
 - more useful unit tests
-- more easy typing/constructing with Formula
 - handle recursive parameter bindings (something like x(n+1) = x(n) ...)
 - more ways to simplify and transform terms
 - comparing terms for equality

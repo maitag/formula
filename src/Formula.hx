@@ -7,11 +7,13 @@ import TermNode;
  * by Sylvio Sell, Rostock 2017
  */
 
-class Term
+private class Term
 {
 	public var name:String;
+	
 	public var node:TermNode;
-	public var bindings:Map<String, Term>;
+	var bindings:Map<String, Term>;
+	public var bindTo:Map<Term, String>;
 	
 	static var nameReg:EReg = ~/^([a-z]+):/i;
 
@@ -22,7 +24,22 @@ class Term
 	{
 		this.node = node;
 		this.name = name;
+		this.bindings = new Map<String, Term>();
+		this.bindTo = new Map<Term, String>();
 		if (bindings != null) bind(bindings);
+	}
+
+	public function set(t:Term):Term
+	{
+		//if (t.name != null) name = t.name;
+		node = t.node.copy();
+		//if (t.bindings != null) bindings = [for (k in t.bindings.keys()) k => t.bindings.get(k)];
+		for (t in bindTo.keys()) {
+			t.bindings.set( bindTo.get(t), this);
+			t.node.bind([for (k in t.bindings.keys()) k => t.bindings.get(k).node]);
+		}
+		t.unbindAll();
+		return this;
 	}
 
 	public static inline function newValue(f:Float):Term {
@@ -33,7 +50,7 @@ class Term
 		return new Term(TermNode.newParam(id, term.node));
 	}
 	
-	public static inline function newOperation(s:String, ?left:Term, ?right:Term):Term {
+	public static inline function newOperation(s:String, ?left:Term, ?right:Term, ?params:Array<Term>):Term {
 		return new Term(TermNode.newOperation(s, left.node, (right != null) ? right.node : null));
 	}
 	
@@ -47,31 +64,106 @@ class Term
 		return new Term(TermNode.fromString(s), name);
 	}
 	
-	public inline function bind(bindings:Map<String, Term>):Void // <-- TODO: more easy api to use here
-	{
-		this.bindings = bindings;
-		node.bind([for (k in bindings.keys()) k => bindings.get(k).node]);
+	public inline function bindToTerm(a:Term, ?b:Term):Term {
+		if (a.name != null) bindParam(a.name, a) else bind(a.bindings);
+		a.unbindAll();
+		
+		if (b != null) {
+			if (b.name != null) bindParam(b.name, b)
+			else bind(b.bindings);
+			b.unbindAll();
+		}
+		return this;
 	}
 	
+	public inline function bind(bindings:Map<String, Term>):Term // <-- TODO: more easy api to use here
+	{
+		for (name in bindings.keys()) bindParam( name, bindings.get(name) );
+		return this;
+	}
+
+	inline function bindParam(name:String, param:Term):Void
+	{
+		param.bindTo.set(this, name);
+		bindings.set(name, param);
+		node.bind([name => param.node]);
+	}
+	
+	public inline function unbind(params:Array<String>):Term // <-- TODO: more easy api to use here
+	{	
+		for (name in params) unbindParam(name);
+		return this;
+	}
+	
+	public inline function unbindAll():Term
+	{	
+		if (bindings != null) for (name in bindings.keys()) unbindParam(name);
+		return this;
+	}
+	
+	inline function unbindParam(name:String):Void
+	{	
+		bindings.get(name).bindTo.remove(this);
+		bindings.remove(name);
+		node.unbind([name]);
+	}
+
 	public inline function simplify():Term
 	{	
 		node.simplify();
 		return this;
 	}
 	
+	public inline function copy(?name:String):Term
+	{	
+		return new Term(node.copy(), (name != null) ? name : this.name,
+			(name != null) ? [for (k in bindings.keys()) k => bindings.get(k)] : null
+		);
+	}
+	
 	public inline function derivate(p:String):Term
 	{	
 		return new Term(node.derivate(p), bindings);
 	}
+	
+	public function debugBindings() {
+		trace(name + ": " + node.toString(0));// + " -> " + node.toString());
+		for (k in bindTo.keys()) trace("   " + bindTo.get(k) + " --> " + k.node.toString(0));
+	}
+
 }
 
-@:forward(name, result, bind)
+@:forward( name, result )
 abstract Formula(Term) from Term to Term
 {	
 	inline public function new(s:String) {
 		this = Term.fromString(s);
 	}
 	
+	public function debugBindings() this.debugBindings();
+	
+	public inline function set(a:Formula):Formula return this.set(a);
+
+	public inline function bind(params:Dynamic):Formula {
+		var ret:Map<String, Formula> = new Map();
+		var arr:Array<Formula> = new Array();
+		if( Std.is(params, Type.getClass(ret)) ) {
+			ret = cast params;// cast(params, Map<String, Formula>);
+		}
+		else if ( Std.is(params, Type.getClass(arr)) ) {
+			//ar arr:Array<Formula> = cast params;
+			arr = cast params;
+			for (p in arr) if (p.name == null) throw "Can't bind to unnamed parameters";
+			ret = [ for (p in arr) p.name => p ];
+		} else {
+			throw "The value isn't an Array or Map";
+		}
+		return this.bind(ret);
+	}
+	public inline function unbind(_):Formula return this.unbind(_);
+	public inline function unbindAll():Formula return this.unbindAll();
+	
+	public inline function copy():Formula return this.copy();
 	public inline function simplify():Formula return this.simplify();
 	public inline function derivate(p:String):Formula return this.derivate(p);
 	
@@ -89,8 +181,8 @@ abstract Formula(Term) from Term to Term
 	static inline function twoSideOp(op:String, a:Formula, b:Formula ):Formula {
 		return Term.newOperation(op,
 			(a.name != null ) ? Term.newParam(a.name, a) : a ,
-			(b.name != null ) ? Term.newParam(b.name, b) : b
-		);
+			(b.name != null ) ? Term.newParam(b.name, b) : b 
+		).bindToTerm(a,b);
 	}
 	@:op(A + B) static public function add     (a:Formula, b:Formula):Formula return twoSideOp('+', a, b);
 	@:op(A - B) static public function subtract(a:Formula, b:Formula):Formula return twoSideOp('-', a, b);
@@ -105,7 +197,7 @@ abstract Formula(Term) from Term to Term
 	public static inline function min  (a:Formula, b:Formula):Formula return twoSideOp('min',   a, b);
 
 	static inline function oneParamOp(op:String, a:Formula):Formula {
-		return Term.newOperation(op, (a.name != null ) ? Term.newParam(a.name, a) : a );
+		return Term.newOperation(op, (a.name != null ) ? Term.newParam(a.name, a) : a ).bindToTerm(a);
 	}
 	public static inline function abs (a:Formula):Formula return oneParamOp('abs', a);
 	public static inline function ln  (a:Formula):Formula return oneParamOp('ln', a);

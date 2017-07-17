@@ -97,8 +97,8 @@ class Main
 		
 		f = TermNode.fromString("atan2(x,y)");
 		f=f.derivate("x");
-		trace("d/dx atan2(x,y)= " + f.simplify().toString(0));	
-		
+		trace("d/dx: atan2(x,y)= " + f.simplify().toString(0));	
+				
 		
 		
 		
@@ -119,25 +119,75 @@ class Main
 		trace( f.toString(0) );	// 2.5*(sin(x-a)^2)
 		trace( f.result );      // 0
 		
-		a = "a: 1-2";
-		x = "x: 3*4";
-		c = "c: 5";
+		x.set(8); trace("change value: x.set(8)");
+		trace( "f="+f.toString(0) + " -> "+f.toString() );
+		trace( "f'(x)="+f.derivate("x").copy().simplify().toString(0) );
 		
+		
+		a = "a: 1-2"; trace("a="+a.toString() );
+		x = "x: 3*4"; trace("x="+x.toString() );
+		c = "c: 5"; trace("c="+c.toString() );
+				
+
 		// operations with Formulas
 		f = a + x / c;
 		
-		trace( f.toString(0) ); // a+(x/c)
-		trace( f );             // (1-2)+((3*4)/5)
-		trace( f.result );      // 1.4
+		a.debugBindings();
+		x.debugBindings();
+		c.debugBindings();
 		
+		trace( "f = a + x / c -> f="+f.toString(0) + " -> "+f.toString() );
+		
+		a.set("7+1"); x.set(c); c.set(2);
+		trace('a.set(7+1); x.set(c); c.set("2");');
+		a.debugBindings();
+		x.debugBindings();
+		c.debugBindings();
+		
+		trace( "f = a + x / c -> f="+f.toString(0) + " -> "+f.toString() );
 		a.simplify();
-		trace( f );             // -1+((3*4)/5)
-		trace( f.result );      // 1.4
+		trace("a.simplify(); f="+f.toString(0) + " -> "+f.toString() );
+		a.debugBindings();
+		x.debugBindings();
+		c.debugBindings();
 		
-		f = Formula.sin(c * a) + Formula.max(f, 3);
+		//f.set( Formula.sin(c * a) + Formula.max(x, 3) );
+		f.unbindAll(); f = Formula.sin(c * a) + Formula.max(x, 3);
+		trace( "Formula.sin(c*a)+Formula.max(x,3) f="+f.toString(0) + " -> "+f.toString() );
+		a.debugBindings();
+		x.debugBindings();
+		c.debugBindings();
 		
-		trace( f.toString(0) ); // sin(c*a)+max(a+(x/c),3)
-		trace( f );             // sin(5*-1)+max(-1+((3*4)/5),3)
+		x.set(c); trace("change value: x.set(c) -> x="+x.toString() );
+		trace( "f="+f.toString(0) + " -> "+f.toString() );
+		a.debugBindings();
+		x.debugBindings();
+		c.debugBindings();
+		
+		f.unbind(["c"]);
+		trace( "unbind c - f="+f.toString(0) + " -> "+f.toString() );
+		a.debugBindings();
+		x.debugBindings();
+		c.debugBindings();
+		
+		f.unbindAll();
+		trace( "unbindAll() - f="+f.toString(0) + " -> "+f.toString() );
+		a.debugBindings();
+		x.debugBindings();
+		c.debugBindings();
+		
+		x.set("x: sin(delta)"); trace("change value: x.set(c) -> x=" + x.toString() + " f="+f.toString(0) + " -> "+f.toString() );
+		a.debugBindings();
+		x.debugBindings();
+		c.debugBindings();
+		
+		
+		f.bind([x, c]);
+		trace( "f.bind([x, c]) - f="+f.toString(0) + " -> "+f.toString() );
+		a.debugBindings();
+		x.debugBindings();
+		c.debugBindings();
+		
 	}
 
 }
