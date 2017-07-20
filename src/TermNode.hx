@@ -516,21 +516,21 @@ class TermNode {
 		else if (t.isParam) setParam(t.symbol, t.left);
 		else return setOperation(t.symbol, t.left, t.right);
 	}
-	function traversemultiplication(t:TermNode, p:Array<TermNode>)
+	function traverseMultiplication(t:TermNode, p:Array<TermNode>)
 	{
 		if(t.symbol!="*"){
 			p.push(t);
 		}
 		else{
-			traversemultiplication(t.left,p);
-			traversemultiplication(t.right,p);
+			traverseMultiplication(t.left,p);
+			traverseMultiplication(t.right,p);
 		}
 	}
-	function traversemultiplicationback(p:Array<TermNode>)
+	function traverseMultiplicationBack(p:Array<TermNode>)
 	{
 		if(p.length>2){
 			setOperation('*', newValue(0), p.pop());
-			left.traversemultiplicationback(p);
+			left.traverseMultiplicationBack(p);
 		}
 		else if(p.length==2){
 			setOperation('*', p[0].copy(), p[1].copy());
@@ -541,9 +541,9 @@ class TermNode {
 	public function simplifyfraction()
 	{
 		var numerator:Array<TermNode>=new Array();
-		traversemultiplication(left, numerator);
+		traverseMultiplication(left, numerator);
 		var denominator:Array<TermNode>=new Array();
-		traversemultiplication(right, denominator);
+		traverseMultiplication(right, denominator);
 		for(n in numerator){
 			for(d in denominator){
 				if(n.isEqual(d)){
@@ -553,7 +553,7 @@ class TermNode {
 			}
 		}
 		if(numerator.length>1){
-			left.traversemultiplicationback(numerator);
+			left.traverseMultiplicationBack(numerator);
 		}
 		else if(numerator.length==1){
 			setOperation('/', numerator.pop(), newValue(0));
@@ -562,7 +562,7 @@ class TermNode {
 			left.setValue(1);
 		}
 		if(denominator.length>1){
-			right.traversemultiplicationback(denominator);
+			right.traverseMultiplicationBack(denominator);
 		}
 		else if(denominator.length==1){
 			setOperation('/', left.copy(), denominator.pop());

@@ -30,7 +30,22 @@ class TestTermNode extends haxe.unit.TestCase
 		assertEquals(simplify("1^x"), "1");
 		assertEquals(simplify("x^0"), "1");
 		assertEquals(simplify("x^1"), "x");
-		// TODO: assertEquals(simplify("1/1/x", "x"));
+
+		//assertEquals(simplify("1/(1/x)"), "x");
+		assertEquals(simplify("a/b+c/d"), "((a*d)+(c*b))/(b*d)");
+		assertEquals(simplify("(a*b)/b"), "a");
+		assertEquals(simplify("(a*ln(b))/ln(b)"), "a");
+		assertEquals(simplify("x/x"), "1");
+		assertEquals(simplify("b/(a*b)"), "1/a");
+		assertEquals(simplify("x+x^2+2+4+x^5+x^ln(2)"), "((4+(2+(x+(x^2))))+(x^5))+(x^ln(2))");
+		//really bad bracket nesting 
+
+		assertEquals(simplify("log(a,b)"), "ln(b)/ln(a)");
+		assertEquals(simplify("log(a,a)"), "1");
+		assertEquals(simplify("ln(a)+ln(b)"), "ln(a*b)");
+		assertEquals(simplify("log(a,b)+log(c,d)"), "((ln(b)*ln(c))+(ln(d)*ln(a)))/(ln(a)*ln(c))");
+		assertEquals(simplify("(x^a)^b"), "x^(a*b)");
+
 	}
 	
 	inline function derivate(s:String):String {
