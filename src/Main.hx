@@ -216,7 +216,7 @@ class Main
 
 		f="log(2,3)-log(2,4)";
 		trace( "f=" + f.simplify().toString() + "=" + f.result);
-		f="x^(2+3)+x";
+		f="(a*b*c*d*e)/(c*a*f)";
 		trace( "f=" + f.simplify().toString());
 	}
 

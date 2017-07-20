@@ -393,7 +393,7 @@ class TermNode {
 						newOperation('*', left.left.copy(), right.left.copy())
 					);
 				}
-				else if (left.symbol == '/' && right.symbol == '/' && left.isEqual(right)){
+				else if (left.symbol == '/' && right.symbol == '/' && left.right.isEqual(right.right)){
 					setOperation('/',
 						newOperation('+', left.left.copy(), right.left.copy()),
 						left.right.copy()
@@ -475,6 +475,9 @@ class TermNode {
 					} else if (right.isValue) {
 						if (right.value == 1) cutNode(left);
 					}
+					else{
+						simplifyfraction();
+					}
 				}
 			case '^':
 				if (left.isValue) {
@@ -512,6 +515,61 @@ class TermNode {
 		if (t.isValue) setValue(value);
 		else if (t.isParam) setParam(t.symbol, t.left);
 		else return setOperation(t.symbol, t.left, t.right);
+	}
+	function traversemultiplication(t:TermNode, p:Array<TermNode>)
+	{
+		if(t.symbol!="*"){
+			p.push(t);
+		}
+		else{
+			traversemultiplication(t.left,p);
+			traversemultiplication(t.right,p);
+		}
+	}
+	function traversemultiplicationback(p:Array<TermNode>)
+	{
+		if(p.length>2){
+			setOperation('*', newValue(0), p.pop());
+			left.traversemultiplicationback(p);
+		}
+		else if(p.length==2){
+			setOperation('*', p[0].copy(), p[1].copy());
+			p.pop();
+			p.pop();
+		}
+	}
+	public function simplifyfraction()
+	{
+		var numerator:Array<TermNode>=new Array();
+		traversemultiplication(left, numerator);
+		var denominator:Array<TermNode>=new Array();
+		traversemultiplication(right, denominator);
+		for(n in numerator){
+			for(d in denominator){
+				if(n.isEqual(d)){
+					numerator.remove(n);
+					denominator.remove(d);
+				}
+			}
+		}
+		if(numerator.length>1){
+			left.traversemultiplicationback(numerator);
+		}
+		else if(numerator.length==1){
+			setOperation('/', numerator.pop(), newValue(0));
+		}
+		else if(numerator.length==0){
+			left.setValue(1);
+		}
+		if(denominator.length>1){
+			right.traversemultiplicationback(denominator);
+		}
+		else if(denominator.length==1){
+			setOperation('/', left.copy(), denominator.pop());
+		}
+		else if(denominator.length==0){
+			right.setValue(1);
+		}
 	}
 	public function isEqual(t:TermNode):Bool
 	{

@@ -51,16 +51,16 @@ class TestTermNode extends haxe.unit.TestCase
 		assertEquals(derivate("atan2(x,y)"), "y/((x*x)+(y*y))");
 
 		assertEquals(derivate("ln(x)"), "1/x");
-		assertEquals(derivate("log(a,x)"), "((1/x)*ln(a))/(ln(a)^2)");
-		assertEquals(derivate("log(x,a)"), "-(ln(a)*(1/x))/(ln(x)^2)");
+		assertEquals(derivate("log(a,x)"), "(ln(a)/x)/(ln(a)^2)");
+		assertEquals(derivate("log(x,a)"), "-(ln(a)/x)/(ln(x)^2)");
 
-		assertEquals(derivate("x^a")         , "(x^a)*(a*(1/x))");
+		assertEquals(derivate("x^a")         , "((x^a)*a)/x");
 		assertEquals(derivate("a^x")         , "(a^x)*ln(a)");
 		assertEquals(derivate("a^(x+b)")     , "(a^(x+b))*ln(a)");
 		assertEquals(derivate("a^(x-b)")     , "(a^(x-b))*ln(a)");
 		assertEquals(derivate("a^(x*b)")     , "(a^(x*b))*(b*ln(a))");
-		assertEquals(derivate("a^(x/b)")     , "(a^(x/b))*((b/(b^2))*ln(a))");
-		assertEquals(derivate("a^(x^b)")     , "(a^(x^b))*(((x^b)*(b*(1/x)))*ln(a))");
+		assertEquals(derivate("a^(x/b)")     , "(((a^(x/b))*ln(a))*b)/(b^2)");
+		assertEquals(derivate("a^(x^b)")     , "(a^(x^b))*((((x^b)*b)/x)*ln(a))");
 		assertEquals(derivate("a^(b^x)")     , "(a^(b^x))*(((b^x)*ln(b))*ln(a))");
 		assertEquals(derivate("a^(b^(x+c))") , "(a^(b^(x+c)))*(((b^(x+c))*ln(b))*ln(a))");
 		
