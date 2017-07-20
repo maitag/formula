@@ -381,13 +381,67 @@ class TermNode {
 				if (left.isValue) {
 					if (right.isValue) setValue(result);
 					else if (left.value == 0) cutNode(right);
-				} else if (right.isValue) {
+				} 
+				else if (right.isValue) {
 					if (right.value == 0) cutNode(left);
+					else{
+						setOperation('+', right.copy(), left.copy());
+					}
+				}
+				else if (left.symbol == 'ln' && right.symbol == 'ln'){
+					setOperation('ln',
+						newOperation('*', left.left.copy(), right.left.copy())
+					);
+				}
+				else if (left.symbol == '/' && right.symbol == '/' && left.isEqual(right)){
+					setOperation('/',
+						newOperation('+', left.left.copy(), right.left.copy()),
+						left.right.copy()
+					);
+				}
+				else if (left.symbol == '/' && right.symbol == '/'){
+					setOperation('/',
+						newOperation('+',
+							newOperation('*', left.left.copy(), right.right.copy()),
+							newOperation('*', right.left.copy(), left.right.copy())
+						),
+						newOperation('*', left.right.copy(), right.right.copy())
+					);
+				}
+				else if (left.symbol == '^' && right.symbol !='^'){
+					setOperation('+', right.copy(), left.copy());
+				}
+				else if (left.symbol == '^' && right.symbol =='^'){
+					if(left.right.isValue && right.right.isValue){
+						if(left.right.value>right.right.value){
+							setOperation('+', right.copy(), left.copy());
+						}
+					}
 				}
 			case '-':
 				if (right.isValue) {
 					if (left.isValue) setValue(result);
 					else if (right.value == 0) cutNode(left);
+				}
+				else if (left.symbol == 'ln' && right.symbol == 'ln'){
+					setOperation('ln',
+						newOperation('/', left.left.copy(), right.left.copy())
+					);
+				}
+				else if (left.symbol == '/' && right.symbol == '/' && left.right.isEqual(right.right)){
+					setOperation('/',
+						newOperation('-', left.left.copy(), right.left.copy()),
+						left.right.copy()
+					);
+				}
+				else if (left.symbol == '/' && right.symbol == '/'){
+					setOperation('/',
+						newOperation('-',
+							newOperation('*', left.left.copy(), right.right.copy()),
+							newOperation('*', right.left.copy(), left.right.copy())
+						),
+						newOperation('*', left.right.copy(), right.right.copy())
+					);
 				}
 			case '*':
 				if (left.isValue) {
@@ -398,12 +452,29 @@ class TermNode {
 					if (right.value == 1) cutNode(left);
 					else if (right.value == 0) setValue(0);
 				}
+				else if(left.symbol == '/'){
+					setOperation('/',
+						newOperation('*', right.copy(), left.left.copy()),
+						left.right.copy()
+					);
+				}
+				else if(right.symbol == '/'){
+					setOperation('/',
+						newOperation('*', left.copy(), right.left.copy()),
+						right.right.copy()
+					);
+				}
 			case '/':
-				if (left.isValue) {
-					if (right.isValue) setValue(result);
-					else if (left.value == 0) setValue(0);
-				} else if (right.isValue) {
-					if (right.value == 1) cutNode(left);
+				if(left.isEqual(right)){
+					setValue(1);
+				}
+				else{
+					if (left.isValue) {
+						if (right.isValue) setValue(result);
+						else if (left.value == 0) setValue(0);
+					} else if (right.isValue) {
+						if (right.value == 1) cutNode(left);
+					}
 				}
 			case '^':
 				if (left.isValue) {
@@ -413,6 +484,23 @@ class TermNode {
 				} else if (right.isValue) {
 					if (right.value == 1) cutNode(left);
 					else if (right.value == 0) setValue(1);
+				}
+				else if (left.symbol == '^'){
+					setOperation('^', left.left.copy(),
+						newOperation('*', left.right.copy(), right.copy())
+					);
+				}
+			case 'ln':
+				if (left.symbol == 'e')	setValue(1);
+			case 'log':
+				if (left.isEqual(right)){
+					setValue(1);
+				}
+				else{
+					setOperation('/',
+						newOperation('ln', right.copy()),
+						newOperation('ln', left.copy())
+					);
 				}
 		}
 		if (left != null) left.simplifyStep();
@@ -425,7 +513,11 @@ class TermNode {
 		else if (t.isParam) setParam(t.symbol, t.left);
 		else return setOperation(t.symbol, t.left, t.right);
 	}
-	
+	public function isEqual(t:TermNode):Bool
+	{
+		if(this.simplify().toString()==t.simplify().toString()) return true;
+		else return false;
+	}	
 	/*
 	 * creates a new term that is derivate of a given term 
 	 * 

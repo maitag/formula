@@ -213,6 +213,11 @@ class Main
 		x.debugBindings();
 		c.debugBindings();
 		
+
+		f="log(2,3)-log(2,4)";
+		trace( "f=" + f.simplify().toString() + "=" + f.result);
+		f="x^(2+3)+x";
+		trace( "f=" + f.simplify().toString());
 	}
 
 }
