@@ -143,8 +143,6 @@ class Main
 		f = Formula.sin("3"); f.debug();
 		//f = a + x / c + 3;	f.name = "f";
 		//f = "f: a + x / c"; f.bind(["x" => x, "a" => a, "c"=>c]);
-		
-
 	}
 
 }
