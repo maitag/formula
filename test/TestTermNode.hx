@@ -4,14 +4,33 @@ class TestTermNode extends haxe.unit.TestCase
 	{
 		var a:TermNode  = TermNode.newValue(2.0);
 		assertTrue(a.isValue);
+		assertEquals(a.result, 2.0);
 	}
-	/*
+	
+	inline function opResult(symbol:String, ?left:Float, ?right:Float):Float {
+		return TermNode.newOperation(symbol,
+			(left != null)  ? TermNode.newValue(left)  : null,
+			(right != null) ? TermNode.newValue(right) : null
+		).result;
+	}
 	public function testOperations()
 	{
-		var f:TermNode  = TermNode.newOperation('+', a, b);
+		assertEquals(opResult('+', 3, 2), 5);		
+		assertEquals(opResult('-', 3, 2), 1);		
+		assertEquals(opResult('*', 3, 2), 6);		
+		assertEquals(opResult('/', 3, 2), 1.5);		
+		assertEquals(opResult('^', 3, 2), 9);		
+		assertEquals(opResult('%', 3, 2), 1);		
 		
-		assertEquals("A", f.is);
-	}*/
+		assertEquals(opResult('sin', 0), 0);
+		assertEquals(opResult('sin', Math.PI), Math.sin(Math.PI));
+		assertEquals(opResult('cos', 0), 1);
+		assertEquals(opResult('cos', Math.PI), Math.cos(Math.PI));
+		
+		assertEquals(opResult('pi'), Math.PI);
+		assertEquals(opResult('e'), Math.exp(1));
+		
+	}
 	
 	inline function simplify(s:String):String {
 		return TermNode.fromString(s).simplify().toString();

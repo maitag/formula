@@ -23,6 +23,9 @@ class Main
 		 * 
 		 */	
 		
+		trace("\nTesting TermNode");
+		trace("-----------------");
+		 
 		var a:TermNode  = TermNode.newValue(2);
 		trace("a: " + a.result + ((a.isValue) ? ' isValue' : '')); // -> a: 2 isValue
 
@@ -33,7 +36,7 @@ class Main
 		trace("f: " + f.toString() + ((f.isValue) ? '' : ' isOperation') + " -> " + f.result); // f: 2+3 isOperation -> 5
 		
 		f.setOperation("*", TermNode.newParam("a", a) , b);
-		trace("f: " + f.toString(0) + " -> " + f.result); // f: a*3 -> 6
+		trace("f: " + f.toString(0) + " -> " + f.toString() + " -> " + f.result); // f: a*3 -> 6
 		
 		
 		var x:TermNode = TermNode.newValue(4);
@@ -53,7 +56,7 @@ class Main
 
 		// error handling
 		try var h:TermNode = TermNode.newOperation("§", a , b) catch (msg:String) trace('Error: $msg'); // Error: "§" is no valid operation
-	
+		
 		
 		
 		
@@ -61,7 +64,9 @@ class Main
 		 * construct Term Tree from String Input
 		 * 
 		 */	
-		
+		trace("\nTesting Formula");
+		trace("---------------");
+		 
 		var a,b,x,f,g:TermNode;
 		
 		// terms with other terms as parameters
@@ -98,121 +103,48 @@ class Main
 		f = TermNode.fromString("atan2(x,y)");
 		f=f.derivate("x");
 		trace("d/dx: atan2(x,y)= " + f.simplify().toString(0));	
-				
 		
+		/*
+
 		
 		
 		/*
 		 * Formula abstract wrapper around Term
 		 * 
 		 */
-		
-		// var x, a, f : Formula; <-- this did NOT work in haxe!
+		trace("\nTesting Formula");
+		trace("---------------");
+		 
 		var x:Formula, a:Formula, b:Formula, c:Formula, f:Formula;
+		/*
 
-		x = 7.0;
-		a = "a: 1+2*3";
+		x = 7.0;        trace('x = 7.0;');
+		a = "a: 1+2*3"; trace('a = "a: 1+2*3";');
 		
-		f = "f: 2.5 * sin(x-a)^2";
-		f.bind(["x" => x, "a" => a]);
-			
-		f.debugBindings();
-		a.debugBindings();
-		x.debugBindings();
+		f = "f: 2.5 * sin(x-a)^2"; trace('f = "f: 2.5 * sin(x-a)^2";');
 		
-		trace( f.toString(0) );	// 2.5*(sin(x-a)^2)
-		trace( f.result );      // 0
+		// bind Formulas as parameter to other Formula
+		f.bind(["x" => x, "a" => a]); trace('f.bind(["x" => x, "a" => a]);');
 		
-		x.set(8); trace("change value: x.set(8)");
-		trace( "f="+f.toString(0) + " -> "+f.toString() );
-		trace( "f'(x)="+f.derivate("x").copy().simplify().toString(0) );
-		f.debugBindings();
-		a.debugBindings();
-		x.debugBindings();
+		trace( "-> " + f.name + ":" + f.toString(0) + "-> " + f.toString(1) );	// f: 2.5*(sin(x-a)^2)
 		
-		a = "a: 1-2"; trace("a="+a.toString() );
-		x = "x: 3*4"; trace("x="+x.toString() );
-		c = "c: 5"; trace("c="+c.toString() );
-				
-		f.debugBindings();
-		a.debugBindings();
-		x.debugBindings();
-		c.debugBindings();		
+		// fast calculation at runtime
+		trace( "f.result = " + f.result );      // 0
+		
+		// derivation           // 2.5*((sin(x-a)^2)*(2*(cos(x-a)*(1/sin(x-a)))))
+		trace( 'f.derivate("x").simplify() = ' + f.derivate("x").simplify().toString(0) );
+		*/
+		
+		// TODO: unbind
+		a = "a:1-2"; a.debug();
+		x = "x:3*4"; x.debug();
+		c = "c:5+1"; c.debug();
 
-		// operations with Formulas
-		f = a + x / c;		
-		trace( "f = a + x / c -> f="+f.toString(0) + " -> "+f.toString() );
+		f = Formula.sin("3"); f.debug();
+		//f = a + x / c + 3;	f.name = "f";
+		//f = "f: a + x / c"; f.bind(["x" => x, "a" => a, "c"=>c]);
 		
-		// was bind automatic to name
-		f.debugBindings();
-		a.debugBindings();
-		x.debugBindings();
-		c.debugBindings();
-		
-		a.set("7+1"); x.set(c); c.set(2);
-		trace('a.set(7+1); x.set(c); c.set("2");');
-		f.debugBindings();
-		a.debugBindings();
-		x.debugBindings();
-		c.debugBindings();
-		
-		trace( "f = a + x / c -> f="+f.toString(0) + " -> "+f.toString() );
-		a.simplify();
-		trace("a.simplify(); f="+f.toString(0) + " -> "+f.toString() );
-		f.debugBindings();
-		a.debugBindings();
-		x.debugBindings();
-		c.debugBindings();
-		
-		//f.set( Formula.sin(c * a) + Formula.max(x, 3) );
-		f.unbindAll(); f = Formula.sin(c * a) + Formula.max(x, 3);
-		trace( "Formula.sin(c*a)+Formula.max(x,3) f="+f.toString(0) + " -> "+f.toString() );
-		f.debugBindings();
-		a.debugBindings();
-		x.debugBindings();
-		c.debugBindings();
-		
-		x.set(c); trace("change value: x.set(c) -> x="+x.toString() );
-		trace( "f="+f.toString(0) + " -> "+f.toString() );
-		f.debugBindings();
-		a.debugBindings();
-		x.debugBindings();
-		c.debugBindings();
-		
-		f.unbind(["c"]);
-		trace( "unbind c - f="+f.toString(0) + " -> "+f.toString() );
-		f.debugBindings();
-		a.debugBindings();
-		x.debugBindings();
-		c.debugBindings();
-		
-		f.unbindAll();
-		trace( "unbindAll() - f="+f.toString(0) + " -> "+f.toString() );
-		f.debugBindings();
-		a.debugBindings();
-		x.debugBindings();
-		c.debugBindings();
-		
-		x.set("x: sin(delta)"); trace("change value: x.set(c) -> x=" + x.toString() + " f="+f.toString(0) + " -> "+f.toString() );
-		f.debugBindings();
-		a.debugBindings();
-		x.debugBindings();
-		c.debugBindings();
-		
-		f.bind([x, c]);
-		trace( "f.bind([x, c]) - f="+f.toString(0) + " -> "+f.toString() );
-		f.debugBindings();
-		a.debugBindings();
-		x.debugBindings();
-		c.debugBindings();
-		
-		f.bind(a);
-		trace( "f.bind(a) - f=" + f.toString(0) + " -> " + f.toString() );
-		f.debugBindings();
-		a.debugBindings();
-		x.debugBindings();
-		c.debugBindings();
-		
+
 	}
 
 }
