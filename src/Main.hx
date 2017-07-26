@@ -8,7 +8,7 @@ package;
 
 
 /*
- * manual testings and playing to climb the tree UP;)
+ * some manual testing
  * 
  */	
 
@@ -64,8 +64,6 @@ class Main
 		 * construct Term Tree from String Input
 		 * 
 		 */	
-		trace("\nTesting Formula");
-		trace("---------------");
 		 
 		var a,b,x,f,g:TermNode;
 		
@@ -116,7 +114,7 @@ class Main
 		trace("---------------");
 		 
 		var x:Formula, a:Formula, b:Formula, c:Formula, f:Formula;
-		/*
+		
 
 		x = 7.0;        trace('x = 7.0;');
 		a = "a: 1+2*3"; trace('a = "a: 1+2*3";');
@@ -133,16 +131,30 @@ class Main
 		
 		// derivation           // 2.5*((sin(x-a)^2)*(2*(cos(x-a)*(1/sin(x-a)))))
 		trace( 'f.derivate("x").simplify() = ' + f.derivate("x").simplify().toString(0) );
-		*/
+		
 		
 		// TODO: unbind
-		a = "a:1-2"; a.debug();
+		f = Formula.sin("3"); f.debug();
+		
+		a = "1-2"; a.debug();
 		x = "x:3*4"; x.debug();
 		c = "c:5+1"; c.debug();
-
-		f = Formula.sin("3"); f.debug();
-		//f = a + x / c + 3;	f.name = "f";
-		//f = "f: a + x / c"; f.bind(["x" => x, "a" => a, "c"=>c]);
+		
+		//b = new Formula("x",x); b.debug();
+		b = a ^ x; b.name = "b"; b.debug();
+		
+		f = Formula.sin(a) + b + 3 * c; f.name = "f"; f.debug();
+		a.set(33); a.debug(); f.debug();
+		x = 77; x.debug();
+		b.bind(["x" => x]); b.debug(); f.debug();
+		
+		b.unbind("x"); b.debug(); f.debug();
+		
+		f = "F = a + x / c"; f.bind(["x" => x, "a" => a, "c" => c]); f.debug();
+		
+		f = a + c; f.debug();
+		f.unbind(c); f.debug();
+		
 	}
 
 }

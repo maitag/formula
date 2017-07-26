@@ -29,8 +29,8 @@ class TermNode {
 			copyNodeFrom(left);
 		}
 		else {
-			if (!nameReg.match(name)) throw('Not allowed characters for name $name".');
-			if (isName) symbol = name else setName(name, (left != null) ? left.copyNode() : null);
+			if (!nameRegFull.match(name)) throw('Not allowed characters for name $name".');
+			if (isName) symbol = name else setName(name, (left != null) ? copyNode() : null);
 		}
 		return name;
 	}
@@ -40,11 +40,23 @@ class TermNode {
 	 * 
 	 */	
 	public inline function depth():Int {
+		if (isName && left != null) return left._depth();
+		else return _depth();
+	}
+	public inline function _depth():Int {
 		var l:Int = 0;
 		var r:Int = 0;
-		if (left != null) l = left.depth();
-		if (right != null) r = right.depth();
-		return( (l>r) ? l : r);
+		var d:Int = 0;
+		if (isParam) {
+			if (left == null) d = 0;
+			else if (!left.isName) d = 1;
+		}
+		else if (isName) d = 1; 
+		
+		if (left != null) l = left._depth();
+		if (right != null) r = right._depth();
+		
+		return( d + ((l>r) ? l : r));
 	}
 	
 	
@@ -107,6 +119,20 @@ class TermNode {
 	 * atomic methods
 	 * 
 	 */
+	public inline function set(term:TermNode):TermNode {
+		if (isName) {
+			if (!term.isName) left = term.copy();
+			else if (term.left != null) left = term.left.copy();
+			else left = null;
+		}
+		else {
+			if (!term.isName) copyNodeFrom(term.copy());
+			else if (term.left != null) copyNodeFrom(term.left.copy());
+			//else return null;
+		}
+		return this;
+	}
+	
 	public inline function setName(name:String, ?term:TermNode) {
 		operation = opName;
 		symbol = name;
@@ -121,6 +147,7 @@ class TermNode {
 	
 	public inline function setValue(f:Float) {
 		operation = opValue;
+		symbol = null;
 		value = f;
 		left = null; right = null;
 	}
@@ -141,7 +168,9 @@ class TermNode {
 	 * 
 	 */	
 	public inline function bind(params:Map<String, TermNode>):TermNode {
-		if (isParam && params.exists(symbol)) left = params.get(symbol);
+		if (isParam) {
+			if (params.exists(symbol)) left = params.get(symbol);
+		}
 		else {
 			if (left != null) left.bind(params);
 			if (right != null) right.bind(params);
@@ -155,7 +184,9 @@ class TermNode {
 	 * 
 	 */	
 	public inline function unbind(params:Array<String>):TermNode {
-		if (isParam && params.indexOf(symbol)>=0) left = null;
+		if (isParam) {
+			if (params.indexOf(symbol)>=0) left = null;
+		}
 		else {
 			if (left != null) left.unbind(params);
 			if (right != null) right.unbind(params);
@@ -163,32 +194,25 @@ class TermNode {
 		return this;
 	}
 	
+	
 	/*
 	 * unbind terms
 	 * 
 	 */	
-	public inline function unbindTerm(params:Array<TermNode>) {
-		/*
-		if ( params.indexOf(left) >= 0 )
-		{
-			copyNodeFrom(right);
+	public inline function unbindTerm(params:Map<Formula, String>):TermNode {
+		if (left != null) {
+			if (params.get(left) != null)
+				left = newParam(params.get(left));
+			else left.unbindTerm(params);
 		}
-		
-		if (isParam && params.indexOf(symbol)>=0) left = null;
-		else {
-			if (left != null) left.unbind(params);
-			if (right != null) right.unbind(params);
+		if (right != null) {
+			if (params.get(right) != null)
+				right = newParam(params.get(right));
+			else right.unbindTerm(params);
 		}
-		*/
+		return this;
 	}
 	
-	/*	
-	public function debugBindings() {
-		trace(name + ": " + node.toString(0));// + " -> " + node.toString());
-		for (k in bindTo.keys()) trace("   " + bindTo.get(k) + " --> "+k.name + ":" + k.node.toString(0));
-		for (k in bindings.keys()) trace("   " + bindings.get(k).node.toString(0) + " <-- " + k);
-	}
-	*/
 	
 	/*
 	 * returns a clone of full Tree, starting with this TermNode
@@ -218,11 +242,11 @@ class TermNode {
 	 * copy all from other TermNode to this
 	 * 
 	 */	
-	inline function copyNodeFrom(t:TermNode) {
-		if (t.isValue) setValue(value);
+	public inline function copyNodeFrom(t:TermNode) {
+		if (t.isValue) setValue(t.value);
 		else if (t.isName) setName(t.symbol, t.left);
 		else if (t.isParam) setParam(t.symbol, t.left);
-		else return setOperation(t.symbol, t.left, t.right);
+		else setOperation(t.symbol, t.left, t.right);
 	}
 	
 	
@@ -307,28 +331,30 @@ class TermNode {
 	static var twoParamOpRegFull:EReg = new EReg("^(" + twoParamOp.split(',').join("|")  + ")$" , "i");
 	static var twoSideOpRegFull: EReg = new EReg("^(" + "\\"+ twoSideOpArray.join("|\\") + ")$" , "");
 
-	static var nameReg:EReg = ~/^([a-z]+):/i;
+	static var nameReg:EReg = ~/^([a-z]+)[:=]/i;
+	static var nameRegFull:EReg = ~/^([a-z]+)$/i;
 
 	/*
 	 * Build Tree up from String Math Expression
 	 * 
 	 */	
 	public static inline function fromString(s:String, ?bindings:Map<String, TermNode>):TermNode {
+		s = clearSpacesReg.replace(s, ''); // clear whitespaces
 		if (nameReg.match(s)) {
 			var name:String = nameReg.matched(1);
 			s = s.substr(name.length + 1);
+			if (s == "") throw("Can't parse Term from empty string.");
 			return newName(name, parseString(s, bindings));
 		}
+		if (s == "") throw("Can't parse Term from empty string.");
 		return parseString(s, bindings);
 	}
 	
-	public static function parseString(s:String, ?params:Map<String, TermNode>):TermNode {
+	static function parseString(s:String, ?params:Map<String, TermNode>):TermNode {
 		var t:TermNode = null;
 		var operations:Array<OperationNode> = new Array();
 		var e, f:String;
 		var negate:Bool;
-		
-		s = clearSpacesReg.replace(s, ''); // clear whitespaces
 		
 		while (s.length != 0) // read in terms from left
 		{
@@ -453,18 +479,24 @@ class TermNode {
 	 * Puts out Math Expression as a String
 	 * 
 	 */
-	public function toString(?depth:Null<Int>=null, ?isFirst:Bool=true):String {	
+	public function toString(?depth:Null<Int> = null):String {
+		if (isName) return (left == null) ? symbol : left._toString(depth);
+		else return _toString(depth);
+	}
+	
+	function _toString(?depth:Null<Int>=null, ?isFirst:Bool=true):String {	
 		if (depth == null) depth = -1;
 		return switch(symbol) {
 			case s if (isValue): Std.string(value);
-			case s if (isName):  (left == null) ? symbol : left.toString(depth, false); // recursive
-			case s if (isParam): (depth == 0 || left == null) ? symbol : left.toString(depth-1, false); // recursive
+			//case s if (isName && isFirst):  (left == null) ? symbol : left.toString(depth, false);
+			case s if (isName):  (depth == 0 || left == null) ? symbol : left._toString(depth-1, false);
+			case s if (isParam): (depth == 0 || left == null) ? symbol : left._toString(depth-((left.isName)?0:1), false);
 			case s if (twoSideOpRegFull.match(s)) :
-				if (symbol == '-' && left.isValue && left.value == 0) symbol + right.toString(depth, false);
-				else ((isFirst)?'':"(") + left.toString(depth, false) + symbol + right.toString(depth, false) + ((isFirst)?'':")");
-			case s if (twoParamOpRegFull.match(s)): symbol + "(" + left.toString(depth) + "," + right.toString(depth) + ")";
+				if (symbol == '-' && left.isValue && left.value == 0) symbol + right._toString(depth, false);
+				else ((isFirst)?'':"(") + left._toString(depth, false) + symbol + right._toString(depth, false) + ((isFirst)?'':")");
+			case s if (twoParamOpRegFull.match(s)): symbol + "(" + left._toString(depth) + "," + right._toString(depth) + ")";
 			case s if (constantOpRegFull.match(s)): symbol + "()";
-			default: symbol + "(" + left.toString(depth) +  ")";
+			default: symbol + "(" + left._toString(depth) +  ")";
 		}
 	}
 	
@@ -473,11 +505,12 @@ class TermNode {
 	 * enrolls all toString
 	 * 
 	 */
-	public function debug(maxDepth:Null<Int> = null) {
+	public function debug() {
 		//TODO
-		var out:String = "";
-		for (i in 0 ... depth()) {
-			out += " -> " + name + "=" + toString(i);
+		var out:String = "";// "(" + depth() + ")";
+		for (i in 0 ... depth()+1) {
+			if (i == 0) out += ((name != null) ? name : "?") + " = "; else out += " -> ";
+			out += toString(i);
 		}
 		trace(out);
 	}

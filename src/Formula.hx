@@ -7,18 +7,17 @@ package;
  */
 
 
-@:forward( name, result, bind, debug )
+@:forward( name, result, depth, debug )
 abstract Formula(TermNode) from TermNode to TermNode
 {	
-	inline public function new(s:String, ?bindings:Map<String, TermNode>) {
-		this = TermNode.fromString(s, bindings);
+	inline public function new(s:String, ?params:Dynamic) {
+		this = TermNode.fromString(s);
+		if (params!=null) bind(params);
 	}
 	
-	//public function debugBindings() this.debugBindings();
-	
-	public inline function set(a:Formula):Formula return this = a.copy(); // TODO: do not destroy the node-Reference!
+	public inline function set(a:Formula):Formula return this.set(a);
 
-	public inline function bind(params:Dynamic):Formula {
+	public function bind(params:Dynamic):Formula {
 		var map:Map<String, Formula> = new Map();
 		var arr:Array<Formula> = new Array();
 		
@@ -27,34 +26,53 @@ abstract Formula(TermNode) from TermNode to TermNode
 		}
 		else if ( Std.is(params, Type.getClass(arr)) ) {
 			arr = cast params;
-			for (p in arr) if (p.name == null) throw "Can't bind to unnamed parameters";
+			for (p in arr) if (p.name == null) throw "Can't bind to unnamed parameters.";
 			map = [ for (p in arr) p.name => p ];
 		} 
 		else if ( Std.is(params, TermNode) || Std.is(params, Formula) ) {
-			var val:Formula = cast params;
-			if (val.name == null) throw "Can't bind to unnamed parameter";
-			map = [ val.name => val ];
+			var p:Formula = cast params;
+			if (p.name == null) throw "Can't bind to unnamed parameter.";
+			map = [ p.name => p ];
 		} 
 		else {
-			throw "The value isn't an Formula, Array or Map";
+			throw "Unbind parameter isn't of type: Formula, Array<Formula> or Map<String, Formula>.";
 		}
 		return this.bind(map);
 	}
 	
-	public inline function unbind(params:Dynamic):Formula {
-		var arr:Array<String> = new Array();
+	public function unbind(params:Dynamic):Formula {
+		var map:Map<Formula, String> = new Map();
+		var arrString:Array<String> = new Array();
+		var arrFormula:Array<Formula> = new Array();
 		
-		if( Std.is(params, Type.getClass(arr)) ) {
-			arr = cast params;
+		if( Std.is(params, Type.getClass(map)) ) {
+			map = cast params;
+			return this.unbindTerm(map);
+		}
+		else if( Std.is(params, Type.getClass(arrFormula)) ) {
+			arrFormula = cast params;
+			for (p in arrFormula) if (p.name == null) throw "Can't unbind unnamed parameters.";
+			map = [ for (p in arrFormula) p => p.name ];
+			return this.unbindTerm(map);
+		}
+		else if ( Std.is(params, TermNode) || Std.is(params, Formula) ) {
+			var p:Formula = cast params;
+			if (p.name == null) throw "Can't unbind unnamed parameter.";
+			map = [p => p.name];
+			return this.unbindTerm(map);
+		} 
+		else if( Std.is(params, Type.getClass(arrString)) ) {
+			arrString = cast params;
+			return this.unbind(arrString);
 		}
 		else if ( Std.is(params, String)) {
-			var val:String = cast params;
-			arr = [ val ];
+			var p:String = cast params;
+			arrString = [ p ];
+			return this.unbind(arrString);
 		} 
 		else {
-			throw "The value isn't an String or Array<String>";
+			throw "Unbind parameter isn't of type: Formula, String, Array<String>, Array<Formula> or Map<Formula, String>.";
 		}
-		return this.unbind(arr);
 	}
 	//public inline function unbindAll():Formula return this.unbindAll();
 	
