@@ -77,6 +77,7 @@ handling parameters to connect formulas together.
 ### Todo
 
 - api documentation
+- position of error while thrown string-parsing-error
 - more useful unit tests
 - more ways to simplify and transform terms
 - comparing terms for equality
