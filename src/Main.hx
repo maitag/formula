@@ -114,46 +114,67 @@ class Main
 		trace("---------------");
 		 
 		var x:Formula, a:Formula, b:Formula, c:Formula, f:Formula;
-		
 
-		x = 7.0;        trace('x = 7.0;');
-		a = "a: 1+2*3"; trace('a = "a: 1+2*3";');
+		x = 7.0;
+		a = "a: 1+2*3";  // a has a defined name
 		
-		f = "f: 2.5 * sin(x-a)^2"; trace('f = "f: 2.5 * sin(x-a)^2";');
-		
+		f = "2.5 * sin(x-a)^2";
+
+		// change name of Formula
+		x.name = "x";
+
 		// bind Formulas as parameter to other Formula
-		f.bind(["x" => x, "a" => a]); trace('f.bind(["x" => x, "a" => a]);');
+		f.bind(["x" => x, "a" => a]);
 		
-		trace( "-> " + f.name + ":" + f.toString(0) + "-> " + f.toString(1) );	// f: 2.5*(sin(x-a)^2)
+		trace( f.toString(0) );	// 2.5*(sin(x-a)^2)
 		
 		// fast calculation at runtime
-		trace( "f.result = " + f.result );      // 0
+		trace( f.result );      // 0
 		
-		// derivation           // 2.5*((sin(x-a)^2)*(2*(cos(x-a)*(1/sin(x-a)))))
-		trace( 'f.derivate("x").simplify() = ' + f.derivate("x").simplify().toString(0) );
+		// derivation           // 2.5*((sin(x-a)^2)*(2*(cos(x-a)/sin(x-a))))
+		trace( f.derivate("x").simplify().toString(0) );
 		
+		// change value (keeps parameter bindings)
+		x.set("atan(a)");
+		x.bind(a);              // a has a defined name to bind to
+
+		trace( f.toString(0) ); // 2.5*(sin(x-a)^2)
+		trace( f.toString(1) ); // 2.5*(sin(atan(a)-(1+(2*3)))^2)
+		trace( f.toString(2) ); // 2.5*(sin(atan((1+(2*3)))-(1+(2*3)))^2)
 		
-		// TODO: unbind
-		f = Formula.sin("3"); f.debug();
+		// unbind parameter
+		x.unbind("a");
+		f.unbind(["a", "x"]); // unbind accepts array of param-names
+		f.unbind(a);          // unbind accepts Formula
+		f.unbind([x => "x", a => "x"]);  // unbind accepts Map<Formula,String>
+		f.unbind([a , x]);    // unbind accepts array of Formulas
+		f.unbindAll();        // or unbind all params
 		
-		a = "1-2"; a.debug();
-		x = "x:3*4"; x.debug();
-		c = "c:5+1"; c.debug();
+		trace( f );  // 2.5*(sin(x-a)^2)
 		
-		//b = new Formula("x",x); b.debug();
-		b = a ^ x; b.name = "b"; b.debug();
+		// operations with Formulas
+		a = "a: 1-2"; 
+		x = "x = 3*4";
+		c = 5;
 		
-		f = Formula.sin(a) + b + 3 * c; f.name = "f"; f.debug();
-		a.set(33); a.debug(); f.debug();
-		x = 77; x.debug();
-		b.bind(["x" => x]); b.debug(); f.debug();
+		f = a + x / c;
+		f.name = "f";
 		
-		b.unbind("x"); b.debug(); f.debug();
+		// show parameters
+		// c has no name, so operation will not generate param for f
+		trace( f.params() ); // [ "a", "x" ]
+			
+		// debugging Formulas
+		f.debug(); // f = a+(x/5) -> (1-2)+((3*4)/5)
 		
-		f = "F = a + x / c"; f.bind(["x" => x, "a" => a, "c" => c]); f.debug();
+		// simplify reduce operations with values
+		a.simplify();
+		trace( f );             // -1+((3*4)/5)
 		
-		f = a + c; f.debug();
-		f.unbind(c); f.debug();
+		// using math functions
+		f = Formula.sin(c * a) + Formula.max(f, 3);
+		f.name = "F";
+		f.debug(); // F = sin(5*a)+max(f,3) -> sin(5*-1)+max((a+(x/5)),3) -> sin(5*-1)+max((-1+((3*4)/5)),3)
 		
 	}
 

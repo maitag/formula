@@ -7,7 +7,7 @@ package;
  */
 
 
-@:forward( name, result, depth, debug )
+@:forward( name, result, depth, params, unbindAll, debug )
 abstract Formula(TermNode) from TermNode to TermNode
 {	
 	inline public function new(s:String, ?params:Dynamic) {
@@ -49,6 +49,15 @@ abstract Formula(TermNode) from TermNode to TermNode
 			map = cast params;
 			return this.unbindTerm(map);
 		}
+		else if( Std.is(params, Type.getClass(arrString)) ) {
+			arrString = cast params;
+			return this.unbind(arrString);
+		}
+		else if ( Std.is(params, String)) {
+			var p:String = cast params;
+			arrString = [ p ];
+			return this.unbind(arrString);
+		} 
 		else if( Std.is(params, Type.getClass(arrFormula)) ) {
 			arrFormula = cast params;
 			for (p in arrFormula) if (p.name == null) throw "Can't unbind unnamed parameters.";
@@ -60,15 +69,6 @@ abstract Formula(TermNode) from TermNode to TermNode
 			if (p.name == null) throw "Can't unbind unnamed parameter.";
 			map = [p => p.name];
 			return this.unbindTerm(map);
-		} 
-		else if( Std.is(params, Type.getClass(arrString)) ) {
-			arrString = cast params;
-			return this.unbind(arrString);
-		}
-		else if ( Std.is(params, String)) {
-			var p:String = cast params;
-			arrString = [ p ];
-			return this.unbind(arrString);
 		} 
 		else {
 			throw "Unbind parameter isn't of type: Formula, String, Array<String>, Array<Formula> or Map<Formula, String>.";

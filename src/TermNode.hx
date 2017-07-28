@@ -30,7 +30,7 @@ class TermNode {
 		}
 		else {
 			if (!nameRegFull.match(name)) throw('Not allowed characters for name $name".');
-			if (isName) symbol = name else setName(name, (left != null) ? copyNode() : null);
+			if (isName) symbol = name else setName(name, copyNode());
 		}
 		return name;
 	}
@@ -164,6 +164,27 @@ class TermNode {
 	}
 
 	/*
+	 * put out array of parameter-names
+	 * 
+	 */	
+	public inline function params():Array<String> {
+		var ret:Array<String> = new Array();
+		if (isParam) {
+			ret.push(symbol);
+		}
+		else {
+			if (left != null ) {
+				for (i in left.params()) if (ret.indexOf(i) < 0) ret.push(i);
+			}
+			if (right != null) {
+				for (i in right.params()) if (ret.indexOf(i) < 0) ret.push(i);
+			}
+		}
+		return ret;
+	}
+	
+	
+	/*
 	 * bind terms to parameters
 	 * 
 	 */	
@@ -211,6 +232,15 @@ class TermNode {
 			else right.unbindTerm(params);
 		}
 		return this;
+	}
+	
+	
+	/*
+	 * unbind all terms that is bind to parameter-names
+	 * 
+	 */	
+	public inline function unbindAll():TermNode {
+		return unbind(params());
 	}
 	
 	
