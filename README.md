@@ -88,5 +88,5 @@ handling parameters to connect formulas together.
 - handling complex numbers
 - other datatypes for values (integer, fixed-point numbers, vectors, matrices)
 - handle recursive parameter bindings (something like x(n+1) = x(n) ...)
-- integrally math
+- definite integrals (or even indefinite later on)
 - gpu-optimization for parallel calculations

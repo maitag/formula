@@ -611,6 +611,7 @@ class TermNode {
 					if (left.isValue) setValue(result);
 					else if (right.value == 0) copyNodeFrom(left);
 				}
+				else if(left.isValue && left.value==0){} // 0-(a/b) should stay like this to simplify fractions
 				else if (left.symbol == 'ln' && right.symbol == 'ln'){ //ln(a)-ln(b) -> ln(a/b)
 					setOperation('ln',
 						newOperation('/', left.left.copy(), right.left.copy())
@@ -684,6 +685,12 @@ class TermNode {
 						setOperation('/',
 							newOperation('*', right.right.copy(), left.copy()),
 							right.left.copy()
+						);
+					}
+					else if (left.symbol == '-' && left.left.isValue && left.left.value==0)
+					{
+						setOperation('-', newValue(0),
+							newOperation('/', left.right.copy(), right.copy())
 						);
 					}
 					else{ // a*b/b -> a
