@@ -76,17 +76,17 @@ class TestTermNode extends haxe.unit.TestCase
 		assertEquals(derivate("sin(x)"), "cos(x)");
 		assertEquals(derivate("cos(x)"), "-sin(x)");
 		assertEquals(derivate("tan(x)"), "1+(tan(x)^2)");
-		assertEquals(derivate("cot(x)"), "-(1+(tan(x)^2))/(tan(x)^2)");
+		assertEquals(derivate("cot(x)"), "-((1+(tan(x)^2))/(tan(x)^2))");
 
 		assertEquals(derivate("asin(x)"), "1/((1-(x^2))^0.5)");
 		assertEquals(derivate("acos(x)"), "-(1/((1-(x^2))^0.5))");
 		assertEquals(derivate("atan(x)"), "1/(1+(x^2))");
-		assertEquals(derivate("atan2(y,x)"), "-y/((y*y)+(x*x))");
+		assertEquals(derivate("atan2(y,x)"), "-(y/((y*y)+(x*x)))");
 		assertEquals(derivate("atan2(x,y)"), "y/((x*x)+(y*y))");
 
 		assertEquals(derivate("ln(x)"), "1/x");
 		assertEquals(derivate("log(a,x)"), "ln(a)/(x*(ln(a)^2))");
-		assertEquals(derivate("log(x,a)"), "-(ln(a)/x)/(ln(x)^2)");
+		assertEquals(derivate("log(x,a)"), "-(ln(a)/(x*(ln(x)^2)))");
 
 		assertEquals(derivate("x^a")         , "((x^a)*a)/x");
 		assertEquals(derivate("a^x")         , "(a^x)*ln(a)");

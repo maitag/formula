@@ -175,7 +175,18 @@ class Main
 		f = Formula.sin(c * a) + Formula.max(f, 3);
 		f.name = "F";
 		f.debug(); // F = sin(5*a)+max(f,3) -> sin(5*-1)+max((a+(x/5)),3) -> sin(5*-1)+max((-1+((3*4)/5)),3)
-		
+
+		var t:Formula;
+		var g:Formula;
+		t="x";
+		t.name="t";
+		g="t";
+		g.bind(["t"=>t]);
+		trace("g=" + g.toString() +"=" +  g.simplify().toString());
+		trace("dg/dx="+g.derivate("x").simplify().toString());
+		trace("dg/dt="+g.derivate("t").simplify().toString());
+		//dg/dx=0 => should be dg/dx=1 (derivate is not searching in bindings)
+		//dg/dt=1 => but that is nice
 	}
 
 }
