@@ -81,6 +81,7 @@ handling parameters to connect formulas together.
 - more useful unit tests
 - more ways to simplify and transform terms
 - comparing terms for equality
+- remove unnecessary parentheses
 
 
 ### Possible tasks in future
