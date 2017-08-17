@@ -64,7 +64,19 @@ class TestTermNode extends haxe.unit.TestCase
 		assertEquals(simplify("ln(a)+ln(b)"), "ln(a*b)");
 		assertEquals(simplify("log(a,b)+log(c,d)"), "((ln(b)*ln(c))+(ln(d)*ln(a)))/(ln(a)*ln(c))");
 		assertEquals(simplify("(x^a)^b"), "x^(a*b)");
+		
 
+		assertEquals(simplify("(a+b)*(c+d)"), "((a*c)+(a*d))+((b*c)+(b*d))");
+		assertEquals(simplify("(a+b)*(c-d)"), "((a*c)-(a*d))+((b*c)-(b*d))");
+		assertEquals(simplify("(a-b)*(c+d)"), "((a*c)+(a*d))-((b*c)+(b*d))");
+		assertEquals(simplify("(a-b)*(c-d)"), "((a*c)-(a*d))-((b*c)-(b*d))");
+
+		assertEquals(simplify("(a+b)*c"), "(a*c)+(b*c)");
+		assertEquals(simplify("(a-b)*c"), "(a*c)-(b*c)");
+		assertEquals(simplify("a*(b-c)"), "(a*b)-(a*c)");
+		assertEquals(simplify("a*(b+c)"), "(a*b)+(a*c)");
+		
+		assertEquals(simplify("(a+b+c+d)*(e+f+g)"), "(((((a*e)+(b*e))+((a*f)+(b*f)))+((c*e)+(c*f)))+(((a*g)+(b*g))+(c*g)))+(((d*e)+(d*f))+(d*g))");
 	}
 	
 	inline function derivate(s:String):String {

@@ -598,7 +598,7 @@ class TermNode {
 				}
 				else if (left.symbol == '^' && right.symbol !='^'){ //x^2+a -> a+x^2
 					setOperation('+', right.copy(), left.copy());
-				}
+			}
 				else if (left.symbol == '^' && right.symbol =='^'){ //x^3+x^2 -> x^2+x^3
 					if(left.right.isValue && right.right.isValue){
 						if(left.right.value>right.right.value){
@@ -653,7 +653,10 @@ class TermNode {
 						right.right.copy()
 					);
 				}
-			case '/':
+				else{
+					expand(); //(sum)*(sum)
+				}
+		case '/':
 				if(left.isEqual(right)){ // x/x -> 1
 					setValue(1);
 				}
@@ -781,6 +784,90 @@ class TermNode {
 		}
 		else if(denominator.length==0){
 			right.setValue(1);
+		}
+	}
+	public function expand()
+	{
+		if(left.symbol == "+" || left.symbol == "-"){
+			if(right.symbol == "+" || right.symbol == "-"){
+				if(left.symbol == "+" && right.symbol == "+"){ //(a+b)*(c+d)
+					setOperation('+',
+						newOperation('+',
+							newOperation('*', left.left.copy(), right.left.copy()),
+							newOperation('*', left.left.copy(), right.right.copy())
+						),
+						newOperation('+',
+							newOperation('*', left.right.copy(), right.left.copy()),
+							newOperation('*', left.right.copy(), right.right.copy())
+						)
+					);
+				}	
+				else if(left.symbol == "+" && right.symbol == "-"){ //(a+b)*(c-d)
+					setOperation('+',
+						newOperation('-',
+							newOperation('*', left.left.copy(), right.left.copy()),
+							newOperation('*', left.left.copy(), right.right.copy())
+						),
+						newOperation('-',
+							newOperation('*', left.right.copy(), right.left.copy()),
+							newOperation('*', left.right.copy(), right.right.copy())
+						)
+					);
+				}
+				else if(left.symbol == "-" && right.symbol == "+"){ //(a-b)*(c+d)
+					setOperation('-',
+						newOperation('+',
+							newOperation('*', left.left.copy(), right.left.copy()),
+							newOperation('*', left.left.copy(), right.right.copy())
+						),
+						newOperation('+',
+							newOperation('*', left.right.copy(), right.left.copy()),
+							newOperation('*', left.right.copy(), right.right.copy())
+						)
+					);
+				}
+				else if(left.symbol == "-" && right.symbol == "-"){ //(a-b)*(c-d)
+					setOperation('-',
+						newOperation('-',
+							newOperation('*', left.left.copy(), right.left.copy()),
+							newOperation('*', left.left.copy(), right.right.copy())
+						),
+						newOperation('-',
+							newOperation('*', left.right.copy(), right.left.copy()),
+							newOperation('*', left.right.copy(), right.right.copy())
+						)
+					);	
+				}
+			}
+			else
+			{
+				if(left.symbol == "+"){ //(a+b)*c
+					setOperation('+',
+						newOperation('*', left.left.copy(), right.copy()),
+						newOperation('*', left.right.copy(), right.copy())
+					);
+				}
+				else if(left.symbol == "-"){ //(a-b)*c
+					setOperation('-',
+						newOperation('*', left.left.copy(), right.copy()),
+						newOperation('*', left.right.copy(), right.copy())
+					);
+				}
+			}
+		}
+		else if(right.symbol == "+" || right.symbol == "-"){
+			if(right.symbol == "+"){ //a*(b+c)
+				setOperation('+',
+					newOperation('*', left.copy(), right.left.copy()),
+					newOperation('*', left.copy(), right.right.copy())
+				);
+			}
+			else if(right.symbol == "-"){ //a*(b-c)
+				setOperation('-',
+					newOperation('*', left.copy(), right.left.copy()),
+					newOperation('*', left.copy(), right.right.copy())
+				);
+			}	
 		}
 	}
 	public function isEqual(t:TermNode):Bool
