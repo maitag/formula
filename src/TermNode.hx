@@ -241,8 +241,7 @@ class TermNode {
 	 */	
 	public inline function unbindAll():TermNode {
 		return unbind(params());
-	}
-	
+	}	
 	
 	/*
 	 * returns a clone of full Tree, starting with this TermNode
@@ -294,13 +293,13 @@ class TermNode {
 			default: 1 + left.length(depth) + right.length(depth);
 		}		
 	}
+	
 	/*
 	 * static Function Pointers (to stored in this.operation)
 	 * 
-	 */	
-	
-	static function opName(t:TermNode) :Float if(t.left!=null) return t.left.result else throw('Empty function "${t.symbol}".');
-	static function opParam(t:TermNode):Float if(t.left!=null) return t.left.result else throw('Missing parameter "${t.symbol}".');
+	 */		
+	static function opName(t:TermNode) :Float if (t.left!=null) return t.left.result else throw('Empty function "${t.symbol}".');
+	static function opParam(t:TermNode):Float if (t.left!=null) return t.left.result else throw('Missing parameter "${t.symbol}".');
 	static function opValue(t:TermNode):Float return t.value;
 	
 	static var MathOp:Map<String, TermNode->Float> = [
@@ -333,6 +332,7 @@ class TermNode {
 		"max"  => function(t) return Math.max(t.left.result, t.right.result),
 		"min"  => function(t) return Math.min(t.left.result, t.right.result),		
 	];
+	
 	static var twoSideOp  = "^,/,*,-,+,%";  // <- order here determines the operator precedence
 	static var twoSideOpArray:Array<String> = twoSideOp.split(',');
 	static var precedence:Map<String,Int> = [ for (i in 0...twoSideOpArray.length) twoSideOpArray[i] => i ];
@@ -532,7 +532,7 @@ class TermNode {
 	
 	
 	/*
-	 * enrolls all toString
+	 * enrolls terms and subterms for debugging
 	 * 
 	 */
 	public function debug() {
@@ -576,18 +576,18 @@ class TermNode {
 						setOperation('+', right.copy(), left.copy());
 					}
 				}
-				else if (left.symbol == 'ln' && right.symbol == 'ln'){ //ln(a)+ln(b)=ln(a*b)
+				else if (left.symbol == 'ln' && right.symbol == 'ln') { //ln(a)+ln(b)=ln(a*b)
 					setOperation('ln',
 						newOperation('*', left.left.copy(), right.left.copy())
 					);
 				}
-				else if (left.symbol == '/' && right.symbol == '/' && left.right.isEqual(right.right)){
+				else if (left.symbol == '/' && right.symbol == '/' && left.right.isEqual(right.right)) {
 					setOperation('/', //a/b+c/b -> (a+c)/b
 						newOperation('+', left.left.copy(), right.left.copy()),
 						left.right.copy()
 					);
 				}
-				else if (left.symbol == '/' && right.symbol == '/'){ //a/b+c/d -> (a*d+c*b)/(b*d)
+				else if (left.symbol == '/' && right.symbol == '/') { //a/b+c/d -> (a*d+c*b)/(b*d)
 					setOperation('/',
 						newOperation('+',
 							newOperation('*', left.left.copy(), right.right.copy()),
@@ -596,12 +596,12 @@ class TermNode {
 						newOperation('*', left.right.copy(), right.right.copy())
 					);
 				}
-				else if (left.symbol == '^' && right.symbol !='^'){ //x^2+a -> a+x^2
+				else if (left.symbol == '^' && right.symbol !='^') { //x^2+a -> a+x^2
 					setOperation('+', right.copy(), left.copy());
 			}
-				else if (left.symbol == '^' && right.symbol =='^'){ //x^3+x^2 -> x^2+x^3
-					if(left.right.isValue && right.right.isValue){
-						if(left.right.value>right.right.value){
+				else if (left.symbol == '^' && right.symbol =='^') { //x^3+x^2 -> x^2+x^3
+					if (left.right.isValue && right.right.isValue) {
+						if (left.right.value>right.right.value) {
 							setOperation('+', right.copy(), left.copy());
 						}
 					}
@@ -611,19 +611,19 @@ class TermNode {
 					if (left.isValue) setValue(result);
 					else if (right.value == 0) copyNodeFrom(left);
 				}
-				else if(left.isValue && left.value==0){} // 0-(a/b) should stay like this to simplify fractions
-				else if (left.symbol == 'ln' && right.symbol == 'ln'){ //ln(a)-ln(b) -> ln(a/b)
+				else if (left.isValue && left.value==0) {} // 0-(a/b) should stay like this to simplify fractions
+				else if (left.symbol == 'ln' && right.symbol == 'ln') { //ln(a)-ln(b) -> ln(a/b)
 					setOperation('ln',
 						newOperation('/', left.left.copy(), right.left.copy())
 					);
 				}
-				else if (left.symbol == '/' && right.symbol == '/' && left.right.isEqual(right.right)){
+				else if (left.symbol == '/' && right.symbol == '/' && left.right.isEqual(right.right)) {
 					setOperation('/', //a/b-c/b -> (a-c)/b
 						newOperation('-', left.left.copy(), right.left.copy()),
 						left.right.copy()
 					);
 				}
-				else if (left.symbol == '/' && right.symbol == '/'){ //a/b-c/d -> (a*d-c*b)/(b*d)
+				else if (left.symbol == '/' && right.symbol == '/') { //a/b-c/d -> (a*d-c*b)/(b*d)
 					setOperation('/', 
 						newOperation('-',
 							newOperation('*', left.left.copy(), right.right.copy()),
@@ -641,13 +641,13 @@ class TermNode {
 					if (right.value == 1) copyNodeFrom(left);
 					else if (right.value == 0) setValue(0);
 				}
-				else if(left.symbol == '/'){ //(a/b)*c -> (a*c)/b
+				else if (left.symbol == '/') { //(a/b)*c -> (a*c)/b
 					setOperation('/',
 						newOperation('*', right.copy(), left.left.copy()),
 						left.right.copy()
 					);
 				}
-				else if(right.symbol == '/'){ //a*(b/c) -> (a*b)/c
+				else if (right.symbol == '/') { //a*(b/c) -> (a*b)/c
 					setOperation('/',
 						newOperation('*', left.copy(), right.left.copy()),
 						right.right.copy()
@@ -657,14 +657,14 @@ class TermNode {
 					expand(); //(sum)*(sum)
 				}
 		case '/':
-				if(left.isEqual(right)){ // x/x -> 1
+				if (left.isEqual(right)) { // x/x -> 1
 					setValue(1);
 				}
 				else{
 					if (left.isValue) {
 						if (right.isValue) setValue(result);
 						else if (left.value == 0) setValue(0);
-						else if (right.symbol == '/'){
+						else if (right.symbol == '/') {
 							setOperation('/',
 								newOperation('*', right.right.copy(), left.copy()),
 								right.left.copy()
@@ -673,18 +673,18 @@ class TermNode {
 					} 
 					else if (right.isValue) {
 						if (right.value == 1) copyNodeFrom(left);
-						else if (left.symbol == '/'){
+						else if (left.symbol == '/') {
 							setOperation('/', left.left.copy(),
 								newOperation('*', left.right.copy(), right.copy())
 							);
 						}
 					}
-					else if (left.symbol == '/'){ //(1/x)/b -> 1/(x*b)
+					else if (left.symbol == '/') { //(1/x)/b -> 1/(x*b)
 						setOperation('/', left.left.copy(),
 							newOperation('*', left.right.copy(), right.copy())
 						);
 					}
-					else if (right.symbol == '/'){ //b/(1/x) -> b*x
+					else if (right.symbol == '/') { //b/(1/x) -> b*x
 						setOperation('/',
 							newOperation('*', right.right.copy(), left.copy()),
 							right.left.copy()
@@ -709,7 +709,7 @@ class TermNode {
 					if (right.value == 1) copyNodeFrom(left);
 					else if (right.value == 0) setValue(1);
 				}
-				else if (left.symbol == '^'){ //(a^b)^c -> a^(b*c)
+				else if (left.symbol == '^') { //(a^b)^c -> a^(b*c)
 					setOperation('^', left.left.copy(),
 						newOperation('*', left.right.copy(), right.copy())
 					);
@@ -717,7 +717,7 @@ class TermNode {
 			case 'ln':
 				if (left.symbol == 'e')	setValue(1);
 			case 'log':
-				if (left.isEqual(right)){
+				if (left.isEqual(right)) {
 					setValue(1);
 				}
 				else{
@@ -731,9 +731,13 @@ class TermNode {
 		if (right != null) right.simplifyStep();
 	}
 	
+	/*
+	 * ???
+	 * 
+	 */
 	function traverseMultiplication(t:TermNode, p:Array<TermNode>)
 	{
-		if(t.symbol!="*"){
+		if (t.symbol!="*") {
 			p.push(t);
 		}
 		else{
@@ -741,56 +745,71 @@ class TermNode {
 			traverseMultiplication(t.right,p);
 		}
 	}
+	
+	/*
+	 * ???
+	 * 
+	 */
 	function traverseMultiplicationBack(p:Array<TermNode>)
 	{
-		if(p.length>2){
+		if (p.length>2) {
 			setOperation('*', newValue(0), p.pop());
 			left.traverseMultiplicationBack(p);
 		}
-		else if(p.length==2){
+		else if (p.length==2) {
 			setOperation('*', p[0].copy(), p[1].copy());
 			p.pop();
 			p.pop();
 		}
 	}
+	
+	/*
+	 * ???
+	 * 
+	 */
 	public function simplifyfraction()
 	{
 		var numerator:Array<TermNode>=new Array();
 		traverseMultiplication(left, numerator);
 		var denominator:Array<TermNode>=new Array();
 		traverseMultiplication(right, denominator);
-		for(n in numerator){
-			for(d in denominator){
-				if(n.isEqual(d)){
+		for (n in numerator) {
+			for (d in denominator) {
+				if (n.isEqual(d)) {
 					numerator.remove(n);
 					denominator.remove(d);
 				}
 			}
 		}
-		if(numerator.length>1){
+		if (numerator.length>1) {
 			left.traverseMultiplicationBack(numerator);
 		}
-		else if(numerator.length==1){
+		else if (numerator.length==1) {
 			setOperation('/', numerator.pop(), newValue(0));
 		}
-		else if(numerator.length==0){
+		else if (numerator.length==0) {
 			left.setValue(1);
 		}
-		if(denominator.length>1){
+		if (denominator.length>1) {
 			right.traverseMultiplicationBack(denominator);
 		}
-		else if(denominator.length==1){
+		else if (denominator.length==1) {
 			setOperation('/', left.copy(), denominator.pop());
 		}
-		else if(denominator.length==0){
+		else if (denominator.length==0) {
 			right.setValue(1);
 		}
 	}
+	
+	/*
+	 * ???
+	 * 
+	 */
 	public function expand()
 	{
-		if(left.symbol == "+" || left.symbol == "-"){
-			if(right.symbol == "+" || right.symbol == "-"){
-				if(left.symbol == "+" && right.symbol == "+"){ //(a+b)*(c+d)
+		if (left.symbol == "+" || left.symbol == "-") {
+			if (right.symbol == "+" || right.symbol == "-") {
+				if (left.symbol == "+" && right.symbol == "+") { //(a+b)*(c+d)
 					setOperation('+',
 						newOperation('+',
 							newOperation('*', left.left.copy(), right.left.copy()),
@@ -802,7 +821,7 @@ class TermNode {
 						)
 					);
 				}	
-				else if(left.symbol == "+" && right.symbol == "-"){ //(a+b)*(c-d)
+				else if (left.symbol == "+" && right.symbol == "-") { //(a+b)*(c-d)
 					setOperation('+',
 						newOperation('-',
 							newOperation('*', left.left.copy(), right.left.copy()),
@@ -814,7 +833,7 @@ class TermNode {
 						)
 					);
 				}
-				else if(left.symbol == "-" && right.symbol == "+"){ //(a-b)*(c+d)
+				else if (left.symbol == "-" && right.symbol == "+") { //(a-b)*(c+d)
 					setOperation('-',
 						newOperation('+',
 							newOperation('*', left.left.copy(), right.left.copy()),
@@ -826,7 +845,7 @@ class TermNode {
 						)
 					);
 				}
-				else if(left.symbol == "-" && right.symbol == "-"){ //(a-b)*(c-d)
+				else if (left.symbol == "-" && right.symbol == "-") { //(a-b)*(c-d)
 					setOperation('-',
 						newOperation('-',
 							newOperation('*', left.left.copy(), right.left.copy()),
@@ -841,13 +860,13 @@ class TermNode {
 			}
 			else
 			{
-				if(left.symbol == "+"){ //(a+b)*c
+				if (left.symbol == "+") { //(a+b)*c
 					setOperation('+',
 						newOperation('*', left.left.copy(), right.copy()),
 						newOperation('*', left.right.copy(), right.copy())
 					);
 				}
-				else if(left.symbol == "-"){ //(a-b)*c
+				else if (left.symbol == "-") { //(a-b)*c
 					setOperation('-',
 						newOperation('*', left.left.copy(), right.copy()),
 						newOperation('*', left.right.copy(), right.copy())
@@ -855,14 +874,14 @@ class TermNode {
 				}
 			}
 		}
-		else if(right.symbol == "+" || right.symbol == "-"){
-			if(right.symbol == "+"){ //a*(b+c)
+		else if (right.symbol == "+" || right.symbol == "-") {
+			if (right.symbol == "+") { //a*(b+c)
 				setOperation('+',
 					newOperation('*', left.copy(), right.left.copy()),
 					newOperation('*', left.copy(), right.right.copy())
 				);
 			}
-			else if(right.symbol == "-"){ //a*(b-c)
+			else if (right.symbol == "-") { //a*(b-c)
 				setOperation('-',
 					newOperation('*', left.copy(), right.left.copy()),
 					newOperation('*', left.copy(), right.right.copy())
@@ -870,11 +889,17 @@ class TermNode {
 			}	
 		}
 	}
+	
+	/*
+	 * TODO: check tree and not string-representation
+	 * 
+	 */	
 	public function isEqual(t:TermNode):Bool
 	{
-		if(this.simplify().toString()==t.simplify().toString()) return true;
+		if (this.simplify().toString()==t.simplify().toString()) return true;
 		else return false;
-	}	
+	}
+	
 	/*
 	 * creates a new term that is derivate of a given term 
 	 * 

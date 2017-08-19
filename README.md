@@ -7,6 +7,10 @@ to handle math expressions at runtime.
 It can do simplification, forming derivative and  
 handling parameters to connect formulas together.  
 
+### Installation
+```
+haxelib git formula https://github.com/maitag/formula.git
+```
 
 ### How to use
 ```
