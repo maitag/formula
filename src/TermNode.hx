@@ -562,32 +562,37 @@ class TermNode {
 	}
 	
 	function simplifyStep():Void {	
-		if (isName || isParam || isValue) return;
+		if (!isOperation) return;
 		
+		if (left != null) {
+			if (left.isValue) {
+				if (right == null) {
+					setValue(result); // calculate operation with one value
+					return;
+				}
+				else if (right.isValue) {
+					setValue(result); // calculate operation with values on both sides
+					return;
+				}
+			}
+		}
+
 		switch(symbol) {
 			case '+':
-				if (left.isValue) {
-					if (right.isValue) setValue(result);
-					else if (left.value == 0) copyNodeFrom(right);
-				} 
-				else if (right.isValue) {
-					if (right.value == 0) copyNodeFrom(left);
-					else{
-						setOperation('+', right.copy(), left.copy());
-					}
-				}
-				else if (left.symbol == 'ln' && right.symbol == 'ln') { //ln(a)+ln(b)=ln(a*b)
+				if (left.isValue && left.value == 0) copyNodeFrom(right);       // 0+a -> a
+				else if (right.isValue && right.value == 0) copyNodeFrom(left); // a+0 -> a
+				else if (left.symbol == 'ln' && right.symbol == 'ln') {         // ln(a)+ln(b) -> ln(a*b)
 					setOperation('ln',
 						newOperation('*', left.left.copy(), right.left.copy())
 					);
 				}
 				else if (left.symbol == '/' && right.symbol == '/' && left.right.isEqual(right.right)) {
-					setOperation('/', //a/b+c/b -> (a+c)/b
+					setOperation('/',                                           // a/b+c/b -> (a+c)/b
 						newOperation('+', left.left.copy(), right.left.copy()),
 						left.right.copy()
 					);
 				}
-				else if (left.symbol == '/' && right.symbol == '/') { //a/b+c/d -> (a*d+c*b)/(b*d)
+				else if (left.symbol == '/' && right.symbol == '/') {            // a/b+c/d -> (a*d+c*b)/(b*d)
 					setOperation('/',
 						newOperation('+',
 							newOperation('*', left.left.copy(), right.right.copy()),
@@ -596,10 +601,10 @@ class TermNode {
 						newOperation('*', left.right.copy(), right.right.copy())
 					);
 				}
-				else if (left.symbol == '^' && right.symbol !='^') { //x^2+a -> a+x^2
+				else if (left.symbol == '^' && right.symbol !='^') {   // x^2+a -> a+x^2
 					setOperation('+', right.copy(), left.copy());
-			}
-				else if (left.symbol == '^' && right.symbol =='^') { //x^3+x^2 -> x^2+x^3
+				}
+				else if (left.symbol == '^' && right.symbol =='^') {   // x^3+x^2 -> x^2+x^3
 					if (left.right.isValue && right.right.isValue) {
 						if (left.right.value>right.right.value) {
 							setOperation('+', right.copy(), left.copy());
@@ -607,23 +612,20 @@ class TermNode {
 					}
 				}
 			case '-':
-				if (right.isValue) {
-					if (left.isValue) setValue(result);
-					else if (right.value == 0) copyNodeFrom(left);
-				}
-				else if (left.isValue && left.value==0) {} // 0-(a/b) should stay like this to simplify fractions
-				else if (left.symbol == 'ln' && right.symbol == 'ln') { //ln(a)-ln(b) -> ln(a/b)
+				if (right.isValue && right.value == 0) copyNodeFrom(left);  // a-0 -> a
+				else if (left.isValue && left.value==0) {}                  // 0-(a/b) should stay to simplify fractions
+				else if (left.symbol == 'ln' && right.symbol == 'ln') {     // ln(a)-ln(b) -> ln(a/b)
 					setOperation('ln',
 						newOperation('/', left.left.copy(), right.left.copy())
 					);
 				}
 				else if (left.symbol == '/' && right.symbol == '/' && left.right.isEqual(right.right)) {
-					setOperation('/', //a/b-c/b -> (a-c)/b
+					setOperation('/',                                        // a/b-c/b -> (a-c)/b
 						newOperation('-', left.left.copy(), right.left.copy()),
 						left.right.copy()
 					);
 				}
-				else if (left.symbol == '/' && right.symbol == '/') { //a/b-c/d -> (a*d-c*b)/(b*d)
+				else if (left.symbol == '/' && right.symbol == '/') {        //a/b-c/d -> (a*d-c*b)/(b*d)
 					setOperation('/', 
 						newOperation('-',
 							newOperation('*', left.left.copy(), right.right.copy()),
@@ -634,57 +636,52 @@ class TermNode {
 				}
 			case '*':
 				if (left.isValue) {
-					if (right.isValue) setValue(result);
-					else if (left.value == 1) copyNodeFrom(right);
-					else if (left.value == 0) setValue(0);
-				} else if (right.isValue) {
-					if (right.value == 1) copyNodeFrom(left);
-					else if (right.value == 0) setValue(0);
+					if (left.value == 1) copyNodeFrom(right); // 1*a -> a
+					else if (left.value == 0) setValue(0);    // 0*a -> 0
 				}
-				else if (left.symbol == '/') { //(a/b)*c -> (a*c)/b
+				else if (right.isValue) {
+					if (right.value == 1) copyNodeFrom(left); // a*1 -> a
+					else if (right.value == 0) setValue(0);   // a*0 -> a
+				}
+				else if (left.symbol == '/') {                // (a/b)*c -> (a*c)/b
 					setOperation('/',
 						newOperation('*', right.copy(), left.left.copy()),
 						left.right.copy()
 					);
 				}
-				else if (right.symbol == '/') { //a*(b/c) -> (a*b)/c
+				else if (right.symbol == '/') {               // a*(b/c) -> (a*b)/c
 					setOperation('/',
 						newOperation('*', left.copy(), right.left.copy()),
 						right.right.copy()
 					);
 				}
 				else{
-					expand(); //(sum)*(sum)
+					expand(); // (sum)*(sum)
 				}
 		case '/':
 				if (left.isEqual(right)) { // x/x -> 1
 					setValue(1);
 				}
-				else{
-					if (left.isValue) {
-						if (right.isValue) setValue(result);
-						else if (left.value == 0) setValue(0);
-						else if (right.symbol == '/') {
-							setOperation('/',
-								newOperation('*', right.right.copy(), left.copy()),
-								right.left.copy()
-							);
-						}
+				else {
+					if (left.isValue && left.value == 0) setValue(0);  // 0/a -> 0
+					else if (right.symbol == '/') {
+						setOperation('/',
+							newOperation('*', right.right.copy(), left.copy()),
+							right.left.copy()
+						);
 					} 
-					else if (right.isValue) {
-						if (right.value == 1) copyNodeFrom(left);
-						else if (left.symbol == '/') {
-							setOperation('/', left.left.copy(),
-								newOperation('*', left.right.copy(), right.copy())
-							);
-						}
-					}
-					else if (left.symbol == '/') { //(1/x)/b -> 1/(x*b)
+					else if (right.isValue && right.value == 1) copyNodeFrom(left); // a/1 -> a
+					else if (left.symbol == '/') {
 						setOperation('/', left.left.copy(),
 							newOperation('*', left.right.copy(), right.copy())
 						);
 					}
-					else if (right.symbol == '/') { //b/(1/x) -> b*x
+					else if (left.symbol == '/') {                     // (1/x)/b -> 1/(x*b)
+						setOperation('/', left.left.copy(),
+							newOperation('*', left.right.copy(), right.copy())
+						);
+					}
+					else if (right.symbol == '/') {                    // b/(1/x) -> b*x
 						setOperation('/',
 							newOperation('*', right.right.copy(), left.copy()),
 							right.left.copy()
@@ -702,14 +699,13 @@ class TermNode {
 				}
 			case '^':
 				if (left.isValue) {
-					if (right.isValue) setValue(result);
-					else if (left.value == 1) setValue(1);
-					else if (left.value == 0) setValue(0);
+					if (left.value == 1) setValue(1);         // 1^a -> 1
+					else if (left.value == 0) setValue(0);    // 0^a -> 0
 				} else if (right.isValue) {
-					if (right.value == 1) copyNodeFrom(left);
-					else if (right.value == 0) setValue(1);
+					if (right.value == 1) copyNodeFrom(left); // a^1 -> a 
+					else if (right.value == 0) setValue(1);   // a^0 -> 1
 				}
-				else if (left.symbol == '^') { //(a^b)^c -> a^(b*c)
+				else if (left.symbol == '^') {                // (a^b)^c -> a^(b*c)
 					setOperation('^', left.left.copy(),
 						newOperation('*', left.right.copy(), right.copy())
 					);
@@ -720,8 +716,8 @@ class TermNode {
 				if (left.isEqual(right)) {
 					setValue(1);
 				}
-				else{
-					setOperation('/', //log(a,b) -> ln(b)/ln(a)
+				else {
+					setOperation('/',                         // log(a,b) -> ln(b)/ln(a)
 						newOperation('ln', right.copy()),
 						newOperation('ln', left.copy())
 					);
@@ -730,7 +726,7 @@ class TermNode {
 		if (left != null) left.simplifyStep();
 		if (right != null) right.simplifyStep();
 	}
-	
+		
 	/*
 	 * put all subterms separated by * into an array
 	 * 
