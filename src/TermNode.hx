@@ -732,7 +732,7 @@ class TermNode {
 	}
 	
 	/*
-	 * ???
+	 * put all subterms separated by * into an array
 	 * 
 	 */
 	function traverseMultiplication(t:TermNode, p:Array<TermNode>)
@@ -747,7 +747,7 @@ class TermNode {
 	}
 	
 	/*
-	 * ???
+	 * build tree consisting of multiple * from array
 	 * 
 	 */
 	function traverseMultiplicationBack(p:Array<TermNode>)
@@ -764,7 +764,7 @@ class TermNode {
 	}
 	
 	/*
-	 * ???
+	 * reduce a fraction 
 	 * 
 	 */
 	public function simplifyfraction()
@@ -802,7 +802,7 @@ class TermNode {
 	}
 	
 	/*
-	 * ???
+	 * expands a mathmatical expression into a polynomial
 	 * 
 	 */
 	public function expand()
