@@ -567,7 +567,7 @@ class TermNode {
 		if (left != null) {
 			if (left.isValue) {
 				if (right == null) {
-					setValue(result); // calculate operation with one value
+//					setValue(result); // calculate operation with one value
 					return;
 				}
 				else if (right.isValue) {

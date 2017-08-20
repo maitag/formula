@@ -56,7 +56,7 @@ class TestTermNode extends haxe.unit.TestCase
 		assertEquals(simplify("(a*ln(b))/ln(b)"), "a");
 		assertEquals(simplify("x/x"), "1");
 		assertEquals(simplify("b/(a*b)"), "1/a");
-		assertEquals(simplify("x+x^2+2+4+x^5+x^ln(2)"), "((4+(2+(x+(x^2))))+(x^5))+(x^ln(2))");
+		assertEquals(simplify("x+x^2+2+4+x^5+x^ln(2)"), "((((x+(x^2))+2)+4)+(x^5))+(x^ln(2))");
 		//really bad bracket nesting 
 
 		assertEquals(simplify("log(a,b)"), "ln(b)/ln(a)");
