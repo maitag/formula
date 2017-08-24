@@ -953,7 +953,6 @@ class TermNode {
 		}
 	}
 
-	
 	/*
 	 * sort a Tree consisting of products
 	 * 
