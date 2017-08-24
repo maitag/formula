@@ -51,7 +51,7 @@ class TestTermNode extends haxe.unit.TestCase
 		assertEquals(simplify("x^1"), "x");
 
 		assertEquals(simplify("1/(1/x)"), "x");
-		assertEquals(simplify("a/b+c/d"), "((a*d)+(c*b))/(b*d)");
+		assertEquals(simplify("a/b+c/d"), "((d*a)+(c*b))/(d*b)");
 		assertEquals(simplify("(a*b)/b"), "a");
 		assertEquals(simplify("(a*ln(b))/ln(b)"), "a");
 		assertEquals(simplify("x/x"), "1");
@@ -61,22 +61,25 @@ class TestTermNode extends haxe.unit.TestCase
 
 		assertEquals(simplify("log(a,b)"), "ln(b)/ln(a)");
 		assertEquals(simplify("log(a,a)"), "1");
-		assertEquals(simplify("ln(a)+ln(b)"), "ln(a*b)");
+		assertEquals(simplify("ln(a)+ln(b)"), "ln(b*a)");
 		assertEquals(simplify("log(a,b)+log(c,d)"), "((ln(b)*ln(c))+(ln(d)*ln(a)))/(ln(a)*ln(c))");
-		assertEquals(simplify("(x^a)^b"), "x^(a*b)");
+		assertEquals(simplify("(x^a)^b"), "x^(b*a)");
 		
 
-		assertEquals(simplify("(a+b)*(c+d)"), "((a*c)+(a*d))+((b*c)+(b*d))");
-		assertEquals(simplify("(a+b)*(c-d)"), "((a*c)-(a*d))+((b*c)-(b*d))");
-		assertEquals(simplify("(a-b)*(c+d)"), "((a*c)+(a*d))-((b*c)+(b*d))");
-		assertEquals(simplify("(a-b)*(c-d)"), "((a*c)-(a*d))-((b*c)-(b*d))");
+		assertEquals(simplify("(a+b)*(c+d)"), "((c*a)+(d*a))+((c*b)+(d*b))");
+		assertEquals(simplify("(a+b)*(c-d)"), "((c*a)-(d*a))+((c*b)-(d*b))");
+		assertEquals(simplify("(a-b)*(c+d)"), "((c*a)+(d*a))-((c*b)+(d*b))");
+		assertEquals(simplify("(a-b)*(c-d)"), "((c*a)-(d*a))-((c*b)-(d*b))");
 
-		assertEquals(simplify("(a+b)*c"), "(a*c)+(b*c)");
-		assertEquals(simplify("(a-b)*c"), "(a*c)-(b*c)");
-		assertEquals(simplify("a*(b-c)"), "(a*b)-(a*c)");
-		assertEquals(simplify("a*(b+c)"), "(a*b)+(a*c)");
+		assertEquals(simplify("(a+b)*c"), "(c*a)+(c*b)");
+		assertEquals(simplify("(a-b)*c"), "(c*a)-(c*b)");
+		assertEquals(simplify("a*(b-c)"), "(b*a)-(c*a)");
+		assertEquals(simplify("a*(b+c)"), "(b*a)+(c*a)");
 		
-		assertEquals(simplify("(a+b+c+d)*(e+f+g)"), "(((((a*e)+(b*e))+((a*f)+(b*f)))+((c*e)+(c*f)))+(((a*g)+(b*g))+(c*g)))+(((d*e)+(d*f))+(d*g))");
+		assertEquals(simplify("(a+b+c+d)*(e+f+g)"), "(((((e*a)+(e*b))+((f*a)+(f*b)))+((e*c)+(f*c)))+(((g*a)+(g*b))+(g*c)))+(((e*d)+(f*d))+(g*d))");
+		
+		assertEquals(simplify("a^3*b*2*B*a*b*cos(x)*a^2*3*a^b*1"),"((((((((b*b)*(a^b))*(a^3))*(a^2))*a)*B)*3)*2)*cos(x)");
+	
 	}
 	
 	inline function derivate(s:String):String {
@@ -109,8 +112,7 @@ class TestTermNode extends haxe.unit.TestCase
 		assertEquals(derivate("a^(x^b)")     , "(a^(x^b))*((((x^b)*((0*ln(x))+(b*(1*(1/x)))))*ln(a))+((x^b)*(0*(1/a))))");
 		assertEquals(derivate("a^(b^x)")     , "(a^(b^x))*((((b^x)*((1*ln(b))+(x*(0*(1/b)))))*ln(a))+((b^x)*(0*(1/a))))");
 		assertEquals(derivate("a^(b^(x+c))") , "(a^(b^(x+c)))*((((b^(x+c))*(((1+0)*ln(b))+((x+c)*(0*(1/b)))))*ln(a))+((b^(x+c))*(0*(1/a))))");
-		
-		
+			
 	}
 	
 	inline function fromString(s:String):String {
@@ -167,5 +169,4 @@ class TestTermNode extends haxe.unit.TestCase
 		assertEquals(errorFromString("^1"), 1);
 		assertEquals(errorFromString("%1"), 1);
 	}
-
 }

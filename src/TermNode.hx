@@ -657,6 +657,7 @@ class TermNode {
 				}
 				else{
 					expand(); // (sum)*(sum)
+					arrangeMultiplication();
 				}
 		case '/':
 				if (left.isEqual(right)) { // x/x -> 1
@@ -894,6 +895,78 @@ class TermNode {
 	{
 		if (this.simplify().toString()==t.simplify().toString()) return true;
 		else return false;
+	}
+	
+	//compare function for Array.sort()
+	function formsort_compare(t1:TermNode, t2:TermNode):Int
+	{
+		if(t1.formsort_priority()>t2.formsort_priority()){
+			return -1;
+		}
+		else if(t1.formsort_priority()<t2.formsort_priority()){
+			return 1;
+		}
+		else{
+			if(t1.isValue && t2.isValue){
+				if(t1.value >= t2.value){
+					return(-1);
+				}
+				else{
+					return(1);
+				}
+			}
+			else if(t1.isOperation && !t2.isOperation){
+				return(formsort_compare(t1.right, t2.right));
+			}
+			else return 0;
+		}
+	}
+
+	//priority function for formsort_compare()
+	function formsort_priority():Float
+	{
+		if(isParam){
+			return(symbol.charCodeAt(0));
+		}
+		else if(isOperation){ 
+			return switch(symbol)
+			{
+				case '+'|'-': left.formsort_priority()+right.formsort_priority()*0.001;
+				case '*'|'/': left.formsort_priority()+right.formsort_priority()*0.001;
+				case '^': left.formsort_priority()+right.formsort_priority()*0.001;
+				case 'sin': -5;
+				case 'cos': -6;
+				case 'tan': -7;
+				case 'cot': -8;
+				case 'asin': -9;
+				case 'acos': -10;
+				case 'atan': -11;
+				case 'atan2': -12;
+				case 'ln': -13;
+				case 'max': -14;
+				case 'min': -15;
+				default: -20;
+			}
+		}
+		else{//isValue)
+			return 1;
+		}
+	}
+
+	
+	/*
+	 * sort a Tree consisting of products
+	 * 
+	 */
+	public function arrangeMultiplication()
+	{
+		var mult:Array<TermNode>=new Array();
+		traverseMultiplication(this, mult);
+		mult.sort(formsort_compare);
+		for(i in mult){
+			trace(i.toString() +": " + i.formsort_priority());
+		}
+		traverseMultiplicationBack(mult);
 	}
 	
 	/*
