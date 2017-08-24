@@ -333,13 +333,18 @@ class TermNode {
 		"min"  => function(t) return Math.min(t.left.result, t.right.result),		
 	];
 	
-	static var twoSideOp  = "^,/,*,-,+,%";  // <- order here determines the operator precedence
-	static var twoSideOpArray:Array<String> = twoSideOp.split(',');
-	static var precedence:Map<String,Int> = [ for (i in 0...twoSideOpArray.length) twoSideOpArray[i] => i ];
+	static var twoSideOp_ = "^,/,*,-,+,%";  // <- order here determines the operator precedence
+	static var constantOp_ = "e,pi"; // functions without parameters like "e() or pi()"
+	static var oneParamOp_ = "abs,ln,sin,cos,tan,cot,asin,acos,atan"; // functions with one parameter like "sin(2)"
+	static var twoParamOp_ = "atan2,log,max,min";                 // functions with two parameters like "max(a,b)"
+
+	static var twoSideOp :Array<String> = twoSideOp_.split(',');
+	static var constantOp:Array<String> = constantOp_.split(',');
+	static var oneParamOp:Array<String> = oneParamOp_.split(',');
+	static var twoParamOp:Array<String> = twoParamOp_.split(',');
 	
-	static var constantOp = "e,pi"; // functions without parameters like "e() or pi()"
-	static var oneParamOp = "abs,ln,sin,cos,tan,cot,asin,acos,atan"; // functions with one parameter like "sin(2)"
-	static var twoParamOp = "atan2,log,max,min";                 // functions with two parameters like "max(a,b)"
+	static var precedence:Map<String,Int> = [ for (i in 0...twoSideOp.length) twoSideOp[i] => i ];
+	
 
 	
 	/*
@@ -351,15 +356,15 @@ class TermNode {
 	static var numberReg:EReg = ~/^([-+]?\d+\.?\d*)/;
 	static var paramReg:EReg = ~/^([a-z]+)/i;
 
-	static var constantOpReg:EReg = new EReg("^(" + constantOp.split(',').join("|")  + ")\\(" , "i");
-	static var oneParamOpReg:EReg = new EReg("^(" + oneParamOp.split(',').join("|")  + ")\\(" , "i");
-	static var twoParamOpReg:EReg = new EReg("^(" + twoParamOp.split(',').join("|")  + ")\\(" , "i");
-	static var twoSideOpReg: EReg = new EReg("^(" + "\\"+ twoSideOpArray.join("|\\") + ")" , "");
+	static var constantOpReg:EReg = new EReg("^(" + constantOp.join("|")  + ")\\(" , "i");
+	static var oneParamOpReg:EReg = new EReg("^(" + oneParamOp.join("|")  + ")\\(" , "i");
+	static var twoParamOpReg:EReg = new EReg("^(" + twoParamOp.join("|")  + ")\\(" , "i");
+	static var twoSideOpReg: EReg = new EReg("^(" + "\\"+ twoSideOp.join("|\\") + ")" , "");
 
-	static var constantOpRegFull:EReg = new EReg("^(" + constantOp.split(',').join("|")  + ")$" , "i");
-	static var oneParamOpRegFull:EReg = new EReg("^(" + oneParamOp.split(',').join("|")  + ")$" , "i");
-	static var twoParamOpRegFull:EReg = new EReg("^(" + twoParamOp.split(',').join("|")  + ")$" , "i");
-	static var twoSideOpRegFull: EReg = new EReg("^(" + "\\"+ twoSideOpArray.join("|\\") + ")$" , "");
+	static var constantOpRegFull:EReg = new EReg("^(" + constantOp.join("|")  + ")$" , "i");
+	static var oneParamOpRegFull:EReg = new EReg("^(" + oneParamOp.join("|")  + ")$" , "i");
+	static var twoParamOpRegFull:EReg = new EReg("^(" + twoParamOp.join("|")  + ")$" , "i");
+	static var twoSideOpRegFull: EReg = new EReg("^(" + "\\"+ twoSideOp.join("|\\") + ")$" , "");
 
 	static var nameReg:EReg = ~/^([a-z]+)[:=]/i;
 	static var nameRegFull:EReg = ~/^([a-z]+)$/i;
@@ -900,56 +905,42 @@ class TermNode {
 	//compare function for Array.sort()
 	function formsort_compare(t1:TermNode, t2:TermNode):Int
 	{
-		if(t1.formsort_priority()>t2.formsort_priority()){
+		if (t1.formsort_priority()>t2.formsort_priority()) {
 			return -1;
 		}
-		else if(t1.formsort_priority()<t2.formsort_priority()){
+		else if (t1.formsort_priority()<t2.formsort_priority()) {
 			return 1;
 		}
 		else{
-			if(t1.isValue && t2.isValue){
-				if(t1.value >= t2.value){
+			if (t1.isValue && t2.isValue) {
+				if (t1.value >= t2.value) {
 					return(-1);
 				}
 				else{
 					return(1);
 				}
 			}
-			else if(t1.isOperation && !t2.isOperation){
+			else if (t1.isOperation && !t2.isOperation) {
 				return(formsort_compare(t1.right, t2.right));
 			}
 			else return 0;
 		}
 	}
 
-	//priority function for formsort_compare()
+	// priority function for formsort_compare()
 	function formsort_priority():Float
 	{
-		if(isParam){
-			return(symbol.charCodeAt(0));
-		}
-		else if(isOperation){ 
-			return switch(symbol)
-			{
-				case '+'|'-': left.formsort_priority()+right.formsort_priority()*0.001;
-				case '*'|'/': left.formsort_priority()+right.formsort_priority()*0.001;
-				case '^': left.formsort_priority()+right.formsort_priority()*0.001;
-				case 'sin': -5;
-				case 'cos': -6;
-				case 'tan': -7;
-				case 'cot': -8;
-				case 'asin': -9;
-				case 'acos': -10;
-				case 'atan': -11;
-				case 'atan2': -12;
-				case 'ln': -13;
-				case 'max': -14;
-				case 'min': -15;
-				default: -20;
-			}
-		}
-		else{//isValue)
-			return 1;
+		return switch(symbol)
+		{
+			case s if (isParam): symbol.charCodeAt(0);
+			case s if (isName):  symbol.charCodeAt(0);
+			case s if (isValue): 1;
+			case s if (twoSideOpRegFull.match(s)) : left.formsort_priority()+right.formsort_priority()*0.001;
+			case s if (oneParamOpRegFull.match(s)): -5 - oneParamOp.indexOf(s);
+			case s if (twoParamOpRegFull.match(s)): -5 - oneParamOp.length - twoParamOp.indexOf(s);
+			case s if (constantOpRegFull.match(s)): -5 - oneParamOp.length - twoParamOp.length - constantOp.indexOf(s);
+			
+			default: -5 - oneParamOp.length - twoParamOp.length - constantOp.length;
 		}
 	}
 
@@ -962,9 +953,9 @@ class TermNode {
 		var mult:Array<TermNode>=new Array();
 		traverseMultiplication(this, mult);
 		mult.sort(formsort_compare);
-		for(i in mult){
+		/*for(i in mult){
 			trace(i.toString() +": " + i.formsort_priority());
-		}
+		}*/
 		traverseMultiplicationBack(mult);
 	}
 	
