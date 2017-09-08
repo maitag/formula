@@ -56,30 +56,28 @@ class TestTermNode extends haxe.unit.TestCase
 		assertEquals(simplify("(a*ln(b))/ln(b)"), "a");
 		assertEquals(simplify("x/x"), "1");
 		assertEquals(simplify("b/(a*b)"), "1/a");
-		assertEquals(simplify("x+x^2+2+4+x^5+x^ln(2)"), "((((x+(x^2))+2)+4)+(x^5))+(x^ln(2))");
-		//really bad bracket nesting 
+		assertEquals(simplify("x+x^2+2+4+x^5+x^ln(2)"), "(((((x^5)+(x^2))+x)+(x^ln(2)))+4)+2");
 
 		assertEquals(simplify("log(a,b)"), "ln(b)/ln(a)");
 		assertEquals(simplify("log(a,a)"), "1");
 		assertEquals(simplify("ln(a)+ln(b)"), "ln(b*a)");
-		assertEquals(simplify("log(a,b)+log(c,d)"), "((ln(b)*ln(c))+(ln(d)*ln(a)))/(ln(a)*ln(c))");
+		assertEquals(simplify("log(a,b)+log(c,d)"), "((ln(c)*ln(b))+(ln(d)*ln(a)))/(ln(c)*ln(a))");
 		assertEquals(simplify("(x^a)^b"), "x^(b*a)");
-		
 
-		assertEquals(simplify("(a+b)*(c+d)"), "((c*a)+(d*a))+((c*b)+(d*b))");
-		assertEquals(simplify("(a+b)*(c-d)"), "((c*a)-(d*a))+((c*b)-(d*b))");
-		assertEquals(simplify("(a-b)*(c+d)"), "((c*a)+(d*a))-((c*b)+(d*b))");
-		assertEquals(simplify("(a-b)*(c-d)"), "((c*a)-(d*a))-((c*b)-(d*b))");
+		assertEquals(simplify("(a+b)*(c-d)"), "(b+a)*-(d-c)");
+		assertEquals(simplify("(a-b)*(c+d)"), "(b-a)*-(d+c)");
+		assertEquals(simplify("(a-b)*(c-d)"), "-((d-c)*-(b-a))");
 
-		assertEquals(simplify("(a+b)*c"), "(c*a)+(c*b)");
-		assertEquals(simplify("(a-b)*c"), "(c*a)-(c*b)");
-		assertEquals(simplify("a*(b-c)"), "(b*a)-(c*a)");
-		assertEquals(simplify("a*(b+c)"), "(b*a)+(c*a)");
-		
-		assertEquals(simplify("(a+b+c+d)*(e+f+g)"), "(((((e*a)+(e*b))+((f*a)+(f*b)))+((e*c)+(f*c)))+(((g*a)+(g*b))+(g*c)))+(((e*d)+(f*d))+(g*d))");
-		
-		assertEquals(simplify("a^3*b*2*B*a*b*cos(x)*a^2*3*a^b*1"),"((((((((b*b)*(a^b))*(a^3))*(a^2))*a)*B)*3)*2)*cos(x)");
-	
+		assertEquals(simplify("(a+b)*c"), "c*(b+a)");
+		assertEquals(simplify("(a-b)*c"), "-(c*(b-a))");
+		assertEquals(simplify("a*(b-c)"), "-((c-b)*a)");
+		assertEquals(simplify("a*(b+c)"), "a*(c+b)");
+
+		assertEquals(simplify("-b-a"), "-(b+a)");
+		assertEquals(simplify("k*(a+b)+d*(-b-a)"), "(b+a)*(k-d)");
+		assertEquals(simplify("a*(b+c)+a*(b-c)"), "(b*a)*2");
+		//assertEquals(simplify("a-(1+d/a)*a"), "d"); --> not working yet
+
 	}
 	
 	inline function derivate(s:String):String {

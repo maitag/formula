@@ -79,7 +79,7 @@ abstract Formula(TermNode) from TermNode to TermNode
 	public inline function copy():Formula return this.copy();
 	public inline function simplify():Formula return this.simplify();
 	public inline function derivate(p:String):Formula return this.derivate(p);
-	
+
 	inline public function toString(?depth:Null<Int>):String return this.toString(depth);
 	
 	@:to inline public function toStr():String return this.toString(0);
