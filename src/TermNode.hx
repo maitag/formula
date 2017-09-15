@@ -953,6 +953,8 @@ class TermNode {
 	  	var mult_matrix:Array<Array<TermNode>>=new Array();
 	 	var add:Array<TermNode>=new Array();
 		traverseAddition(this, add);
+
+		var add_length_old:Int=0;
 		for(i in add) {
 			if(i.symbol == "-") {
 				mult_matrix.push(new Array());
@@ -1134,7 +1136,13 @@ class TermNode {
 					add.pop();
 					break;
 				}
+
+				if(add[i].isValue && add[i+1].isValue) {
+					add[i].setValue(add[i].value+add[i+1].value);
+					add.splice(i+1,1);
+				}
 			}
+
 			if(add[0].symbol=='-' && add[0].left.value==0) {
 				for(i in add) {
 					if(i.symbol=='-' && i.left.value==0) {

@@ -56,7 +56,7 @@ class TestTermNode extends haxe.unit.TestCase
 		assertEquals(simplify("(a*ln(b))/ln(b)"), "a");
 		assertEquals(simplify("x/x"), "1");
 		assertEquals(simplify("b/(a*b)"), "1/a");
-		assertEquals(simplify("x+x^2+2+4+x^5+x^ln(2)"), "(((((x^5)+(x^2))+x)+(x^ln(2)))+4)+2");
+		assertEquals(simplify("x+x^2+2+4+x^5+x^ln(2)"), "((((x^5)+(x^2))+x)+(x^ln(2)))+6");
 
 		assertEquals(simplify("log(a,b)"), "ln(b)/ln(a)");
 		assertEquals(simplify("log(a,a)"), "1");
@@ -76,7 +76,7 @@ class TestTermNode extends haxe.unit.TestCase
 		assertEquals(simplify("-b-a"), "-(b+a)");
 		assertEquals(simplify("k*(a+b)+d*(-b-a)"), "(b+a)*(k-d)");
 		assertEquals(simplify("a*(b+c)+a*(b-c)"), "(b*a)*2");
-		//assertEquals(simplify("a-(1+d/a)*a"), "d"); --> not working yet
+		assertEquals(simplify("a-(1+d/a)*a"), "-d");
 
 	}
 	
