@@ -64,20 +64,24 @@ class TestTermNode extends haxe.unit.TestCase
 		assertEquals(simplify("log(a,b)+log(c,d)"), "((ln(c)*ln(b))+(ln(d)*ln(a)))/(ln(c)*ln(a))");
 		assertEquals(simplify("(x^a)^b"), "x^(b*a)");
 
-		assertEquals(simplify("(a+b)*(c-d)"), "(b+a)*-(d-c)");
-		assertEquals(simplify("(a-b)*(c+d)"), "(b-a)*-(d+c)");
+		assertEquals(simplify("(a+b)*(c-d)"), "-((d-c)*(b+a))");
+		assertEquals(simplify("(a-b)*(c+d)"), "-((d+c)*(b-a))");
 		assertEquals(simplify("(a-b)*(c-d)"), "-((d-c)*-(b-a))");
 
 		assertEquals(simplify("(a+b)*c"), "c*(b+a)");
 		assertEquals(simplify("(a-b)*c"), "-(c*(b-a))");
 		assertEquals(simplify("a*(b-c)"), "-((c-b)*a)");
-		assertEquals(simplify("a*(b+c)"), "a*(c+b)");
+		assertEquals(simplify("a*(b+c)"), "(c+b)*a");
 
 		assertEquals(simplify("-b-a"), "-(b+a)");
-		assertEquals(simplify("k*(a+b)+d*(-b-a)"), "(b+a)*(k-d)");
+		assertEquals(simplify("k*(a+b)+d*(-b-a)"), "(k-d)*(b+a)");
 		assertEquals(simplify("a*(b+c)+a*(b-c)"), "(b*a)*2");
 		assertEquals(simplify("a-(1+d/a)*a"), "-d");
+		
 
+		//just to find bugs:
+		//assertEquals(simplify("3*x^2+x*(-5*x+4)"), "-2*x^2+4*x"); -> not working because logic of expand and factorize still not ideal
+		//assertEquals(simplify("x^2-3*x(4*x+2)"), "-11*X^2-6*X");
 	}
 	
 	inline function derivate(s:String):String {

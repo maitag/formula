@@ -561,15 +561,26 @@ class TermNode {
 		while (len != len_old) {
 			if (isName && left != null) {
 				left.simplifyStep(true);
-				left.simplifyStep();
 			}
 			else {
 				simplifyStep(true);
+			}
+			len_old = len;
+			len = length();
+		}
+		len=-1;
+		len_old=0;
+		while (len != len_old) {
+			if (isName && left != null) {
+				left.simplifyStep();
+			}
+			else {
 				simplifyStep();
 			}
 			len_old = len;
 			len = length();
 		}
+		
 		return this;
 	}
 	
@@ -614,7 +625,9 @@ class TermNode {
 					);
 				}
 				arrangeAddition();
-				factorize();
+				if(expandNow==false) {
+					factorize();
+				}
 			case '-':
 				if (right.isValue && right.value == 0) copyNodeFrom(left);  // a-0 -> a
 				else if (left.isValue && left.value==0) {}                  // 0-(a/b) should stay to simplify fractions
@@ -639,7 +652,9 @@ class TermNode {
 					);
 				}
 				arrangeAddition();
-				factorize();
+				if(expandNow==false) {
+					factorize();
+				}
 			case '*':
 				if (left.isValue) {
 					if (left.value == 1) copyNodeFrom(right); // 1*a -> a
@@ -945,7 +960,7 @@ class TermNode {
 					newOperation('*', left.copy(), right.left.copy()),
 					newOperation('*', left.copy(), right.right.copy())
 				);
-			}	
+			}
 		}
 	}
 
@@ -1120,11 +1135,14 @@ class TermNode {
 	 */
 	public function arrangeAddition()
 	{
-		trace(this.toString());
 		var addlength_old:Int=-1;
 		var add:Array<TermNode>=new Array();
 		traverseAddition(this, add);
 		add.sort(formsort_compare);
+		trace("before: " + this.toString());
+		for(i in add) {
+			trace(i.toString());
+		}
 		while(add.length!=addlength_old) {
 			addlength_old=add.length;
 			for(i in 0...add.length-1) {
@@ -1136,10 +1154,19 @@ class TermNode {
 					add.pop();
 					break;
 				}
-
+				if(add[i].symbol=='*' && add[i+1].symbol=='*' && add[i].right.isValue && add[i+1].isValue && add[i].left.isEqual(add[i+1].left)) {
+					add[i].right.setValue(add[i].right.value+add[i+1].right.value);
+					add.splice(i+1,1);
+					break;
+				}
 				if(add[i].isValue && add[i+1].isValue) {
 					add[i].setValue(add[i].value+add[i+1].value);
 					add.splice(i+1,1);
+					break;
+				}
+				if(newOperation('-', newValue(0), add[i]).isEqual(add[i+1])){
+					add.splice(i,2);
+					break;
 				}
 			}
 
@@ -1157,6 +1184,10 @@ class TermNode {
 				return;
 			}
 				
+		}
+		trace("after:");
+		for(i in add){
+			trace(i.toString());
 		}
 
 
