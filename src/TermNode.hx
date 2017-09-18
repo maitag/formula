@@ -559,14 +559,32 @@ class TermNode {
 		var len:Int = -1;
 		var len_old:Int = 0;
 		while (len != len_old) {
-			if (isName && left != null) left.simplifyStep() else simplifyStep();
+			if (isName && left != null) {
+				left.simplifyStep(true);
+			}
+			else {
+				simplifyStep(true);
+			}
 			len_old = len;
 			len = length();
 		}
+		len=-1;
+		len_old=0;
+		while (len != len_old) {
+			if (isName && left != null) {
+				left.simplifyStep();
+			}
+			else {
+				simplifyStep();
+			}
+			len_old = len;
+			len = length();
+		}
+		
 		return this;
 	}
 	
-	function simplifyStep():Void {	
+	function simplifyStep(?expandNow:Bool=false):Void {	
 		if (!isOperation) return;
 		
 		if (left != null) {
@@ -606,15 +624,9 @@ class TermNode {
 						newOperation('*', left.right.copy(), right.right.copy())
 					);
 				}
-				else if (left.symbol == '^' && right.symbol !='^') {   // x^2+a -> a+x^2
-					setOperation('+', right.copy(), left.copy());
-				}
-				else if (left.symbol == '^' && right.symbol =='^') {   // x^3+x^2 -> x^2+x^3
-					if (left.right.isValue && right.right.isValue) {
-						if (left.right.value>right.right.value) {
-							setOperation('+', right.copy(), left.copy());
-						}
-					}
+				arrangeAddition();
+				if(expandNow==false) {
+					factorize();
 				}
 			case '-':
 				if (right.isValue && right.value == 0) copyNodeFrom(left);  // a-0 -> a
@@ -639,6 +651,10 @@ class TermNode {
 						newOperation('*', left.right.copy(), right.right.copy())
 					);
 				}
+				arrangeAddition();
+				if(expandNow==false) {
+					factorize();
+				}
 			case '*':
 				if (left.isValue) {
 					if (left.value == 1) copyNodeFrom(right); // 1*a -> a
@@ -661,7 +677,9 @@ class TermNode {
 					);
 				}
 				else{
-					expand(); // (sum)*(sum)
+					if(expandNow) {
+						expand(); // (sum)*(sum)
+					}
 					arrangeMultiplication();
 				}
 		case '/':
@@ -742,9 +760,9 @@ class TermNode {
 		if (t.symbol!="*") {
 			p.push(t);
 		}
-		else{
-			traverseMultiplication(t.left,p);
-			traverseMultiplication(t.right,p);
+		else {
+			traverseMultiplication(t.left, p);
+			traverseMultiplication(t.right, p);
 		}
 	}
 	
@@ -755,7 +773,7 @@ class TermNode {
 	function traverseMultiplicationBack(p:Array<TermNode>)
 	{
 		if (p.length>2) {
-			setOperation('*', newValue(0), p.pop());
+			setOperation('*', newValue(1), p.pop());
 			left.traverseMultiplicationBack(p);
 		}
 		else if (p.length==2) {
@@ -763,8 +781,62 @@ class TermNode {
 			p.pop();
 			p.pop();
 		}
+		else {
+			set(p.pop());
+		}
 	}
-	
+
+	/*
+	 * put all subterms separated by * into an array
+	 *
+	 */
+	function traverseAddition(t:TermNode, p:Array<TermNode>, ?negative:Bool=false)
+	{
+		if (t.symbol=="+" && negative==false) {
+			traverseAddition(t.left, p);
+			traverseAddition(t.right, p);
+		}
+		else if (t.symbol=="-" && negative==false) {
+			traverseAddition(t.left, p);
+			traverseAddition(t.right, p, true);
+		}
+		else if (t.symbol=="+" && negative==true) {
+			traverseAddition(t.left, p, true);
+			traverseAddition(t.right, p, true);
+		}
+		else if (t.symbol=="-" && negative==true) {
+			traverseAddition(t.left, p, true);
+			traverseAddition(t.right, p);
+		}
+		else if (negative==true && !t.isValue || negative==true && t.isValue && t.value!=0) {
+			p.push(newOperation('-', newValue(0), t));
+		}
+		else if (!t.isValue || t.isValue && t.value!=0) {
+			p.push(t);
+		}
+		return(p);
+	}
+
+	/*
+	 * build tree consisting of multiple - and + from array
+	 *
+	 */
+	function traverseAdditionBack(p:Array<TermNode>)
+	{
+		if(p.length>1) {
+			if (p[p.length-1].symbol=="-") {
+				set(p.pop());
+			}
+			else {
+				setOperation("+", newValue(0), p.pop());
+			}	
+			left.traverseAdditionBack(p);
+		}
+		else if(p.length==1){
+			set(p.pop());
+		}
+	}
+
 	/*
 	 * reduce a fraction 
 	 * 
@@ -787,7 +859,7 @@ class TermNode {
 			left.traverseMultiplicationBack(numerator);
 		}
 		else if (numerator.length==1) {
-			setOperation('/', numerator.pop(), newValue(0));
+			setOperation('/', numerator.pop(), newValue(1));
 		}
 		else if (numerator.length==0) {
 			left.setValue(1);
@@ -888,9 +960,108 @@ class TermNode {
 					newOperation('*', left.copy(), right.left.copy()),
 					newOperation('*', left.copy(), right.right.copy())
 				);
-			}	
+			}
 		}
 	}
+
+	/*
+	 * factorize a term -> a*c+a*b=a*(c+b)
+	 *
+	 */
+	public function factorize() {
+	  	var mult_matrix:Array<Array<TermNode>>=new Array();
+	 	var add:Array<TermNode>=new Array();
+		
+		//build matrix - addition in columns - multiplication in rows 
+		traverseAddition(this, add);
+		var add_length_old:Int=0;
+		for(i in add) {
+			if(i.symbol == "-") {
+				mult_matrix.push(new Array());
+				traverseMultiplication(add[mult_matrix.length-1].right, mult_matrix[mult_matrix.length-1]);
+			}
+			else {
+				mult_matrix.push(new Array());
+				traverseMultiplication(add[mult_matrix.length-1], mult_matrix[mult_matrix.length-1]);
+			}
+		}
+		
+		//find and extract common factors
+		var part_of_all:Array<TermNode>=new Array();
+		factorize_extract_common(mult_matrix, part_of_all);
+		if(part_of_all.length!=0) {
+			var new_add:Array<TermNode>=new Array();
+			var t:TermNode=TermNode.fromString("42");
+			for(i in mult_matrix) {
+				t.traverseMultiplicationBack(i);
+				var v:TermNode=TermNode.fromString("42");
+				v.set(t);
+				new_add.push(v);
+			}
+			for(i in 0...add.length) {
+				if(add[i].symbol=='-' && add[i].left.value==0) {
+					new_add[i].setOperation('-', newValue(0), new_add[i].copy());
+				}
+			}
+
+			setOperation('*', newValue(42), newValue(42));
+			left.traverseMultiplicationBack(part_of_all);
+			right.traverseAdditionBack(new_add);
+		}
+	}
+	
+	//delete common factors of mult_matrix and add them to part_of_all	
+	function factorize_extract_common(mult_matrix:Array<Array<TermNode>>, part_of_all:Array<TermNode>) {
+		var bool:Bool=false;
+		var matrix_length_old:Int=-1;
+		while(matrix_length_old!=mult_matrix[0].length) {
+			matrix_length_old=mult_matrix[0].length;
+			for(i in mult_matrix[0]) {
+				for(j in 1...mult_matrix.length) {
+					bool=false;
+					for(h in mult_matrix[j]) {
+						if(h.isEqual(i)) {
+							bool=true;
+							break;
+						}	
+					}
+					if(bool==false) {
+						break;
+					}
+				}
+				if(bool==true) {
+					part_of_all.push(newValue(42));
+					part_of_all[part_of_all.length-1].set(i);
+					var t:TermNode=TermNode.fromString("42");
+					t.set(i);
+					delete_last_from_matrix(mult_matrix, t);
+					break;
+				}
+			}
+		}
+	}
+	
+	//deletes d from every row in mult_matrix once
+	function delete_last_from_matrix(mult_matrix:Array<Array<TermNode>>, d:TermNode) {
+		for(i in mult_matrix) {
+			if(i.length>1) {
+				for(j in 1...i.length+1) {
+					if(i[i.length-j].isEqual(d)) {
+						for(h in 0...j-1) {
+							i[i.length-j+h].set(i[i.length-j+h+1]);
+						}
+						i.pop();
+						break;
+					}
+				}
+			}
+			else {
+				i[0].set(newValue(1));
+			}
+		}
+	}
+
+			
 	
 	/*
 	 * TODO: check tree and not string-representation
@@ -920,8 +1091,13 @@ class TermNode {
 					return(1);
 				}
 			}
-			else if (t1.isOperation && !t2.isOperation) {
-				return(formsort_compare(t1.right, t2.right));
+			else if (t1.isOperation && t2.isOperation) {
+				if(t1.right!=null && t2.right!=null) {
+					return(formsort_compare(t1.right, t2.right));
+				}
+				else {
+					return(formsort_compare(t1.left, t2.left));
+				}
 			}
 			else return 0;
 		}
@@ -934,8 +1110,14 @@ class TermNode {
 		{
 			case s if (isParam): symbol.charCodeAt(0);
 			case s if (isName):  symbol.charCodeAt(0);
-			case s if (isValue): 1;
-			case s if (twoSideOpRegFull.match(s)) : left.formsort_priority()+right.formsort_priority()*0.001;
+			case s if (isValue): 1+0.00001*value;
+			case s if (twoSideOpRegFull.match(s)) : 
+				if(symbol=='-' && left.value==0) {
+					right.formsort_priority();
+				}
+				else {													 
+					left.formsort_priority()+right.formsort_priority()*0.001;
+				}
 			case s if (oneParamOpRegFull.match(s)): -5 - oneParamOp.indexOf(s);
 			case s if (twoParamOpRegFull.match(s)): -5 - oneParamOp.length - twoParamOp.indexOf(s);
 			case s if (constantOpRegFull.match(s)): -5 - oneParamOp.length - twoParamOp.length - constantOp.indexOf(s);
@@ -953,10 +1135,72 @@ class TermNode {
 		var mult:Array<TermNode>=new Array();
 		traverseMultiplication(this, mult);
 		mult.sort(formsort_compare);
-		/*for(i in mult){
-			trace(i.toString() +": " + i.formsort_priority());
-		}*/
 		traverseMultiplicationBack(mult);
+	}
+
+	/*
+	 * sort a Tree consisting of addition and subtraction
+	 *
+	 */
+	public function arrangeAddition()
+	{
+		var addlength_old:Int=-1;
+		var add:Array<TermNode>=new Array();
+		traverseAddition(this, add);
+		add.sort(formsort_compare);
+		trace("before: " + this.toString());
+		for(i in add) {
+			trace(i.toString());
+		}
+		while(add.length!=addlength_old) {
+			addlength_old=add.length;
+			for(i in 0...add.length-1) {
+				if(add[i].isEqual(add[i+1])) {
+					add[i].setOperation('*', add[i].copy(), newValue(2));
+					for(j in i+1...add.length-1) {
+						add[j]=add[j+1];
+					}
+					add.pop();
+					break;
+				}
+				if(add[i].symbol=='*' && add[i+1].symbol=='*' && add[i].right.isValue && add[i+1].isValue && add[i].left.isEqual(add[i+1].left)) {
+					add[i].right.setValue(add[i].right.value+add[i+1].right.value);
+					add.splice(i+1,1);
+					break;
+				}
+				if(add[i].isValue && add[i+1].isValue) {
+					add[i].setValue(add[i].value+add[i+1].value);
+					add.splice(i+1,1);
+					break;
+				}
+				if(newOperation('-', newValue(0), add[i]).isEqual(add[i+1])){
+					add.splice(i,2);
+					break;
+				}
+			}
+
+			if(add[0].symbol=='-' && add[0].left.value==0) {
+				for(i in add) {
+					if(i.symbol=='-' && i.left.value==0) {
+						i.set(i.right);
+					}
+					else {
+						i.setOperation('-', newValue(0), i.copy());
+					}
+				}
+				setOperation('-', newValue(0), newValue(42));
+				right.traverseAdditionBack(add);
+				return;
+			}
+				
+		}
+		trace("after:");
+		for(i in add){
+			trace(i.toString());
+		}
+
+
+		traverseAdditionBack(add);
 	}
 	
 	/*
