@@ -964,11 +964,16 @@ class TermNode {
 		}
 	}
 
+	/*
+	 * factorize a term -> a*c+a*b=a*(c+b)
+	 *
+	 */
 	public function factorize() {
 	  	var mult_matrix:Array<Array<TermNode>>=new Array();
 	 	var add:Array<TermNode>=new Array();
+		
+		//build matrix - addition in columns - multiplication in rows 
 		traverseAddition(this, add);
-
 		var add_length_old:Int=0;
 		for(i in add) {
 			if(i.symbol == "-") {
@@ -980,6 +985,8 @@ class TermNode {
 				traverseMultiplication(add[mult_matrix.length-1], mult_matrix[mult_matrix.length-1]);
 			}
 		}
+		
+		//find and extract common factors
 		var part_of_all:Array<TermNode>=new Array();
 		factorize_extract_common(mult_matrix, part_of_all);
 		if(part_of_all.length!=0) {
@@ -1002,7 +1009,8 @@ class TermNode {
 			right.traverseAdditionBack(new_add);
 		}
 	}
-			
+	
+	//delete common factors of mult_matrix and add them to part_of_all	
 	function factorize_extract_common(mult_matrix:Array<Array<TermNode>>, part_of_all:Array<TermNode>) {
 		var bool:Bool=false;
 		var matrix_length_old:Int=-1;
@@ -1029,10 +1037,11 @@ class TermNode {
 					delete_last_from_matrix(mult_matrix, t);
 					break;
 				}
-		}
+			}
 		}
 	}
-
+	
+	//deletes d from every row in mult_matrix once
 	function delete_last_from_matrix(mult_matrix:Array<Array<TermNode>>, d:TermNode) {
 		for(i in mult_matrix) {
 			if(i.length>1) {
