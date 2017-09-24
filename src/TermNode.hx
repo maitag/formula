@@ -293,6 +293,17 @@ class TermNode {
 			default: 1 + left.length(depth) + right.length(depth);
 		}		
 	}
+			
+	
+	/*
+	 * TODO: check tree and not string-representation
+	 * 
+	 */	
+	public function isEqual(t:TermNode):Bool
+	{
+		if (this.simplify().toString()==t.simplify().toString()) return true;
+		else return false;
+	}
 	
 	/*
 	 * static Function Pointers (to stored in this.operation)
@@ -551,8 +562,136 @@ class TermNode {
 	}
 	
 	
+	
+	
+	/**************************************************************************************
+	 *                                                                                    *
+	 * extending TermNode with various math operations transformation and more.        *
+	 *                                                                                    *
+	 *                                                                                    *
+	 **************************************************************************************/
+	
 	/*
-	 * Trim length of math expression
+	 * creates a new term that is derivate of a given term 
+	 * 
+	 */
+	public function derivate(p:String):TermNode {	
+		return switch (symbol) 
+		{
+			case s if (isName): newName( symbol, left.derivate(p) );
+			case s if (isValue || constantOpRegFull.match(s)): newValue(0);
+			case s if (isParam): (symbol == p) ? newValue(1) : newValue(0);
+			case '+' | '-':
+				newOperation(symbol, left.derivate(p), right.derivate(p));
+			case '*':
+				newOperation('+',
+					newOperation('*', left.derivate(p), right.copy()),
+					newOperation('*', left.copy(), right.derivate(p))
+				);
+			case '/':
+				newOperation('/',
+					newOperation('-',
+						newOperation('*', left.derivate(p), right.copy()),
+						newOperation('*', left.copy(), right.derivate(p))
+					),
+					newOperation('^', right.copy(), newValue(2) )
+				);
+			case '^':
+				if (left.symbol == 'e')
+					newOperation('*', right.derivate(p),
+						newOperation('^', newOperation('e'), left.copy())
+					);
+				else
+					newOperation('*', 
+						newOperation('^', left.copy(), right.copy()),
+						newOperation('*',
+							right.copy(),
+							newOperation('ln', left.copy())
+						).derivate(p)
+					);
+			case 'sin':
+				newOperation('*', left.derivate(p),
+					newOperation('cos', left.copy())
+				);
+			case 'cos':
+				newOperation('*', left.derivate(p),
+					newOperation('-', newValue(0),
+						newOperation('sin', left.copy() )
+					)
+				);
+			case 'tan':
+				newOperation('*', left.derivate(p),
+					newOperation('+', newValue(1),
+						newOperation('^',
+							newOperation('tan', left.copy() ),
+							newValue(2)
+						)
+					)
+				);
+			case 'cot':
+				newOperation('/',
+					newValue(1),
+					newOperation('tan', left.copy())
+				).derivate(p);				
+			case 'atan':
+				newOperation('*', left.derivate(p),
+					newOperation('/', newValue(1),
+						newOperation('+', newValue(1),
+							newOperation('^', left.copy(), newValue(2))
+						)
+					)
+				);
+			case 'atan2':
+				newOperation('/', 
+					newOperation('-',
+						newOperation('*', right.copy(), left.derivate(p)),
+						newOperation('*', left.copy(), right.derivate(p))
+					),
+					newOperation('+',
+						newOperation('*', left.copy(), left.copy()),
+						newOperation('*', right.copy(), right.copy())
+					)
+				);
+			case 'asin':
+				newOperation('*', left.derivate(p),
+					newOperation('/', newValue(1),
+						newOperation('^',
+							newOperation('-', newValue(1),
+								newOperation('^', left.copy(), newValue(2))
+							), newOperation('/', newValue(1), newValue(2))
+						)
+					)
+				);
+			case 'acos':
+				newOperation('*', left.derivate(p),
+					newOperation('-', newValue(0),
+						newOperation('/', newValue(1),
+							newOperation('^',
+								newOperation('-', newValue(1),
+									newOperation('^', left.copy(), newValue(2))
+								), newOperation('/', newValue(1), newValue(2))
+							)
+						)
+					)
+				);
+			case 'log':
+				newOperation('/',
+					newOperation('ln', right.copy()),
+					newOperation('ln', left.copy())
+				).derivate(p);
+			case 'ln':
+				newOperation('*', left.derivate(p),
+					newOperation('/', newValue(1), left.copy())
+				);
+				
+			default: throw('derivation of "$symbol" not implemented');	
+		}
+
+	}
+	
+	 
+	/*
+	 * Simplify: trims the length of a math expression
 	 * 
 	 */
 	public function simplify():TermNode {
@@ -590,7 +729,7 @@ class TermNode {
 		if (left != null) {
 			if (left.isValue) {
 				if (right == null) {
-//					setValue(result); // calculate operation with one value
+					// setValue(result); // calculate operation with one value
 					return;
 				}
 				else if (right.isValue) {
@@ -1060,18 +1199,6 @@ class TermNode {
 			}
 		}
 	}
-
-			
-	
-	/*
-	 * TODO: check tree and not string-representation
-	 * 
-	 */	
-	public function isEqual(t:TermNode):Bool
-	{
-		if (this.simplify().toString()==t.simplify().toString()) return true;
-		else return false;
-	}
 	
 	//compare function for Array.sort()
 	function formsort_compare(t1:TermNode, t2:TermNode):Int
@@ -1202,125 +1329,7 @@ class TermNode {
 
 		traverseAdditionBack(add);
 	}
-	
-	/*
-	 * creates a new term that is derivate of a given term 
-	 * 
-	 */
-	public function derivate(p:String):TermNode {	
-		return switch (symbol) 
-		{
-			case s if (isName): newName( symbol, left.derivate(p) );
-			case s if (isValue || constantOpRegFull.match(s)): newValue(0);
-			case s if (isParam): (symbol == p) ? newValue(1) : newValue(0);
-			case '+' | '-':
-				newOperation(symbol, left.derivate(p), right.derivate(p));
-			case '*':
-				newOperation('+',
-					newOperation('*', left.derivate(p), right.copy()),
-					newOperation('*', left.copy(), right.derivate(p))
-				);
-			case '/':
-				newOperation('/',
-					newOperation('-',
-						newOperation('*', left.derivate(p), right.copy()),
-						newOperation('*', left.copy(), right.derivate(p))
-					),
-					newOperation('^', right.copy(), newValue(2) )
-				);
-			case '^':
-				if (left.symbol == 'e')
-					newOperation('*', right.derivate(p),
-						newOperation('^', newOperation('e'), left.copy())
-					);
-				else
-					newOperation('*', 
-						newOperation('^', left.copy(), right.copy()),
-						newOperation('*',
-							right.copy(),
-							newOperation('ln', left.copy())
-						).derivate(p)
-					);
-			case 'sin':
-				newOperation('*', left.derivate(p),
-					newOperation('cos', left.copy())
-				);
-			case 'cos':
-				newOperation('*', left.derivate(p),
-					newOperation('-', newValue(0),
-						newOperation('sin', left.copy() )
-					)
-				);
-			case 'tan':
-				newOperation('*', left.derivate(p),
-					newOperation('+', newValue(1),
-						newOperation('^',
-							newOperation('tan', left.copy() ),
-							newValue(2)
-						)
-					)
-				);
-			case 'cot':
-				newOperation('/',
-					newValue(1),
-					newOperation('tan', left.copy())
-				).derivate(p);				
-			case 'atan':
-				newOperation('*', left.derivate(p),
-					newOperation('/', newValue(1),
-						newOperation('+', newValue(1),
-							newOperation('^', left.copy(), newValue(2))
-						)
-					)
-				);
-			case 'atan2':
-				newOperation('/', 
-					newOperation('-',
-						newOperation('*', right.copy(), left.derivate(p)),
-						newOperation('*', left.copy(), right.derivate(p))
-					),
-					newOperation('+',
-						newOperation('*', left.copy(), left.copy()),
-						newOperation('*', right.copy(), right.copy())
-					)
-				);
-			case 'asin':
-				newOperation('*', left.derivate(p),
-					newOperation('/', newValue(1),
-						newOperation('^',
-							newOperation('-', newValue(1),
-								newOperation('^', left.copy(), newValue(2))
-							), newOperation('/', newValue(1), newValue(2))
-						)
-					)
-				);
-			case 'acos':
-				newOperation('*', left.derivate(p),
-					newOperation('-', newValue(0),
-						newOperation('/', newValue(1),
-							newOperation('^',
-								newOperation('-', newValue(1),
-									newOperation('^', left.copy(), newValue(2))
-								), newOperation('/', newValue(1), newValue(2))
-							)
-						)
-					)
-				);
-			case 'log':
-				newOperation('/',
-					newOperation('ln', right.copy()),
-					newOperation('ln', left.copy())
-				).derivate(p);
-			case 'ln':
-				newOperation('*', left.derivate(p),
-					newOperation('/', newValue(1), left.copy())
-				);
-				
-			default: throw('derivation of "$symbol" not implemented');	
-		}
-
-	}
-	
+		
 	
 	
 
