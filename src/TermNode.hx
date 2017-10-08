@@ -1341,7 +1341,7 @@ class TermNode {
 	 *
 	 */
 	public function arrangeAddition()
-	{	
+	{
 		var addlength_old:Int=-1;
 		var add:Array<TermNode>=new Array();
 		traverseAddition(this, add);
