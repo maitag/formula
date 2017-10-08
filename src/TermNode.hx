@@ -713,7 +713,7 @@ class TermNode {
 		return this;
 	}
 	
-	function simplifyStep(?expandNow:Bool=false):Void {	
+	function simplifyStep():Void {	
 		if (!isOperation) return;
 		
 		if (left != null) {
@@ -754,7 +754,7 @@ class TermNode {
 					);
 				}
 				arrangeAddition();
-				if(expandNow == false && symbol == '+') {
+				if(symbol == '+') {
 					factorize();
 				}
 			case '-':
@@ -781,7 +781,7 @@ class TermNode {
 					);
 				}
 				arrangeAddition();
-				if(expandNow == false && symbol == '-') {
+				if(symbol == '-') {
 					factorize();
 				}
 			case '*':
@@ -833,9 +833,6 @@ class TermNode {
 
 				else {
 					arrangeMultiplication();
-					if (expandNow) {
-						expand();
-					}
 				}
 		case '/':
 				if (left.isEqual(right)) { // x/x -> 1
