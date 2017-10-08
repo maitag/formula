@@ -699,19 +699,6 @@ class TermNode {
 		
 		var len:Int = -1;
 		var len_old:Int = 0;
-		/**while (len != len_old) {
-			if (isName && left != null) {
-				left.simplifyStep(true);
-			}
-			else {
-				simplifyStep(true);
-			}
-			len_old = len;
-			len = length();
-		}
-		trace(this.toString());
-		len=-1;
-		len_old=0;**/
 		while (len != len_old) {
 			if (isName && left != null) {
 				left.simplifyStep();
@@ -720,7 +707,7 @@ class TermNode {
 				simplifyStep();
 			}
 			len_old = len;
-			len= length();
+			len = length();
 		}
 		
 		return this;
@@ -767,7 +754,7 @@ class TermNode {
 					);
 				}
 				arrangeAddition();
-				if(expandNow == false && symbol == '+') {	
+				if(expandNow == false && symbol == '+') {
 					factorize();
 				}
 			case '-':
@@ -1162,7 +1149,6 @@ class TermNode {
 	 *
 	 */
 	public function factorize() {
-		trace("before:" + toString());
 	  	var mult_matrix:Array<Array<TermNode>>=new Array();
 	 	var add:Array<TermNode>=new Array();
 		
@@ -1202,8 +1188,6 @@ class TermNode {
 			left.traverseMultiplicationBack(part_of_all);
 			right.traverseAdditionBack(new_add);
 		}
-
-		trace("after:" + toString());
 	}
 	
 	//delete common factors of mult_matrix and add them to part_of_all	
@@ -1361,15 +1345,10 @@ class TermNode {
 	 */
 	public function arrangeAddition()
 	{	
-		trace("arrangeAdditionbefore:" + toString());
 		var addlength_old:Int=-1;
 		var add:Array<TermNode>=new Array();
 		traverseAddition(this, add);
 		add.sort(formsort_compare);
-		trace("   listbefore:");
-		for(i in add) {
-			trace("    " + i.toString());
-		}
 		while(add.length != addlength_old) {
 			addlength_old=add.length;
 			for(i in 0...add.length-1) {
@@ -1422,13 +1401,7 @@ class TermNode {
 			}
 				
 		}
-		trace("   listafter:");
-		for(i in add) {
-			trace("    " + i.toString());
-		}
-
 		traverseAdditionBack(add);
-		trace("arrangeAddafter: " + toString());
 	}
 		
 	
