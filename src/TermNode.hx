@@ -695,20 +695,10 @@ class TermNode {
 	 * 
 	 */
 	public function simplify():TermNode {
+		expandall();
+		
 		var len:Int = -1;
 		var len_old:Int = 0;
-		while (len != len_old) {
-			if (isName && left != null) {
-				left.simplifyStep(true);
-			}
-			else {
-				simplifyStep(true);
-			}
-			len_old = len;
-			len = length();
-		}
-		len=-1;
-		len_old=0;
 		while (len != len_old) {
 			if (isName && left != null) {
 				left.simplifyStep();
@@ -723,7 +713,7 @@ class TermNode {
 		return this;
 	}
 	
-	function simplifyStep(?expandNow:Bool=false):Void {	
+	function simplifyStep():Void {	
 		if (!isOperation) return;
 		
 		if (left != null) {
@@ -764,7 +754,7 @@ class TermNode {
 					);
 				}
 				arrangeAddition();
-				if(expandNow==false) {
+				if(symbol == '+') {
 					factorize();
 				}
 			case '-':
@@ -791,7 +781,7 @@ class TermNode {
 					);
 				}
 				arrangeAddition();
-				if(expandNow==false) {
+				if(symbol == '-') {
 					factorize();
 				}
 			case '*':
@@ -815,10 +805,33 @@ class TermNode {
 						right.right.copy()
 					);
 				}
-				else{
-					if(expandNow) {
-						expand(); // (sum)*(sum)
-					}
+				else if (left.symbol == '-' && left.left.isValue && left.left.value == 0 && left.right.isValue && left.right.value == 1) {
+					setOperation('-', newValue(0), right.copy());
+				}
+				else if (right.symbol == '-' && right.left.isValue && right.left.value == 0 && right.right.isValue && right.right.value==1) {
+					setOperation('-', newValue(0), left.copy());
+				}
+				else if (left.symbol == '-' && left.right.symbol == '/' && left.left.isValue && left.left.value == 0) {
+					setOperation('-', newValue(0),
+						newOperation('/',
+							newOperation('*', left.right.left.copy(), right.copy()),
+							left.right.right.copy()
+						)
+					);
+				}
+				else if (right.symbol == '-' && right.right.symbol == '/' && right.left.isValue && right.left.value == 0) {
+					setOperation('-', newValue(0),
+						newOperation('/',
+							newOperation('*', right.right.left.copy(), left.copy()),
+							right.right.right.copy()
+						)
+					);
+				}
+				else if (right.symbol == '-' && right.left.isValue && right.left.value == 0 && left.symbol == '-' && left.left.isValue && left.left.value == 0) {
+					setOperation('*', left.right.copy(), right.right.copy());
+				}
+
+				else {
 					arrangeMultiplication();
 				}
 		case '/':
@@ -1015,10 +1028,35 @@ class TermNode {
 	}
 	
 	/*
-	 * expands a mathmatical expression into a polynomial
+	 * expand as often as you can
+	 *
+	 */
+	public function expandall() {
+		var len:Int = -1;
+		var len_old:Int = 0;
+		while(len != len_old) {
+			if (symbol == '*') {
+				expand();
+			}
+			else {
+				if(left != null) {
+					left.expandall();
+				}
+				if(right != null) {
+					right.expandall();
+			
+				}
+			}
+			len_old=len;
+			len=length();
+		}
+	}
+
+	/*
+	 * expands a mathmatical expression into a polynomial -> use only if top symbol=*
 	 * 
 	 */
-	public function expand()
+	function expand()
 	{
 		if (left.symbol == "+" || left.symbol == "-") {
 			if (right.symbol == "+" || right.symbol == "-") {
@@ -1138,7 +1176,7 @@ class TermNode {
 				new_add.push(v);
 			}
 			for(i in 0...add.length) {
-				if(add[i].symbol=='-' && add[i].left.value==0) {
+				if(add[i].symbol == '-' && add[i].left.value == 0) {
 					new_add[i].setOperation('-', newValue(0), new_add[i].copy());
 				}
 			}
@@ -1153,22 +1191,44 @@ class TermNode {
 	function factorize_extract_common(mult_matrix:Array<Array<TermNode>>, part_of_all:Array<TermNode>) {
 		var bool:Bool=false;
 		var matrix_length_old:Int=-1;
-		while(matrix_length_old!=mult_matrix[0].length) {
+		var i:TermNode=TermNode.fromString("42");
+		var exponentiation_counter:Int=0;
+		while(matrix_length_old != mult_matrix[0].length) {
 			matrix_length_old=mult_matrix[0].length;
-			for(i in mult_matrix[0]) {
+			for(p in mult_matrix[0]) {
+				if(p.symbol == '^') {
+					i.set(p.left);
+					exponentiation_counter++;
+				}
+				else if(p.symbol == '-' && p.left.isValue && p.left.value == 0) {
+					i.set(p.right);
+				}
+				else {
+					i.set(p);
+				}
 				for(j in 1...mult_matrix.length) {
 					bool=false;
 					for(h in mult_matrix[j]) {
 						if(h.isEqual(i)) {
 							bool=true;
 							break;
-						}	
+						}
+						else if(h.symbol == '^' && h.left.isEqual(i)) {
+							bool=true;
+							exponentiation_counter++;
+							break;
+		
+						}
+						else if(h.symbol == '-' && h.left.isValue && h.left.value == 0 && h.right.isEqual(i)) {
+							bool=true;
+							break;		
+						}
 					}
-					if(bool==false) {
+					if(bool == false) {
 						break;
 					}
 				}
-				if(bool==true) {
+				if(bool == true && exponentiation_counter < mult_matrix.length) {
 					part_of_all.push(newValue(42));
 					part_of_all[part_of_all.length-1].set(i);
 					var t:TermNode=TermNode.fromString("42");
@@ -1185,14 +1245,25 @@ class TermNode {
 		for(i in mult_matrix) {
 			if(i.length>1) {
 				for(j in 1...i.length+1) {
-					if(i[i.length-j].isEqual(d)) {
+					if(i[i.length-j].isEqual(d)) { //a*x -> a
 						for(h in 0...j-1) {
 							i[i.length-j+h].set(i[i.length-j+h+1]);
 						}
 						i.pop();
 						break;
 					}
+					else if(i[i.length-j].symbol == '^' && i[i.length-j].left.isEqual(d)) { //x^n -> x^(n-1)
+						i[i.length-j].right.set(newOperation('-', i[i.length-j].right.copy(), newValue(1)));
+						break;
+					}
+					else if(i[i.length-j].symbol == '-' && i[i.length-j].left.isValue && i[i.length-j].left.value == 0 && i[i.length-j].right.isEqual(d)) {
+					       i[i.length-j].right.set(newValue(1));
+				       		break;
+					}		
 				}
+			}
+			else if(i[0].symbol=='^' && i[0].left.isEqual(d)) { //x^n -> x^(n-1)
+				i[0].right.set(newOperation('-', i[0].right.copy(), newValue(1)));
 			}
 			else {
 				i[0].set(newValue(1));
@@ -1203,10 +1274,10 @@ class TermNode {
 	//compare function for Array.sort()
 	function formsort_compare(t1:TermNode, t2:TermNode):Int
 	{
-		if (t1.formsort_priority()>t2.formsort_priority()) {
+		if (t1.formsort_priority() > t2.formsort_priority()) {
 			return -1;
 		}
-		else if (t1.formsort_priority()<t2.formsort_priority()) {
+		else if (t1.formsort_priority() < t2.formsort_priority()) {
 			return 1;
 		}
 		else{
@@ -1239,7 +1310,7 @@ class TermNode {
 			case s if (isName):  symbol.charCodeAt(0);
 			case s if (isValue): 1+0.00001*value;
 			case s if (twoSideOpRegFull.match(s)) : 
-				if(symbol=='-' && left.value==0) {
+				if(symbol == '-' && left.value == 0) {
 					right.formsort_priority();
 				}
 				else {													 
@@ -1275,40 +1346,46 @@ class TermNode {
 		var add:Array<TermNode>=new Array();
 		traverseAddition(this, add);
 		add.sort(formsort_compare);
-		trace("before: " + this.toString());
-		for(i in add) {
-			trace(i.toString());
-		}
-		while(add.length!=addlength_old) {
+		while(add.length != addlength_old) {
 			addlength_old=add.length;
 			for(i in 0...add.length-1) {
 				if(add[i].isEqual(add[i+1])) {
 					add[i].setOperation('*', add[i].copy(), newValue(2));
-					for(j in i+1...add.length-1) {
-						add[j]=add[j+1];
+					for(j in 1...add.length-i-1) {
+						add[i+j]=add[i+j+1];
 					}
 					add.pop();
 					break;
 				}
-				if(add[i].symbol=='*' && add[i+1].symbol=='*' && add[i].right.isValue && add[i+1].isValue && add[i].left.isEqual(add[i+1].left)) {
+				if(add[i].symbol == '*' && add[i+1].symbol == '*' && add[i].right.isValue && add[i+1].isValue && add[i].left.isEqual(add[i+1].left)) {
 					add[i].right.setValue(add[i].right.value+add[i+1].right.value);
-					add.splice(i+1,1);
+					for(j in 1...add.length-i-1) {
+						add[i+j]=add[i+j+1];
+					}
+					add.pop();
 					break;
 				}
 				if(add[i].isValue && add[i+1].isValue) {
 					add[i].setValue(add[i].value+add[i+1].value);
-					add.splice(i+1,1);
+					for(j in 1...add.length-i-1) {
+						add[i+j]=add[i+j+1];
+					}
+					add.pop();
 					break;
 				}
-				if(newOperation('-', newValue(0), add[i]).isEqual(add[i+1])){
-					add.splice(i,2);
+				if((add[i].symbol=='-' && add[i].left.isValue && add[i].left.value == 0 && add[i].right.isEqual(add[i+1])) || (add[i+1].symbol=='-' && add[i+1].left.isValue && add[i+1].left.value == 0 && add[i+1].right.isEqual(add[i]))) {
+					for(j in 0...add.length-i-2) {
+						add[i+j]=add[i+j+2];
+					}
+					add.pop();
+					add.pop();
 					break;
 				}
 			}
 
-			if(add[0].symbol=='-' && add[0].left.value==0) {
+			if(add[0].symbol == '-' && add[0].left.value == 0) {
 				for(i in add) {
-					if(i.symbol=='-' && i.left.value==0) {
+					if(i.symbol == '-' && i.left.value == 0) {
 						i.set(i.right);
 					}
 					else {
@@ -1321,12 +1398,6 @@ class TermNode {
 			}
 				
 		}
-		trace("after:");
-		for(i in add){
-			trace(i.toString());
-		}
-
-
 		traverseAdditionBack(add);
 	}
 		
