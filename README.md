@@ -1,18 +1,107 @@
-# formula
-to play with mathematical formulas at [haxe-runtime](https://haxe.org).  
+# Formula
+handle mathematical expressions at [haxe-runtime](https://haxe.org).  
 
-This tool has arisen from [old C symbolic math stuff](https://github.com/maitag/lyapunov-c)  
-to handle math expressions at runtime.  
+This tool has its roots in [old C symbolic math stuff](https://github.com/maitag/lyapunov-c)  
 
 It can do simplification, forming derivative and  
-handling parameters to connect formulas together.  
+handling parameters to connect Formulas together.  
 
 ### Installation
 ```
-haxelib git formula https://github.com/maitag/formula.git
+haxelib git Formula https://github.com/maitag/formula.git
 ```
 
-### How to use
+### Documentation
+```
+	// Formula is an abstract class from TermNode for operator-overloading,
+	// prefer this one
+
+	// instantiation
+	var f:Formula;
+	
+	// set a TermNode for your object by using the "="-operator
+	// supported types are: String, Int
+	f = 3.14;
+	f = "(sqrt(5)-1)/2";
+	
+	// you can use variables inside of a Formula
+	f = "sin(b)";
+	// and also connect them to another Formula object later on
+	var x:Formula;
+	x = 0;
+	// name of variable is neither the name of the Formula-object nor the name of the formula-object known by the other formula-objects
+	// set the name the Formula object should be known to other Formula objects
+	x.name = "x";
+	// also possible in definition of x
+	x = "x: 0";
+	// it does not necessarily has to be the same name
+	// bind the variable b of Formula f to formula x
+	f.bind(["b" => x]); 
+	// if you want to bind more than one variable proceed like this: f.bind(["b" => x, "c" => c])
+	
+	// result() will calculate everything, use this if no undefined variables are left in your term
+	trace(f.result()); // 0
+	
+	// in String context now Formula will return the in x contained mathmatical expression
+	trace(f); // "sin(0)"
+	
+	// unbind a parameter
+	f.unbind(x);
+	// or f.unbind("x"), and if you have more than one parameter you want to unbind f.unbind["x", "y") or f.unbindAll()
+	trace(f); // "sin(b)"
+
+	// supported operator for Formula definitions are -, +, *, /, ^, %
+	// supported mathmatical functions are +, -, *, /, ^, %, log(a, b), ln(a), sin(a), cos(a), tan(a), e, pi, abs(a), cot(a), asin(a), acos(a), atan(a), atan2(a,b), max(a,b), min(a,b)
+	// useful other functions:
+	f.derivate(x)
+	f.expandall();
+	f.simplify();
+
+```
+
+	
+### Formula API
+```
+	new(s:String, ?params:Dynamic)
+		creates an Formula object based on the string s
+
+	set(a:Formula)
+		this Formula gets the same properties as a
+
+	bind(params:Dynamic):Formula
+		link a variable inside of this Formula to another Formula
+
+	unbind(params:Dynamic)
+		delete the connection between a variable and the linked Formula
+
+	unbindAll()
+		deletes the connection between all variables of the Formula and all linked Formulas
+	
+	copy()
+		returns a copy of this Formula
+
+	derivate(p:String)
+		returns the derivate of this mathmatical expression
+
+	toString(?depth:Null<Int>)
+		returns the mathmatical expression in form of a string
+		depth specifies how deep variables should be replaced by their corresponding Formulas
+	
+	simplify()
+		tries with various ways to make the term appear simpler
+		also normalizes it
+		unstable, use with caution
+
+	debug()
+		some debugging output
+	
+	expandAll()
+		expands the term
+
+```
+
+
+### Examples
 ```
 	var x:Formula, a:Formula, b:Formula, c:Formula, f:Formula;
 
@@ -80,13 +169,12 @@ haxelib git formula https://github.com/maitag/formula.git
 
 ### Todo
 
-- api documentation
 - position of error while thrown string-parsing-error
 - more useful unit tests
 - more ways to simplify and transform terms
 - comparing terms for equality
 - remove unnecessary parentheses
-
+- !-operator
 
 ### Possible tasks in future
 

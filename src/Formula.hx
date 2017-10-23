@@ -7,7 +7,7 @@ package;
  */
 
 
-@:forward( name, result, depth, params, unbindAll, debug )
+@:forward( name, result, depth, params, unbindAll, debug , expandAll)
 abstract Formula(TermNode) from TermNode to TermNode
 {	
 	inline public function new(s:String, ?params:Dynamic) {

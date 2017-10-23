@@ -695,7 +695,7 @@ class TermNode {
 	 * 
 	 */
 	public function simplify():TermNode {
-		expandall();
+		expandAll();
 		
 		var len:Int = -1;
 		var len_old:Int = 0;
@@ -1031,7 +1031,7 @@ class TermNode {
 	 * expand as often as you can
 	 *
 	 */
-	public function expandall() {
+	public function expandAll() {
 		var len:Int = -1;
 		var len_old:Int = 0;
 		while(len != len_old) {
@@ -1040,10 +1040,10 @@ class TermNode {
 			}
 			else {
 				if(left != null) {
-					left.expandall();
+					left.expandAll();
 				}
 				if(right != null) {
-					right.expandall();
+					right.expandAll();
 			
 				}
 			}
