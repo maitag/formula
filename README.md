@@ -13,66 +13,81 @@ haxelib git Formula https://github.com/maitag/formula.git
 ```
 
 ### Documentation
-Formula class is an [haxe-abstract](https://haxe.org/manual/types-abstract.html) of the underlaying TermNode class to support operator-overloading,  
+__Formula__ class is an [haxe-abstract](https://haxe.org/manual/types-abstract.html) of the underlaying TermNode class to support operator-overloading,  
 prefer this one for instantiation:
 ```
 var f:Formula;
 ```
 
-Set up a math expression with new(s:String) or use the "="-operator that supports String and Float:
+Set up a __math expression__ with new(s:String) or use the "="-operator that supports String and Float:
 ```
 f = new Formula("1+2*3");
 f = "1+2*3";
 f = 7;
 ```
 
-To be known to 'others', you can give every Formula object a name:
+
+__Math expressions:__
+
+supported operators:  
+`+`, `-`, `*`, `/`, `^`, `%`  
+
+mathmatical functions:  
+`log(a, b)`, `ln(a)`, `abs(a)`, `max(a,b)`, `min(a,b)`  
+`sin(a)`, `cos(a)`, `tan(a)`, `cot(a)`, `asin(a)`, `acos(a)`, `atan(a)`, `atan2(a,b)`  
+
+constants: `e()` and `pi()`  
+
+
+__Formula naming:__
+
+To be known to 'others', you can give a formula object a name:
 ```
 f.name = "f";
 ```
-or alternatively at first position while definition separated by a colon:
+
+or alternatively name it at first position while definition (separated by a colon):
 ```
 f = "f: 1+2*3";
 ```
 
-Supported operators inside math expression of a Formula are:  
-`+`, `-`, `*`, `/`, `^`, `%`  
 
-The following mathmatical functions  can be used:  
-`log(a, b)`, `ln(a)`, `abs(a)`, `max(a,b)`, `min(a,b)`  
-`sin(a)`, `cos(a)`, `tan(a)`, `cot(a)`, `asin(a)`, `acos(a)`, `atan(a)`, `atan2(a,b)`  
-
-Constant expressions are:  
-`e()` and `pi()`  
-
+__Parameter binding:__
 
 Bind Formulas together by using custom literals (like variable names):
 ```
 f = "sin(b)";  // other formula can be bind to 'b' later
 ```
+
 Now define another Formula object `x` to connect to variable `b` with the 'bind()' method:
 ```
 var x:Formula = 0;
 f.bind(["b" => x]); 
 ```
+
 Formula `x` does not necessarily has to be same named as variable inside `f`,  
 but if Formula `x` has same name, its more easy:
 ```
 x.name = "b";
 f.bind(x);
 ```
-To bind more than one variable at once, proceed like this: `f.bind(["b" => x, "c" => c]);`
+
+To bind more than one variable at once, proceed like this: `f.bind(["b" => x, "c" => c]);`  
 
 
-In a String context Formula will return the full dissolved mathmatical expression:
+__Output:__
+
+In a String context Formula will return the full dissolved mathmatical expression (includes all bindings):
 ```
 trace(f); // sin(0)
 ```
+
 To dissolve only at a certain level of subterms, use the `toString` method:
 ```
 trace( f.toString(0) ); // sin(b)
 trace( f.toString(1) ); // sin(0)
 ```
+
 Or print out all binding levels in order with the `debug()` method:
 ```
 f.name = "f";
@@ -80,11 +95,14 @@ f.debug(); // f = sin(b) -> sin(0)
 ```
 
 
-Calculating the result of a formula expression can be done with the `result()` method.  
-Use this if no unbinded variables are left in your term:
+__Calculating result:__
+
+The result of a formula expression can be calculate with the `result()` method.  
+Use this if no unbinded variables are left:
 ```
 trace(f.result()); // 0
 ```
+
 
 __Unbinding parameters:__
 ```
