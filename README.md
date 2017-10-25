@@ -12,49 +12,79 @@ haxelib git Formula https://github.com/maitag/formula.git
 ```
 
 ### Documentation
+Formula class is an abstract of the underlaying TermNode class to support operator-overloading,  
+prefer this one for instantiation:
 ```
-// Formula is an abstract class from TermNode for operator-overloading,
-// prefer this one
-
-// instantiation
 var f:Formula;
+```
 
-// set a TermNode for your object by using the "="-operator
-// supported types are: String, Int
-f = 3.14;
-f = "(sqrt(5)-1)/2";
+Set up a math expression with new(s:String) or use the "="-operator that supports String and Float:
+```
+f = new Formula("1+2*3");
+f = "1+2*3";
+f = 7;
+```
 
-// you can use variables inside of a Formula
+Using literals (variables) inside of a Formula:
+```
 f = "sin(b)";
-// and also connect them to another Formula object later on
+```
+
+Now define another Formula object to connect "b" later on
+```
 var x:Formula = 0;
+```
 
-// name of variable is neither the name of the Formula-object nor the name of the formula-object known by the other formula-objects
-// set the name the Formula object should be known to other Formula objects
+To be known to others, you can give every Formula object a name:
+```
 x.name = "x";
-// also possible in definition of x
-x = "x: 0";
+x = "x: 0";   // or alternatively in definition of x
+```
 
-// it does not necessarily has to be the same name
-// bind the variable b of Formula f to formula x
+To bind the variable b of Formula f to formula x it does not necessarily has to be the same name
+```
 f.bind(["b" => x]); 
-// if you want to bind more than one variable proceed like this: f.bind(["b" => x, "c" => c])
+// to bind more than one variable proceed like this: f.bind(["b" => x, "c" => c]);
+```
 
-// result() will calculate everything, use this if no undefined variables are left in your term
+If Formula x has same name as variable in f to bind, its more easy:
+```
+x.name = "b";
+f.bind(x);
+```
+
+
+result() will calculate everything, use this if no undefined variables are left in your term:
+```
 trace(f.result()); // 0
+```
 
-// in String context now Formula will return the in x contained mathmatical expression
+In a String context Formula will return the full dissolved mathmatical expression:
+```
 trace(f); // "sin(0)"
+```
+To dissolve only at a certain level of subterms use the toString(?depth:Null<Int>) method:
+```
+trace( f.toString(0) ); // "sin(b)"
+```
 
-// unbind a parameter
+
+Unbinding parameters:
+```
 f.unbind(x);
-// or f.unbind("x"), and if you have more than one parameter you want to unbind f.unbind["x", "y") or f.unbindAll()
+// or f.unbind("x"),
+// or unbind more than one: f.unbind["x", "y")
+// or f.unbindAll()
 trace(f); // "sin(b)"
+```
 
-// supported operator for Formula definitions are -, +, *, /, ^, %
-// supported mathmatical functions are +, -, *, /, ^, %, log(a, b), ln(a), sin(a), cos(a), tan(a), e, pi, abs(a), cot(a), asin(a), acos(a), atan(a), atan2(a,b), max(a,b), min(a,b)
-// useful other functions:
-f.derivate(x)
+Supported operators inside math expression of a Formula are: `+, -, *, /, ^, %`  
+Following mathmatical functions  can be used to: log(a, b), ln(a), sin(a), cos(a), tan(a), abs(a), cot(a), asin(a), acos(a), atan(a), atan2(a,b), max(a,b), min(a,b)  
+Constant functions: e, pi
+
+Useful other functions are:
+```
+f.derivate("b");
 f.expandall();
 f.simplify();
 ```
