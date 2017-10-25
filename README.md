@@ -62,7 +62,7 @@ f = "sin(b)";  // other formula can be bind to 'b' later
 Now define another Formula object `x` to connect to variable `b` with the 'bind()' method:
 ```
 var x:Formula = 0;
-f.bind(["b" => x]); 
+f.bind( ["b" => x] ); 
 ```
 
 Formula `x` does not necessarily has to be same named as variable inside `f`,  
@@ -72,7 +72,7 @@ x.name = "b";
 f.bind(x);
 ```
 
-To bind more than one variable at once, proceed like this: `f.bind(["b" => x, "c" => c]);`  
+To bind more than one variable at once, proceed like this: `f.bind( ["b" => x, "c" => c] );`  
 
 
 __Output:__
@@ -100,16 +100,21 @@ __Calculating result:__
 The result of a formula expression can be calculate with the `result()` method.  
 Use this if no unbinded variables are left:
 ```
-trace(f.result()); // 0
+trace( f.result() ); // 0
 ```
 
 
 __Unbinding parameters:__
 ```
 f.unbind(x);
-// or f.unbind("x"),
-// or unbind more than one: f.unbind["x", "y")
-// or f.unbindAll()
+// or f.unbind("b");
+
+// unbind more than one with array usage
+f.unbind( [x, y] );
+// or f.unbind( ["b", "c"] );
+
+// unbind all with:
+f.unbindAll();
 trace(f); // "sin(b)"
 ```
 
