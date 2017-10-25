@@ -35,17 +35,21 @@ or alternatively at first position while definition separated by a colon:
 f = "f: 1+2*3";
 ```
 
-Supported operators inside math expression of a Formula are: `+`, `-`, `*`, `/`, `^`, `%`  
-The following mathmatical functions  can be used: `log(a, b)`, `ln(a)`, `abs(a)`, `max(a,b)`, `min(a,b)`  
+Supported operators inside math expression of a Formula are:  
+`+`, `-`, `*`, `/`, `^`, `%`  
+
+The following mathmatical functions  can be used:  
+`log(a, b)`, `ln(a)`, `abs(a)`, `max(a,b)`, `min(a,b)`  
 `sin(a)`, `cos(a)`, `tan(a)`, `cot(a)`, `asin(a)`, `acos(a)`, `atan(a)`, `atan2(a,b)`  
-Constant expressions are: `e()` and `pi()`  
+
+Constant expressions are:  
+`e()` and `pi()`  
 
 
 Bind Formulas together by using custom literals (like variable names):
 ```
 f = "sin(b)";  // other formula can be bind to 'b' later
 ```
-
 Now define another Formula object `x` to connect to variable `b` with the 'bind()' method:
 ```
 var x:Formula = 0;
