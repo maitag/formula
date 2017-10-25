@@ -13,7 +13,7 @@ haxelib git Formula https://github.com/maitag/formula.git
 ```
 
 ### Documentation
-Formula class is an abstract of the underlaying TermNode class to support operator-overloading,  
+Formula class is an [haxe-abstract](https://haxe.org/manual/types-abstract.html) of the underlaying TermNode class to support operator-overloading,  
 prefer this one for instantiation:
 ```
 var f:Formula;
@@ -86,7 +86,7 @@ Use this if no unbinded variables are left in your term:
 trace(f.result()); // 0
 ```
 
-Unbinding parameters:
+####Unbinding parameters:
 ```
 f.unbind(x);
 // or f.unbind("x"),
