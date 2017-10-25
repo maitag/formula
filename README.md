@@ -13,23 +13,23 @@ haxelib git Formula https://github.com/maitag/formula.git
 ```
 
 ### Documentation
-__Formula__ class is an [haxe-abstract](https://haxe.org/manual/types-abstract.html) of the underlaying TermNode class to support operator-overloading,  
-prefer this one for instantiation:
+__Formula__ class is an [haxe-abstract](https://haxe.org/manual/types-abstract.html) to support operator-overloading from the underlaying __TermNode__ class,  
+so prefer this one for instantiation:
 ```
 var f:Formula;
 ```
 
-Set up a __math expression__ with new(s:String) or use the "="-operator that supports String and Float:
+Set up a math expression as String with new or using the "="-operator:
 ```
 f = new Formula("1+2*3");
 f = "1+2*3";
-f = 7;
+f = 7;  // supports Float to
 ```
 
 
 __Math expressions:__
 
-supported operators:  
+two side operators:  
 `+`, `-`, `*`, `/`, `^`, `%`  
 
 mathmatical functions:  
@@ -39,7 +39,7 @@ mathmatical functions:
 constants: `e()` and `pi()`  
 
 
-__Formula naming:__
+__Naming formulas:__
 
 To be known to 'others', you can give a formula object a name:
 ```
@@ -75,7 +75,7 @@ f.bind(x);
 To bind more than one variable at once, proceed like this: `f.bind( ["b" => x, "c" => c] );`  
 
 
-__Output:__
+__Output formulas:__
 
 In a String context Formula will return the full dissolved mathmatical expression (includes all bindings):
 ```
@@ -95,7 +95,7 @@ f.debug(); // f = sin(b) -> sin(0)
 ```
 
 
-__Calculating result:__
+__Calculating results:__
 
 The result of a formula expression can be calculate with the `result()` method.  
 Use this if no unbinded variables are left:
@@ -104,12 +104,12 @@ trace( f.result() ); // 0
 ```
 
 
-__Unbinding parameters:__
+__Unbinding of parameters:__
 ```
 f.unbind(x);
 // or f.unbind("b");
 
-// unbind more than one with array usage
+// unbind more than one with array usage:
 f.unbind( [x, y] );
 // or f.unbind( ["b", "c"] );
 
