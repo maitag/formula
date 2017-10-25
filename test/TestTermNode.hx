@@ -32,11 +32,52 @@ class TestTermNode extends haxe.unit.TestCase
 		
 	}
 	
+	inline function equal(a:String, b:String, ?compareNames=false, ?compareParams=false):Bool {
+		return TermNode.fromString(a).isEqual( TermNode.fromString(b), compareNames, compareParams);
+	}
+	public function testEqual()
+	{	
+		assertTrue( equal("f:1+2" , "f:1+2" , true) );
+		
+		assertTrue( equal("a:1+2" , "b:1+2" ) );
+		assertFalse( equal("a:1+2" , "b:1+2" , true) );
+		
+		assertTrue( equal("1+a" , "1+b" ) );
+		assertFalse( equal("1+a" , "1+b" ,false , true) );
+		
+		assertTrue( equal("1+2" , "1+2") );
+		assertTrue( equal("1+2*3" , "1+(2*3)") );
+		assertTrue( equal("f: 1+a*3" , "g: 1+(b*3)") );
+		
+		var a:TermNode = TermNode.fromString("a: 1+2");
+		var b:TermNode = TermNode.newValue(3);
+		
+		var f:TermNode = TermNode.fromString("f: a*b", ["a"=>a, "b"=>b] );
+		var g:TermNode = TermNode.fromString("g: (1+2)*3");
+
+		assertTrue(f.isEqual(g));		
+		assertTrue(f.isEqual(TermNode.fromString("(1+2)*c", ["c"=>b])));
+
+		// compare Names only
+		assertFalse(f.isEqual(g, true));  // different names
+		assertFalse(f.isEqual(TermNode.fromString("(1+2)*3"), true)); // different name (no name)
+		assertTrue (f.isEqual(TermNode.fromString("f: a*c", ["a"=>a, "c"=>b]), true)); // same name "f"
+		
+		// compare Params only		  
+		assertFalse(f.isEqual(g, false, true));
+		assertTrue(f.isEqual(TermNode.fromString("g: a*b", ["a" => a, "b" => b]), false, true));
+		
+		// compare Names and Params
+		assertFalse(f.isEqual(g, true, true));
+		assertFalse(f.isEqual(TermNode.fromString("f: a*c", ["a"=>a, "c"=>b]), true, true));
+		assertTrue(f.isEqual(TermNode.fromString("f: a*b", ["a"=>a, "b"=>b]), true, true));
+	}
+	
 	inline function simplify(s:String):String {
 		return TermNode.fromString(s).simplify().toString();
 	}
 	public function testSimplify()
-	{
+	{	
 		assertEquals(simplify("0+x"), "x");
 		assertEquals(simplify("x+0"), "x");
 		assertEquals(simplify("1*x"), "x");
@@ -56,18 +97,20 @@ class TestTermNode extends haxe.unit.TestCase
 		assertEquals(simplify("(a*ln(b))/ln(b)"), "a");
 		assertEquals(simplify("x/x"), "1");
 		assertEquals(simplify("b/(a*b)"), "1/a");
-		//assertEquals(simplify("x+x^2+2+4+x^5+x^ln(2)"), "((((x^5)+(x^2))+x)+(x^ln(2)))+6"); //thanks to factorization now complete gibberish like this: (((((((((x^(-5+ln(2)))+1)*x)*x)*x)+1)*x)+1)*x)+6, nested form is still mathmatically correct though
+		//assertEquals(simplify("x+x^2+2+4+x^5+x^ln(2)"), "((((x^5)+(x^2))+x)+(x^ln(2)))+6"); // thanks to factorization now complete gibberish like this: (((((((((x^(-5+ln(2)))+1)*x)*x)*x)+1)*x)+1)*x)+6, nested form is still mathmatically correct though
 
 		assertEquals(simplify("log(a,b)"), "ln(b)/ln(a)");
 		assertEquals(simplify("log(a,a)"), "1");
 		assertEquals(simplify("ln(a)+ln(b)"), "ln(b*a)");
 		assertEquals(simplify("log(a,b)+log(c,d)"), "((ln(c)*ln(b))+(ln(d)*ln(a)))/(ln(c)*ln(a))");
 		assertEquals(simplify("(x^a)^b"), "x^(b*a)");
-
-		/**assertEquals(simplify("(a+b)*(c-d)"), "-((d-c)*(b+a))");
+		
+		/*
+		assertEquals(simplify("(a+b)*(c-d)"), "-((d-c)*(b+a))");
 		assertEquals(simplify("(a-b)*(c+d)"), "-((d+c)*(b-a))");
-		assertEquals(simplify("(a-b)*(c-d)"), "-(-(d-c)*(b-a))"); -> not working, because factorize can only be applied to entire Node-structures**/
-
+		assertEquals(simplify("(a-b)*(c-d)"), "-(-(d-c)*(b-a))"); -> not working, because factorize can only be applied to entire Node-structures
+		*/
+		
 		assertEquals(simplify("(a+b)*c"), "c*(b+a)");
 		assertEquals(simplify("(a-b)*c"), "c*-(b-a)");
 		assertEquals(simplify("a*(b-c)"), "-(c-b)*a");
@@ -82,7 +125,8 @@ class TestTermNode extends haxe.unit.TestCase
 
 		//just to find bugs:
 		assertEquals(simplify("3*x^2+x*(-5*x+4)"), "((x*-2)+4)*x");
-		assertEquals(simplify("x^2-3*x*(4*x+2)"), "-((x*11)+6)*x"); 
+		assertEquals(simplify("x^2-3*x*(4*x+2)"), "-((x*11)+6)*x");
+		
 	}
 	
 	inline function derivate(s:String):String {

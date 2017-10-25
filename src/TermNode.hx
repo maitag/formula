@@ -296,13 +296,40 @@ class TermNode {
 			
 	
 	/*
-	 * TODO: check tree and not string-representation
+	 * returns true if other term is equal in data and structure
 	 * 
 	 */	
-	public function isEqual(t:TermNode):Bool
+	public function isEqual(t:TermNode, ?compareNames=false, ?compareParams=false):Bool
 	{
-		if (this.simplify().toString()==t.simplify().toString()) return true;
-		else return false;
+		if ( !compareNames && (isName || t.isName) ) {
+			if (isName   && left   != null) return left.isEqual(t, compareNames, compareParams);
+			if (t.isName && t.left != null) return isEqual(t.left, compareNames, compareParams);
+			return (isName && t.isName);
+		}
+		
+		if ( !compareParams && (isParam || t.isParam) ) {
+			if (isParam   && left   != null) return left.isEqual(t, compareNames, compareParams);
+			if (t.isParam && t.left != null) return isEqual(t.left, compareNames, compareParams);
+			return (isParam && t.isParam);
+		}
+		
+		var is_equal:Bool = false;
+		
+		if (isValue && t.isValue)
+			is_equal = (value==t.value);
+		else if ( (isName && t.isName) || (isParam && t.isParam) || (isOperation && t.isOperation) )
+			is_equal = (symbol==t.symbol);
+		
+		if (left != null) {
+			if (t.left != null) is_equal = is_equal && left.isEqual(t.left, compareNames, compareParams);
+			else is_equal = false;
+		}
+		if (right != null) {
+			if (t.right != null) is_equal = is_equal && right.isEqual(t.right, compareNames, compareParams);
+			else is_equal = false;		
+		}
+
+		return is_equal;
 	}
 	
 	/*
@@ -713,6 +740,13 @@ class TermNode {
 		return this;
 	}
 	
+	// TODO: take care, simplify changes both TermNodes on call !!!
+	// TODO: removing this ugly function and using "isEqual()" rather then !!!
+	function isEqualAfterSimplify(t:TermNode):Bool {
+		// old method: if (this.simplify().toString() == t.simplify().toString()) return true else return false;
+		return this.simplify().isEqual(t.simplify(), false, true);
+	}
+	
 	function simplifyStep():Void {	
 		if (!isOperation) return;
 		
@@ -737,8 +771,8 @@ class TermNode {
 					setOperation('ln',
 						newOperation('*', left.left.copy(), right.left.copy())
 					);
-				}
-				else if (left.symbol == '/' && right.symbol == '/' && left.right.isEqual(right.right)) {
+				}                                         // -> TODO: left.right.isEqual(right.right)
+				else if (left.symbol == '/' && right.symbol == '/' && left.right.isEqualAfterSimplify(right.right)) {
 					setOperation('/',                                           // a/b+c/b -> (a+c)/b
 						newOperation('+', left.left.copy(), right.left.copy()),
 						left.right.copy()
@@ -765,7 +799,7 @@ class TermNode {
 						newOperation('/', left.left.copy(), right.left.copy())
 					);
 				}
-				else if (left.symbol == '/' && right.symbol == '/' && left.right.isEqual(right.right)) {
+				else if (left.symbol == '/' && right.symbol == '/' && left.right.isEqualAfterSimplify(right.right)) {
 					setOperation('/',                                        // a/b-c/b -> (a-c)/b
 						newOperation('-', left.left.copy(), right.left.copy()),
 						left.right.copy()
@@ -835,7 +869,7 @@ class TermNode {
 					arrangeMultiplication();
 				}
 		case '/':
-				if (left.isEqual(right)) { // x/x -> 1
+				if (left.isEqualAfterSimplify(right)) { // x/x -> 1
 					setValue(1);
 				}
 				else {
@@ -889,7 +923,7 @@ class TermNode {
 			case 'ln':
 				if (left.symbol == 'e')	setValue(1);
 			case 'log':
-				if (left.isEqual(right)) {
+				if (left.isEqualAfterSimplify(right)) {
 					setValue(1);
 				}
 				else {
@@ -1001,7 +1035,7 @@ class TermNode {
 		traverseMultiplication(right, denominator);
 		for (n in numerator) {
 			for (d in denominator) {
-				if (n.isEqual(d)) {
+				if (n.isEqualAfterSimplify(d)) {
 					numerator.remove(n);
 					denominator.remove(d);
 				}
@@ -1209,17 +1243,17 @@ class TermNode {
 				for(j in 1...mult_matrix.length) {
 					bool=false;
 					for(h in mult_matrix[j]) {
-						if(h.isEqual(i)) {
+						if(h.isEqualAfterSimplify(i)) {
 							bool=true;
 							break;
 						}
-						else if(h.symbol == '^' && h.left.isEqual(i)) {
+						else if(h.symbol == '^' && h.left.isEqualAfterSimplify(i)) {
 							bool=true;
 							exponentiation_counter++;
 							break;
 		
 						}
-						else if(h.symbol == '-' && h.left.isValue && h.left.value == 0 && h.right.isEqual(i)) {
+						else if(h.symbol == '-' && h.left.isValue && h.left.value == 0 && h.right.isEqualAfterSimplify(i)) {
 							bool=true;
 							break;		
 						}
@@ -1245,24 +1279,24 @@ class TermNode {
 		for(i in mult_matrix) {
 			if(i.length>1) {
 				for(j in 1...i.length+1) {
-					if(i[i.length-j].isEqual(d)) { //a*x -> a
+					if(i[i.length-j].isEqualAfterSimplify(d)) { //a*x -> a
 						for(h in 0...j-1) {
 							i[i.length-j+h].set(i[i.length-j+h+1]);
 						}
 						i.pop();
 						break;
 					}
-					else if(i[i.length-j].symbol == '^' && i[i.length-j].left.isEqual(d)) { //x^n -> x^(n-1)
+					else if(i[i.length-j].symbol == '^' && i[i.length-j].left.isEqualAfterSimplify(d)) { //x^n -> x^(n-1)
 						i[i.length-j].right.set(newOperation('-', i[i.length-j].right.copy(), newValue(1)));
 						break;
 					}
-					else if(i[i.length-j].symbol == '-' && i[i.length-j].left.isValue && i[i.length-j].left.value == 0 && i[i.length-j].right.isEqual(d)) {
+					else if(i[i.length-j].symbol == '-' && i[i.length-j].left.isValue && i[i.length-j].left.value == 0 && i[i.length-j].right.isEqualAfterSimplify(d)) {
 					       i[i.length-j].right.set(newValue(1));
 				       		break;
 					}		
 				}
 			}
-			else if(i[0].symbol=='^' && i[0].left.isEqual(d)) { //x^n -> x^(n-1)
+			else if(i[0].symbol=='^' && i[0].left.isEqualAfterSimplify(d)) { //x^n -> x^(n-1)
 				i[0].right.set(newOperation('-', i[0].right.copy(), newValue(1)));
 			}
 			else {
@@ -1349,7 +1383,7 @@ class TermNode {
 		while(add.length != addlength_old) {
 			addlength_old=add.length;
 			for(i in 0...add.length-1) {
-				if(add[i].isEqual(add[i+1])) {
+				if(add[i].isEqualAfterSimplify(add[i+1])) {
 					add[i].setOperation('*', add[i].copy(), newValue(2));
 					for(j in 1...add.length-i-1) {
 						add[i+j]=add[i+j+1];
@@ -1357,7 +1391,7 @@ class TermNode {
 					add.pop();
 					break;
 				}
-				if(add[i].symbol == '*' && add[i+1].symbol == '*' && add[i].right.isValue && add[i+1].isValue && add[i].left.isEqual(add[i+1].left)) {
+				if(add[i].symbol == '*' && add[i+1].symbol == '*' && add[i].right.isValue && add[i+1].isValue && add[i].left.isEqualAfterSimplify(add[i+1].left)) {
 					add[i].right.setValue(add[i].right.value+add[i+1].right.value);
 					for(j in 1...add.length-i-1) {
 						add[i+j]=add[i+j+1];
@@ -1373,7 +1407,7 @@ class TermNode {
 					add.pop();
 					break;
 				}
-				if((add[i].symbol=='-' && add[i].left.isValue && add[i].left.value == 0 && add[i].right.isEqual(add[i+1])) || (add[i+1].symbol=='-' && add[i+1].left.isValue && add[i+1].left.value == 0 && add[i+1].right.isEqual(add[i]))) {
+				if((add[i].symbol=='-' && add[i].left.isValue && add[i].left.value == 0 && add[i].right.isEqualAfterSimplify(add[i+1])) || (add[i+1].symbol=='-' && add[i+1].left.isValue && add[i+1].left.value == 0 && add[i+1].right.isEqualAfterSimplify(add[i]))) {
 					for(j in 0...add.length-i-2) {
 						add[i+j]=add[i+j+2];
 					}
