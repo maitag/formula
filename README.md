@@ -29,7 +29,8 @@ f = 7;
 To be known to 'others', you can give every Formula object a name:
 ```
 f.name = "f";
-or alternatively while definition:
+```
+or alternatively at first position while definition separated by a colon:
 ```
 f = "f: 1+2*3";
 ```
