@@ -86,7 +86,7 @@ Use this if no unbinded variables are left in your term:
 trace(f.result()); // 0
 ```
 
-####Unbinding parameters:
+__Unbinding parameters:__
 ```
 f.unbind(x);
 // or f.unbind("x"),
