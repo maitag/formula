@@ -41,7 +41,7 @@ The following mathmatical functions  can be used: `log(a, b)`, `ln(a)`, `abs(a)`
 Constant expressions are: `e()` and `pi()`  
 
 
-Bind Formulas together by using custom literals (variable-name `b`) inside a Formula:
+Bind Formulas together by using custom literals (like variable names):
 ```
 f = "sin(b)";  // other formula can be bind to 'b' later
 ```
