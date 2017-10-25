@@ -229,7 +229,7 @@ f.debug(); // F = sin(5*a)+max(f,3) -> sin(5*-1)+max((a+(x/5)),3) -> sin(5*-1)+m
 ### Todo
 
 - position of error while thrown string-parsing-error
-- string-output for programming languages expressions
+- math expression output for programming languages (to use in glsl)
 - more useful unit tests
 - more ways to simplify and transform terms
 - comparing terms for equality
