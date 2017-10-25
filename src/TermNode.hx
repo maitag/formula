@@ -36,7 +36,7 @@ class TermNode {
 	}
 	
 	/*
-	 * gets depth of parameter bindings
+	 * returns depth of parameter bindings
 	 * 
 	 */	
 	public inline function depth():Int {
@@ -164,7 +164,7 @@ class TermNode {
 	}
 
 	/*
-	 * put out array of parameter-names
+	 * returns an array of parameter-names
 	 * 
 	 */	
 	public inline function params():Array<String> {

@@ -12,7 +12,7 @@ handling parameters to connect Formulas together.
 haxelib git Formula https://github.com/maitag/formula.git
 ```
 
-### Documentation
+## Documentation
 __Formula__ class is an [haxe-abstract](https://haxe.org/manual/types-abstract.html) to support operator-overloading from the underlaying __TermNode__ class,  
 so prefer this one for instantiation:
 ```
@@ -27,7 +27,7 @@ f = 7;  // supports Float to
 ```
 
 
-__Math expressions:__
+### Math expressions:
 
 two side operators:  
 `+`, `-`, `*`, `/`, `^`, `%`  
@@ -39,7 +39,7 @@ mathmatical functions:
 constants: `e()` and `pi()`  
 
 
-__Naming formulas:__
+### Naming formulas:
 
 To be known to 'others', you can give a formula object a name:
 ```
@@ -52,7 +52,7 @@ f = "f: 1+2*3";
 ```
 
 
-__Parameter binding:__
+### Parameter binding:
 
 Bind Formulas together by using custom literals (like variable names):
 ```
@@ -75,7 +75,7 @@ f.bind(x);
 To bind more than one variable at once, proceed like this: `f.bind( ["b" => x, "c" => c] );`  
 
 
-__Output formulas:__
+### Output formulas:
 
 In a String context Formula will return the full dissolved mathmatical expression (includes all bindings):
 ```
@@ -95,7 +95,7 @@ f.debug(); // f = sin(b) -> sin(0)
 ```
 
 
-__Calculating results:__
+### Calculating results:
 
 The result of a formula expression can be calculate with the `result()` method.  
 Use this if no unbinded variables are left:
@@ -104,7 +104,7 @@ trace( f.result() ); // 0
 ```
 
 
-__Unbinding of parameters:__
+### Unbinding of parameters:
 ```
 f.unbind(x);
 // or f.unbind("b");
@@ -119,47 +119,59 @@ trace(f); // "sin(b)"
 ```
 
 
-### Formula API
+## Formula API
 ```
 new(s:String, ?params:Dynamic)
 	creates an Formula object based on the string s
 
-set(a:Formula)
-	this Formula gets the same properties as a
-
+name:String (get and set)
+	Formula name
+	
+result:Float (get only)
+	calculation result of the math expression
+	
 bind(params:Dynamic):Formula
 	link a variable inside of this Formula to another Formula
 
-unbind(params:Dynamic)
+unbind(params:Dynamic):Formula
 	delete the connection between a variable and the linked Formula
 
-unbindAll()
+unbindAll():Formula
 	deletes the connection between all variables of the Formula and all linked Formulas
+	
+depth():Int
+	returns the max depth of parameter bindings
 
-copy()
+params():Array<String>
+	returns an array of parameter-names
+
+set(a:Formula):Formula
+	take a copy from another Formula (keeps the own name if it is defined)
+
+copy():Formula
 	returns a copy of this Formula
 
-derivate(p:String)
-	returns the derivate of this mathmatical expression
-
-toString(?depth:Null<Int>)
+toString(?depth:Null<Int>):String
 	returns the mathmatical expression in form of a string
 	depth specifies how deep variables should be replaced by their corresponding Formulas
-
-simplify()
-	tries various ways to make the term appear simpler
-	and also normalizes it
-	(use with caution because this process is not trivial and can be changed in later versions)
 
 debug()
 	debugging output to see all bindings
 
+simplify():Formula
+	tries various ways to make the term appear simpler
+	and also normalizes it
+	(use with caution because this process is not trivial and can be changed in later versions)
+
+derivate(p:String):Formula
+	returns the derivate of this mathmatical expression
+
 expandAll()
-	expands the term
+	mathematically expands the term
 ```
 
 
-### Examples
+## Examples
 ```
 var x:Formula, a:Formula, b:Formula, c:Formula, f:Formula;
 
@@ -226,7 +238,7 @@ f.debug(); // F = sin(5*a)+max(f,3) -> sin(5*-1)+max((a+(x/5)),3) -> sin(5*-1)+m
 ```
 
 
-### Todo
+## Todo
 
 - position of error while thrown string-parsing-error
 - math expression output for programming languages (to use in glsl)
