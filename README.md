@@ -6,6 +6,7 @@ This tool has its roots in [old C symbolic math stuff](https://github.com/maitag
 It can do simplification, forming derivative and  
 handling parameters to connect Formulas together.  
 
+
 ### Installation
 ```
 haxelib git Formula https://github.com/maitag/formula.git
@@ -25,49 +26,60 @@ f = "1+2*3";
 f = 7;
 ```
 
-Using literals (variables) inside of a Formula:
+To be known to 'others', you can give every Formula object a name:
 ```
-f = "sin(b)";
+f.name = "f";
+or alternatively while definition:
+```
+f = "f: 1+2*3";
 ```
 
-Now define another Formula object to connect "b" later on
+Supported operators inside math expression of a Formula are: `+`, `-`, `*`, `/`, `^`, `%`  
+The following mathmatical functions  can be used: `log(a, b)`, `ln(a)`, `abs(a)`, `max(a,b)`, `min(a,b)`  
+`sin(a)`, `cos(a)`, `tan(a)`, `cot(a)`, `asin(a)`, `acos(a)`, `atan(a)`, `atan2(a,b)`  
+Constant expressions are: `e()` and `pi()`  
+
+
+Bind Formulas together by using custom literals (variable-name `b`) inside a Formula:
+```
+f = "sin(b)";  // other formula can be bind to 'b' later
+```
+
+Now define another Formula object `x` to connect to variable `b` with the 'bind()' method:
 ```
 var x:Formula = 0;
-```
-
-To be known to others, you can give every Formula object a name:
-```
-x.name = "x";
-x = "x: 0";   // or alternatively in definition of x
-```
-
-To bind the variable b of Formula f to formula x it does not necessarily has to be the same name
-```
 f.bind(["b" => x]); 
-// to bind more than one variable proceed like this: f.bind(["b" => x, "c" => c]);
 ```
-
-If Formula x has same name as variable in f to bind, its more easy:
+Formula `x` does not necessarily has to be same named as variable inside `f`,  
+but if Formula `x` has same name, its more easy:
 ```
 x.name = "b";
 f.bind(x);
 ```
+To bind more than one variable at once, proceed like this: `f.bind(["b" => x, "c" => c]);`
 
-
-result() will calculate everything, use this if no undefined variables are left in your term:
-```
-trace(f.result()); // 0
-```
 
 In a String context Formula will return the full dissolved mathmatical expression:
 ```
-trace(f); // "sin(0)"
+trace(f); // sin(0)
 ```
-To dissolve only at a certain level of subterms use the toString(?depth:Null<Int>) method:
+To dissolve only at a certain level of subterms, use the `toString` method:
 ```
-trace( f.toString(0) ); // "sin(b)"
+trace( f.toString(0) ); // sin(b)
+trace( f.toString(1) ); // sin(0)
+```
+Or print out all binding levels in order with the `debug()` method:
+```
+f.name = "f";
+f.debug(); // f = sin(b) -> sin(0)
 ```
 
+
+Calculating the result of a formula expression can be done with the `result()` method.  
+Use this if no unbinded variables are left in your term:
+```
+trace(f.result()); // 0
+```
 
 Unbinding parameters:
 ```
@@ -76,17 +88,6 @@ f.unbind(x);
 // or unbind more than one: f.unbind["x", "y")
 // or f.unbindAll()
 trace(f); // "sin(b)"
-```
-
-Supported operators inside math expression of a Formula are: `+, -, *, /, ^, %`  
-Following mathmatical functions  can be used to: log(a, b), ln(a), sin(a), cos(a), tan(a), abs(a), cot(a), asin(a), acos(a), atan(a), atan2(a,b), max(a,b), min(a,b)  
-Constant functions: e, pi
-
-Useful other functions are:
-```
-f.derivate("b");
-f.expandall();
-f.simplify();
 ```
 
 
@@ -118,12 +119,12 @@ toString(?depth:Null<Int>)
 	depth specifies how deep variables should be replaced by their corresponding Formulas
 
 simplify()
-	tries with various ways to make the term appear simpler
-	also normalizes it
-	unstable, use with caution
+	tries various ways to make the term appear simpler
+	and also normalizes it
+	(use with caution because this process is not trivial and can be changed in later versions)
 
 debug()
-	some debugging output
+	debugging output to see all bindings
 
 expandAll()
 	expands the term
@@ -196,19 +197,21 @@ f.name = "F";
 f.debug(); // F = sin(5*a)+max(f,3) -> sin(5*-1)+max((a+(x/5)),3) -> sin(5*-1)+max((-1+((3*4)/5)),3)
 ```
 
+
 ### Todo
 
 - position of error while thrown string-parsing-error
+- string-output for programming languages expressions
 - more useful unit tests
 - more ways to simplify and transform terms
 - comparing terms for equality
 - remove unnecessary parentheses
 - !-operator
 
+
 ### Possible tasks in future
 
-- handling complex numbers
-- other datatypes for values (integer, fixed-point numbers, vectors, matrices)
+- handling other datatypes for values (integer, fixed-point numbers, vectors, matrices, complex numbers)
 - handle recursive parameter bindings (something like x(n+1) = x(n) ...)
 - definite integrals (or even indefinite later on)
 - gpu-optimization for parallel calculations
