@@ -13,13 +13,13 @@ haxelib git Formula https://github.com/maitag/formula.git
 ```
 
 ## Documentation
-__Formula__ class is an [haxe-abstract](https://haxe.org/manual/types-abstract.html) to support operator-overloading from the underlaying __TermNode__ class,  
+__Formula__ class is an [haxe-abstract](https://haxe.org/manual/types-abstract.html) to support operator-overloading for the underlaying __TermNode__ class,  
 so prefer this one for instantiation:
 ```
 var f:Formula;
 ```
 
-Set up a math expression as String with new or using the "="-operator:
+Set up a math expression from String with new or by using the "="-operator:
 ```
 f = new Formula("1+2*3");
 f = "1+2*3";
@@ -41,12 +41,12 @@ constants: `e()` and `pi()`
 
 ### Naming formulas:
 
-To be known to 'others', you can give a formula object a name:
+To be known to 'others', you can give a Formula object a name:
 ```
 f.name = "f";
 ```
 
-or alternatively name it at first position while definition (separated by a colon):
+or alternatively name it at first position in the definition (separated by a colon):
 ```
 f = "f: 1+2*3";
 ```
@@ -56,7 +56,7 @@ f = "f: 1+2*3";
 
 Bind Formulas together by using custom literals (like variable names):
 ```
-f = "sin(b)";  // other formula can be bind to 'b' later
+f = "sin(b)";  // other formula can be bound to 'b' later
 ```
 
 Now define another Formula object `x` to connect to variable `b` with the 'bind()' method:
@@ -65,8 +65,8 @@ var x:Formula = 0;
 f.bind( ["b" => x] ); 
 ```
 
-Formula `x` does not necessarily has to be same named as variable inside `f`,  
-but if Formula `x` has same name, its more easy:
+Formula `x` does not necessarily has to have the same name as the variable inside `f`,  
+but if Formula `x` has the same name, it's easier:
 ```
 x.name = "b";
 f.bind(x);
@@ -82,7 +82,7 @@ In a String context Formula will return the full dissolved mathmatical expressio
 trace(f); // sin(0)
 ```
 
-To dissolve only at a certain level of subterms, use the `toString` method:
+To dissolve only to a certain level of subterms, use the `toString` method:
 ```
 trace( f.toString(0) ); // sin(b)
 trace( f.toString(1) ); // sin(0)
@@ -97,8 +97,8 @@ f.debug(); // f = sin(b) -> sin(0)
 
 ### Calculating results:
 
-The result of a formula expression can be calculate with the `result()` method.  
-Use this if no unbinded variables are left:
+The result of a formula expression can be calculated with the `result()` method.  
+Use this if no unbound variables are left:
 ```
 trace( f.result() ); // 0
 ```
