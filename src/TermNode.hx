@@ -552,27 +552,52 @@ class TermNode {
 	 * Puts out Math Expression as a String
 	 * 
 	 */
-	public function toString(?depth:Null<Int> = null):String {
-		if (isName) return (left == null) ? symbol : left._toString(depth);
-		else return _toString(depth);
+	public function toString(?depth:Null<Int> = null, ?plOut:String = null):String {
+		var t:TermNode = this;
+		if (isName) t = left;
+		var options:Int;
+		switch (plOut) {
+			case 'glsl': options = noNeg|forceFloat|forcePow|forceMod|forceLog|forceAtan;
+			default:     options = 0;
+		}
+		return (left != null) ? t._toString(depth, options) : '';
 	}
+	// options
+	public static inline var noNeg:Int = 1;
+	public static inline var forceFloat:Int = 2;
+	public static inline var forcePow:Int = 4;
+	public static inline var forceMod:Int = 8;
+	public static inline var forceLog:Int = 16;
+	public static inline var forceAtan:Int = 32;
 	
-	function _toString(?depth:Null<Int>=null, ?isFirst:Bool=true):String {	
+	inline function _toString(depth:Null<Int>, options:Int, ?isFirst:Bool=true):String {	
 		if (depth == null) depth = -1;
 		return switch(symbol) {
-			case s if (isValue): Std.string(value);
+			case s if (isValue): floatToString(value, options);
 			//case s if (isName && isFirst):  (left == null) ? symbol : left.toString(depth, false);
-			case s if (isName):  (depth == 0 || left == null) ? symbol : left._toString(depth-1, false);
-			case s if (isParam): (depth == 0 || left == null) ? symbol : left._toString(depth-((left.isName)?0:1), false);
+			case s if (isName):  (depth == 0 || left == null) ? symbol : left._toString(depth-1, options, false);
+			case s if (isParam): (depth == 0 || left == null) ? symbol : left._toString(depth-((left.isName)?0:1), options, false);
 			case s if (twoSideOpRegFull.match(s)) :
-				if (symbol == '-' && left.isValue && left.value == 0) symbol + right._toString(depth, false);
-				else ((isFirst)?'':"(") + left._toString(depth, false) + symbol + right._toString(depth, false) + ((isFirst)?'':")");
-			case s if (twoParamOpRegFull.match(s)): symbol + "(" + left._toString(depth) + "," + right._toString(depth) + ")";
+				if (symbol == "-" && left.isValue && left.value == 0 && options&noNeg == 0) symbol + right._toString(depth, options, false);
+				else if (symbol == "^" && options&forcePow > 0) 'pow' + "(" + left._toString(depth, options) + "," + right._toString(depth, options) + ")";
+				else if (symbol == "%" && options&forceMod > 0) 'mod' + "(" + left._toString(depth, options) + "," + right._toString(depth, options) + ")";
+				else ((isFirst)?"":"(") + left._toString(depth, options, false) + symbol + right._toString(depth, options, false) + ((isFirst)?'':")");
+			case s if (twoParamOpRegFull.match(s)):
+				if (symbol == "log" && options&forceLog > 0) "(log(" + right._toString(depth, options) + ")/log(" + left._toString(depth, options) + "))";
+				if (symbol == "atan2" && options&forceAtan > 0) "atan(" + left._toString(depth, options) + "," + right._toString(depth, options) + ")";
+				else symbol + "(" + left._toString(depth, options) + "," + right._toString(depth, options) + ")";
 			case s if (constantOpRegFull.match(s)): symbol + "()";
-			default: symbol + "(" + left._toString(depth) +  ")";
+			default:
+				if (symbol == "ln" && options&forceLog > 0) 'log' + "(" + left._toString(depth, options) + ")";
+				else symbol + "(" + left._toString(depth, options) +  ")";
 		}
 	}
 	
+	inline function floatToString(value:Float, ?options:Int = 0):String {
+		var s:String = Std.string(value);
+		if (options&forceFloat > 0 && s.indexOf('.') == -1) s += ".0";
+		return s;
+	}
 	
 	/*
 	 * enrolls terms and subterms for debugging
