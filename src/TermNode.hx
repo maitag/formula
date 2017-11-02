@@ -397,7 +397,7 @@ class TermNode {
 	static var numberReg:EReg = ~/^([-+]?\d+\.?\d*)/;
 	static var paramReg:EReg = ~/^([a-z]+)/i;
 
-	static var constantOpReg:EReg = new EReg("^(" + constantOp.join("|")  + ")\\(" , "i");
+	static var constantOpReg:EReg = new EReg("^(" + constantOp.join("|")  + ")\\(\\)" , "i");
 	static var oneParamOpReg:EReg = new EReg("^(" + oneParamOp.join("|")  + ")\\(" , "i");
 	static var twoParamOpReg:EReg = new EReg("^(" + twoParamOp.join("|")  + ")\\(" , "i");
 	static var twoSideOpReg: EReg = new EReg("^(" + "\\"+ twoSideOp.join("|\\") + ")" , "");
@@ -442,7 +442,8 @@ class TermNode {
 			}
 			else if (constantOpReg.match(s)) {  // like e() or pi()
 				e = constantOpReg.matched(1);
-				t = newOperation(e);				
+				t = newOperation(e);
+				e+= "()";
 			}
 			else if (oneParamOpReg.match(s)) {  // like sin(...)
 				f = oneParamOpReg.matched(1);
@@ -563,7 +564,7 @@ class TermNode {
 			case 'glsl': options = noNeg|forceFloat|forcePow|forceMod|forceLog|forceAtan;
 			default:     options = 0;
 		}
-		return (left != null) ? t._toString(depth, options) : '';
+		return (left != null || !isName) ? t._toString(depth, options) : '';
 	}
 	// options
 	public static inline var noNeg:Int = 1;
