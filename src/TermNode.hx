@@ -1,4 +1,7 @@
 package;
+import haxe.io.Bytes;
+import haxe.io.BytesInput;
+import haxe.io.BytesOutput;
 
 /**
  * knot of a Tree to do math operations at runtime
@@ -613,7 +616,71 @@ class TermNode {
 		trace(out);
 	}
 	
+	/*
+	 * packs a TermNode and all sub-terms into Bytes
+	 * 
+	 */
+	public function pack():Bytes {
+		var b = new BytesOutput();
+		_pack(b);
+		return b.getBytes();
+	}
 	
+	function _pack(b:BytesOutput) {
+		// optimize (later to do): needs only 3 bit per TermNode type!
+		if (isValue) {
+			b.writeByte(0);
+			b.writeFloat(value);
+		}
+		else if (isName) {
+			b.writeByte((left!=null) ? 1:2);
+			b.writeByte(symbol.charCodeAt(0));
+			if (left!=null) left._pack(b);
+		}
+		else if (isParam) {
+			b.writeByte((left!=null) ? 3:4);
+			b.writeByte(symbol.charCodeAt(0));
+			if (left!=null) left._pack(b);
+		}
+		else if (isOperation) {
+			b.writeByte(5);
+			var i:Int = twoSideOp.concat(constantOp.concat(oneParamOp.concat(twoParamOp))).indexOf(symbol);
+			if (i > -1)	{
+				b.writeByte(i);
+				if (oneParamOpRegFull.match(symbol)) left._pack(b);
+				else if (twoSideOpRegFull.match(symbol) || twoParamOpRegFull.match(symbol) ) { 
+					left._pack(b);
+					right._pack(b);
+				}
+			}
+			else throw("Error in _pack");
+		}
+		else throw("Error in _pack");
+	}
+	
+	/*
+	 * unserialize packed Bytes-Term to create a TermNode structure
+	 * 
+	 */
+	public static function unPack(b:Bytes):TermNode {
+		return _unPack(new BytesInput(b));	 
+	}
+	
+	static function _unPack(b:BytesInput):TermNode {
+		return switch (b.readByte()) {
+			case 0: TermNode.newValue(b.readFloat());
+			case 1: TermNode.newName( String.fromCharCode(b.readByte()), _unPack(b) );
+			case 2: TermNode.newName( String.fromCharCode(b.readByte()) );
+			case 3: TermNode.newParam( String.fromCharCode(b.readByte()) );
+			case 4: TermNode.newParam( String.fromCharCode(b.readByte()), _unPack(b) );
+			case 5: 
+				var op:String = twoSideOp.concat(constantOp.concat(oneParamOp.concat(twoParamOp)))[b.readByte()];
+				if (oneParamOpRegFull.match(op)) TermNode.newOperation( op, _unPack(b) );
+				else if (twoSideOpRegFull.match(op) || twoParamOpRegFull.match(op) ) TermNode.newOperation( op, _unPack(b) );
+				else TermNode.newOperation( op );
+			default: throw("Error in _unPack");
+		}
+	}
 	
 	
 	/**************************************************************************************
