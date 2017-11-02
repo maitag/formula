@@ -671,12 +671,12 @@ class TermNode {
 			case 0: TermNode.newValue(b.readFloat());
 			case 1: TermNode.newName( String.fromCharCode(b.readByte()), _unPack(b) );
 			case 2: TermNode.newName( String.fromCharCode(b.readByte()) );
-			case 3: TermNode.newParam( String.fromCharCode(b.readByte()) );
-			case 4: TermNode.newParam( String.fromCharCode(b.readByte()), _unPack(b) );
+			case 3: TermNode.newParam( String.fromCharCode(b.readByte()), _unPack(b) );
+			case 4: TermNode.newParam( String.fromCharCode(b.readByte()) );
 			case 5: 
 				var op:String = twoSideOp.concat(constantOp.concat(oneParamOp.concat(twoParamOp)))[b.readByte()];
 				if (oneParamOpRegFull.match(op)) TermNode.newOperation( op, _unPack(b) );
-				else if (twoSideOpRegFull.match(op) || twoParamOpRegFull.match(op) ) TermNode.newOperation( op, _unPack(b) );
+				else if (twoSideOpRegFull.match(op) || twoParamOpRegFull.match(op) ) TermNode.newOperation( op, _unPack(b), _unPack(b) );
 				else TermNode.newOperation( op );
 			default: throw("Error in _unPack");
 		}

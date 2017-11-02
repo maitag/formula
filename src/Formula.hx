@@ -1,4 +1,5 @@
 package;
+import haxe.io.Bytes;
 
 /**
  * abstract wrapper around TermNode
@@ -7,7 +8,7 @@ package;
  */
 
 
-@:forward( name, result, depth, params, unbindAll, debug , expandAll)
+@:forward( name, result, depth, params, unbindAll, pack, debug , expandAll)
 abstract Formula(TermNode) from TermNode to TermNode
 {	
 	inline public function new(s:String, ?params:Dynamic) {
@@ -81,6 +82,7 @@ abstract Formula(TermNode) from TermNode to TermNode
 	public inline function derivate(p:String):Formula return this.derivate(p);
 
 	inline public function toString(?depth:Null<Int> = null, ?plOut:String = null):String return this.toString(depth, plOut);
+	inline public static function unPack(b:Bytes):Formula return TermNode.unPack(b);
 	
 	@:to inline public function toStr():String return this.toString(0);
 	@:to inline public function toFloat():Float return this.result;
