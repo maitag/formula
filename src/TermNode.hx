@@ -489,7 +489,7 @@ class TermNode {
 					operations[operations.length - 2].rightOperation = operations[operations.length - 1];
 					operations[operations.length - 1].leftOperation = operations[operations.length - 2];
 				}
-			}
+			} else if (s.length > 0) throw("Missing operation.");
 		}
 		
 		if ( operations.length > 0 ) {
@@ -621,13 +621,13 @@ class TermNode {
 	 * packs a TermNode and all sub-terms into Bytes
 	 * 
 	 */
-	public function pack():Bytes {
+	public function toBytes():Bytes {
 		var b = new BytesOutput();
-		_pack(b);
+		_toBytes(b);
 		return b.getBytes();
 	}
 	
-	function _pack(b:BytesOutput) {
+	inline function _toBytes(b:BytesOutput) {
 		// optimize (later to do): needs only 3 bit per TermNode type!
 		if (isValue) {
 			b.writeByte(0);
@@ -635,52 +635,63 @@ class TermNode {
 		}
 		else if (isName) {
 			b.writeByte((left!=null) ? 1:2);
-			b.writeByte(symbol.charCodeAt(0));
-			if (left!=null) left._pack(b);
+			_writeString(symbol, b);
+			if (left!=null) left._toBytes(b);
 		}
 		else if (isParam) {
 			b.writeByte((left!=null) ? 3:4);
-			b.writeByte(symbol.charCodeAt(0));
-			if (left!=null) left._pack(b);
+			_writeString(symbol, b);
+			if (left!=null) left._toBytes(b);
 		}
 		else if (isOperation) {
 			b.writeByte(5);
 			var i:Int = twoSideOp.concat(constantOp.concat(oneParamOp.concat(twoParamOp))).indexOf(symbol);
 			if (i > -1)	{
 				b.writeByte(i);
-				if (oneParamOpRegFull.match(symbol)) left._pack(b);
+				if (oneParamOpRegFull.match(symbol)) left._toBytes(b);
 				else if (twoSideOpRegFull.match(symbol) || twoParamOpRegFull.match(symbol) ) { 
-					left._pack(b);
-					right._pack(b);
+					left._toBytes(b);
+					right._toBytes(b);
 				}
 			}
-			else throw("Error in _pack");
+			else throw("Error in _toBytes");
 		}
-		else throw("Error in _pack");
+		else throw("Error in _toBytes");
 	}
 	
+	inline function _writeString(s:String, b:BytesOutput) {
+		b.writeByte((s.length<255) ? s.length: 255);
+		for (i in 0...((s.length<255) ? s.length: 255)) b.writeByte(symbol.charCodeAt(i));
+	}
 	/*
 	 * unserialize packed Bytes-Term to create a TermNode structure
 	 * 
 	 */
-	public static function unPack(b:Bytes):TermNode {
-		return _unPack(new BytesInput(b));	 
+	public static function fromBytes(b:Bytes):TermNode {
+		return _fromBytes(new BytesInput(b));	 
 	}
 	
-	static function _unPack(b:BytesInput):TermNode {
+	static inline function _fromBytes(b:BytesInput):TermNode {
 		return switch (b.readByte()) {
 			case 0: TermNode.newValue(b.readFloat());
-			case 1: TermNode.newName( String.fromCharCode(b.readByte()), _unPack(b) );
-			case 2: TermNode.newName( String.fromCharCode(b.readByte()) );
-			case 3: TermNode.newParam( String.fromCharCode(b.readByte()), _unPack(b) );
-			case 4: TermNode.newParam( String.fromCharCode(b.readByte()) );
+			case 1: TermNode.newName( _readString(b), _fromBytes(b) );
+			case 2: TermNode.newName( _readString(b) );
+			case 3: TermNode.newParam( _readString(b), _fromBytes(b) );
+			case 4: TermNode.newParam( _readString(b) );
 			case 5: 
 				var op:String = twoSideOp.concat(constantOp.concat(oneParamOp.concat(twoParamOp)))[b.readByte()];
-				if (oneParamOpRegFull.match(op)) TermNode.newOperation( op, _unPack(b) );
-				else if (twoSideOpRegFull.match(op) || twoParamOpRegFull.match(op) ) TermNode.newOperation( op, _unPack(b), _unPack(b) );
+				if (oneParamOpRegFull.match(op)) TermNode.newOperation( op, _fromBytes(b) );
+				else if (twoSideOpRegFull.match(op) || twoParamOpRegFull.match(op) ) TermNode.newOperation( op, _fromBytes(b), _fromBytes(b) );
 				else TermNode.newOperation( op );
-			default: throw("Error in _unPack");
+			default: throw("Error in _fromBytes");
 		}
+	}
+	
+	static inline function _readString(b:BytesInput):String {
+		var len:Int = b.readByte();
+		var s:String = "";
+		for (i in 0...len) s += String.fromCharCode(b.readByte());
+		return s;
 	}
 	
 	

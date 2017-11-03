@@ -169,10 +169,10 @@ derivate(p:String):Formula
 expandAll()
 	mathematically expands the term
 	
-pack():Bytes
+toBytes():Bytes
 	packs Formula into haxe.io.Bytes for more efficiently storage
 
-unPack(b:Bytes):Formula
+Formula.fromBytes(b:Bytes):Formula
 	static function to extract a Formula from haxe.io.Bytes
 ```
 
