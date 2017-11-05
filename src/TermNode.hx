@@ -255,7 +255,7 @@ class TermNode {
 		if (isValue) return TermNode.newValue(value);
 		else if (isName) return TermNode.newName(symbol, (left!=null) ? left.copy() : null);
 		else if (isParam) return TermNode.newParam(symbol, (left!=null) ? left.copy() : null);
-		else return TermNode.newOperation(symbol, left.copy(), (right!=null) ? right.copy() : null);
+		else return TermNode.newOperation(symbol, (left!=null) ? left.copy() : null, (right!=null) ? right.copy() : null);
 	}
 
 	/*
@@ -292,6 +292,7 @@ class TermNode {
 			case s if (isValue): 1;
 			case s if (isName):  (left == null) ? 0 : left.length(depth);
 			case s if (isParam): (depth == 0 || left == null) ? 1 : left.length(depth-1);
+			case s if (constantOpRegFull.match(s)): 1;
 			case s if (oneParamOpRegFull.match(s)): 1 + left.length(depth);
 			default: 1 + left.length(depth) + right.length(depth);
 		}		
@@ -561,7 +562,7 @@ class TermNode {
 		if (isName) t = left;
 		var options:Int;
 		switch (plOut) {
-			case 'glsl': options = noNeg|forceFloat|forcePow|forceMod|forceLog|forceAtan;
+			case 'glsl': options = noNeg|forceFloat|forcePow|forceMod|forceLog|forceAtan|forceConst;
 			default:     options = 0;
 		}
 		return (left != null || !isName) ? t._toString(depth, options) : '';
@@ -573,6 +574,7 @@ class TermNode {
 	public static inline var forceMod:Int = 8;
 	public static inline var forceLog:Int = 16;
 	public static inline var forceAtan:Int = 32;
+	public static inline var forceConst:Int = 64;
 	
 	inline function _toString(depth:Null<Int>, options:Int, ?isFirst:Bool=true):String {	
 		if (depth == null) depth = -1;
@@ -588,9 +590,12 @@ class TermNode {
 				else ((isFirst)?"":"(") + left._toString(depth, options, false) + symbol + right._toString(depth, options, false) + ((isFirst)?'':")");
 			case s if (twoParamOpRegFull.match(s)):
 				if (symbol == "log" && options&forceLog > 0) "(log(" + right._toString(depth, options) + ")/log(" + left._toString(depth, options) + "))";
-				if (symbol == "atan2" && options&forceAtan > 0) "atan(" + left._toString(depth, options) + "," + right._toString(depth, options) + ")";
+				else if (symbol == "atan2" && options&forceAtan > 0) "atan(" + left._toString(depth, options) + "," + right._toString(depth, options) + ")";
 				else symbol + "(" + left._toString(depth, options) + "," + right._toString(depth, options) + ")";
-			case s if (constantOpRegFull.match(s)): symbol + "()";
+			case s if (constantOpRegFull.match(s)):
+				if (symbol == "pi" && options & forceConst > 0) Std.string(Math.PI);
+				else if (symbol == "e" && options&forceConst > 0) Std.string(Math.exp(1));
+				else symbol + "()";
 			default:
 				if (symbol == "ln" && options&forceLog > 0) 'log' + "(" + left._toString(depth, options) + ")";
 				else symbol + "(" + left._toString(depth, options) +  ")";
