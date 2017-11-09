@@ -166,8 +166,8 @@ simplify():Formula
 derivate(p:String):Formula
 	returns the derivate of this mathmatical expression
 
-expandAll()
-	mathematically expands the term
+expand():Formula
+	mathematically expands the term into a polynomial
 	
 toBytes():Bytes
 	packs Formula into haxe.io.Bytes for more efficiently storage

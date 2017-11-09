@@ -4,7 +4,7 @@
 	"license": "MIT",
 	"tags": ["math", "expression", "derivate", "derivation"],
 	"description": "math expression parser and more",
-	"version": "0.3.3",
+	"version": "0.3.4",
 	"classPath": "src/",
 	"releasenote": "works",
 	"contributors": ["maitag", "samusake"],

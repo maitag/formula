@@ -8,7 +8,7 @@ import haxe.io.Bytes;
  */
 
 
-@:forward( name, result, depth, params, unbindAll, toBytes, debug , expandAll)
+@:forward( name, result, depth, params, unbindAll, toBytes, debug, copy, derivate, simplify, expand)
 abstract Formula(TermNode) from TermNode to TermNode
 {	
 	inline public function new(s:String, ?params:Dynamic) {
@@ -75,12 +75,7 @@ abstract Formula(TermNode) from TermNode to TermNode
 			throw "Unbind parameter isn't of type: Formula, String, Array<String>, Array<Formula> or Map<Formula, String>.";
 		}
 	}
-	//public inline function unbindAll():Formula return this.unbindAll();
 	
-	public inline function copy():Formula return this.copy();
-	public inline function simplify():Formula return this.simplify();
-	public inline function derivate(p:String):Formula return this.derivate(p);
-
 	inline public function toString(?depth:Null<Int> = null, ?plOut:String = null):String return this.toString(depth, plOut);
 	inline public static function fromBytes(b:Bytes):Formula return TermNode.fromBytes(b);
 	
