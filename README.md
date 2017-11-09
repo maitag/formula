@@ -246,11 +246,11 @@ f.debug(); // F = sin(5*a)+max(f,3) -> sin(5*-1)+max((a+(x/5)),3) -> sin(5*-1)+m
 
 ## Todo
 
+- simplify() and expand() should not change the TermNode itself
 - position of error while thrown string-parsing-error
-- math expression output for programming languages (to use in glsl)
 - more useful unit tests
 - more ways to simplify and transform terms
-- comparing terms for equality
+- comparing terms for math-equality
 - remove unnecessary parentheses
 - !-operator
 
