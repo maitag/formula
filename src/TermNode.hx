@@ -725,5 +725,12 @@ class TermNode {
 	 */
 	public function expand():TermNode return TermTransform.expand(this);
 
-
+	/*
+	 * factorizes a mathmatical expression
+	 *
+	 */
+	public function factorize():TermNode {
+		TermTransform.factorize(this);
+		return(this);
+	}
 }
