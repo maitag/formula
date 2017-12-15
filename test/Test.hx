@@ -8,7 +8,6 @@ class Test {
 		r.add(new TestTermDerivate());
 		r.add(new TestTermTransform());
 
-
 		// run the tests
 		r.run();
 	}
