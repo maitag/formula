@@ -233,7 +233,7 @@ trace( f.params() ); // [ "a", "x" ]
 // debugging Formulas
 f.debug(); // f = a+(x/5) -> (1-2)+((3*4)/5)
 
-// simplify reduce operations
+// simplify reduces operations
 a.simplify();
 trace( f );             // -1+((3*4)/5)
 
