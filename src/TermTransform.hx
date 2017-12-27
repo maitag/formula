@@ -16,7 +16,7 @@ class TermTransform {
 	 * 
 	 */
 	static public inline function simplify(t:TermNode):TermNode {
-		expand(t);
+		t=expand(t);
 		
 		var len:Int = -1;
 		var len_old:Int = 0;
@@ -332,25 +332,26 @@ class TermTransform {
 	 *
 	 */
 	static public function expand(t:TermNode):TermNode {
+		var tnew:TermNode=t;
 		var len:Int = -1;
 		var len_old:Int = 0;
 		while(len != len_old) {
-			if (t.symbol == '*') {
-				expandStep(t);
+			if (tnew.symbol == '*') {
+				expandStep(tnew);
 			}
 			else {
-				if(t.left != null) {
-					expand(t.left);
+				if(tnew.left != null) {
+					expand(tnew.left);
 				}
-				if(t.right != null) {
-					expand(t.right);
+				if(tnew.right != null) {
+					expand(tnew.right);
 			
 				}
 			}
 			len_old = len;
-			len = t.length();
+			len = tnew.length();
 		}
-		return t;
+		return tnew;
 	}
 
 	/*
