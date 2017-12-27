@@ -332,7 +332,7 @@ class TermTransform {
 	 *
 	 */
 	static public function expand(t:TermNode):TermNode {
-		var tnew:TermNode=t;
+		var tnew:TermNode=t.copy();
 		var len:Int = -1;
 		var len_old:Int = 0;
 		while(len != len_old) {
