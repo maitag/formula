@@ -3,8 +3,8 @@ handle mathematical expressions at [haxe-runtime](https://haxe.org).
 
 This tool has its roots in [old C symbolic math stuff](https://github.com/maitag/lyapunov-c)  
 
-It can do simplification, forming derivative and  
-handling parameters to connect Formulas together.  
+It can form derivatives, simplify terms and  
+handle parameters to connect Formulas together.  
 
 
 ### Installation
@@ -13,8 +13,8 @@ haxelib git Formula https://github.com/maitag/formula.git
 ```
 
 ## Documentation
-__Formula__ class is an [haxe-abstract](https://haxe.org/manual/types-abstract.html) to support operator-overloading for the underlaying __TermNode__ class,  
-so prefer this one for instantiation:
+__Formula__ class is a [haxe-abstract](https://haxe.org/manual/types-abstract.html) to support operator-overloading for the underlaying __TermNode__ class,  
+therefore prefer this one for instantiation:
 ```
 var f:Formula;
 ```
@@ -23,7 +23,7 @@ Set up a math expression from String with new or by using the "="-operator:
 ```
 f = new Formula("1+2*3");
 f = "1+2*3";
-f = 7;  // supports Float to
+f = 7;  // supports Float too
 ```
 
 
@@ -161,14 +161,14 @@ debug()
 simplify():Formula
 	tries various ways to make the term appear simpler
 	and also normalizes it
-	(use with caution because this process is not trivial and can be changed in later versions)
+	(use with caution because this process is not trivial and could be changed in later versions)
 
 derivate(p:String):Formula
 	returns the derivate of this mathmatical expression
 
 expand():Formula
 	mathematically expands the term into a polynomial
-	
+
 toBytes():Bytes
 	packs Formula into haxe.io.Bytes for more efficiently storage
 
@@ -189,7 +189,7 @@ f = "2.5 * sin(x-a)^2";
 // change name of Formula
 x.name = "x";
 
-// bind Formulas as parameter to other Formula
+// bind Formulas as parameters to other Formula
 f.bind(["x" => x, "a" => a]);
 
 trace( f.toString(0) ); // 2.5*(sin(x-a)^2)
@@ -233,7 +233,7 @@ trace( f.params() ); // [ "a", "x" ]
 // debugging Formulas
 f.debug(); // f = a+(x/5) -> (1-2)+((3*4)/5)
 
-// simplify reduce operations with values
+// simplify reduce operations
 a.simplify();
 trace( f );             // -1+((3*4)/5)
 
