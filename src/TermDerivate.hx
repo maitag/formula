@@ -126,6 +126,10 @@ class TermDerivate {
 				newOperation('*', derivate(t.left, p),
 					newOperation('/', newValue(1), t.left.copy())
 				);
+			case 'abs':
+				newOperation('*', derivate(t.left, p),
+					newOperation('/', t.left.copy(), newOperation('abs', t.left.copy()) )
+				);
 				
 			default: throw('derivation of "${t.symbol}" not implemented');	
 		}

@@ -146,28 +146,33 @@ params():Array<String>
 	returns an array of parameter-names
 
 set(a:Formula):Formula
-	take a copy from another Formula (keeps the own name if it is defined)
+	copy all from another Formula to this (keeps the own name if it is defined)
 
 copy():Formula
 	returns a copy of this Formula
 
-toString(?depth:Null<Int>):String
+toString(?depth:Null<Int>, ?plOut:String):String
 	returns the mathmatical expression in form of a string
-	depth specifies how deep variables should be replaced by their corresponding Formulas
+	parameters:
+		depth: specifies how deep variables should be replaced by their corresponding Formulas
+		plOut: to generate output syntax for different programming languages ( only 'glsl' yet )
 
 debug()
 	debugging output to see all bindings
+
+derivate(p:String):Formula
+	returns the derivate of this mathmatical expression
 
 simplify():Formula
 	tries various ways to make the term appear simpler
 	and also normalizes it
 	(use with caution because this process is not trivial and could be changed in later versions)
 
-derivate(p:String):Formula
-	returns the derivate of this mathmatical expression
-
 expand():Formula
 	mathematically expands the term into a polynomial
+
+factorize():Formula
+	factorizes a mathmatical expression
 
 toBytes():Bytes
 	packs Formula into haxe.io.Bytes for more efficiently storage

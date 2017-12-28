@@ -8,7 +8,7 @@ import haxe.io.Bytes;
  */
 
 
-@:forward( name, result, depth, params, unbindAll, toBytes, debug, copy, derivate, simplify, expand)
+@:forward( name, result, depth, params, unbindAll, toBytes, debug, copy, derivate, simplify, expand, factorize)
 abstract Formula(TermNode) from TermNode to TermNode
 {	
 	inline public function new(s:String, ?params:Dynamic) {
