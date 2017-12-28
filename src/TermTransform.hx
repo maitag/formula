@@ -16,8 +16,7 @@ class TermTransform {
 	 * 
 	 */
 	static public inline function simplify(t:TermNode):TermNode {
-		expand(t);
-		
+		t.set(expand(t));
 		var len:Int = -1;
 		var len_old:Int = 0;
 		while (len != len_old) {
@@ -331,7 +330,9 @@ class TermTransform {
 	 * expands a mathmatical expression recursivly into a polynomial
 	 *
 	 */
-	static public function expand(t:TermNode):TermNode {
+	static public function expand(t2:TermNode):TermNode {
+		var t:TermNode=new TermNode();
+		t.set(t2.copy());
 		var len:Int = -1;
 		var len_old:Int = 0;
 		while(len != len_old) {
@@ -340,10 +341,10 @@ class TermTransform {
 			}
 			else {
 				if(t.left != null) {
-					expand(t.left);
+					t.left.set(expand(t.left));
 				}
 				if(t.right != null) {
-					expand(t.right);
+					t.right.set(expand(t.right));
 			
 				}
 			}
