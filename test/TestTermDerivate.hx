@@ -17,6 +17,7 @@ class TestTermDerivate extends haxe.unit.TestCase
 		assertEquals(derivate("atan2(y,x)"), "((x*0)-(y*1))/((y*y)+(x*x))");
 		assertEquals(derivate("atan2(x,y)"), "((y*1)-(x*0))/((x*x)+(y*y))");
 
+		assertEquals(derivate("abs(x)"), "1*(x/abs(x))");
 		assertEquals(derivate("ln(x)"), "1*(1/x)");
 		assertEquals(derivate("log(a,x)"), "(((1*(1/x))*ln(a))-(ln(x)*(0*(1/a))))/(ln(a)^2)");
 		assertEquals(derivate("log(x,a)"), "(((0*(1/a))*ln(x))-(ln(a)*(1*(1/x))))/(ln(x)^2)");

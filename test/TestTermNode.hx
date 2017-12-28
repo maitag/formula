@@ -27,6 +27,9 @@ class TestTermNode extends haxe.unit.TestCase
 		assertEquals(opResult('cos', 0), 1);
 		assertEquals(opResult('cos', Math.PI), Math.cos(Math.PI));
 		
+		assertEquals(opResult('abs',  1.23), 1.23);
+		assertEquals(opResult('abs', -1.23), 1.23);
+		
 		assertEquals(opResult('pi'), Math.PI);
 		assertEquals(opResult('e'), Math.exp(1));
 		
