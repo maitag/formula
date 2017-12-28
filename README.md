@@ -234,7 +234,7 @@ trace( f.params() ); // [ "a", "x" ]
 f.debug(); // f = a+(x/5) -> (1-2)+((3*4)/5)
 
 // simplify reduces operations
-a=a.simplify();
+a = a.simplify();
 trace( f );             // -1+((3*4)/5)
 
 // using math functions
@@ -246,7 +246,6 @@ f.debug(); // F = sin(5*a)+max(f,3) -> sin(5*-1)+max((a+(x/5)),3) -> sin(5*-1)+m
 
 ## Todo
 
-- simplify() should not change the TermNode itself
 - position of error while thrown string-parsing-error
 - more useful unit tests
 - more ways to simplify and transform terms

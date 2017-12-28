@@ -148,14 +148,14 @@ class TermNode {
 		left = term; right = null;
 	}
 	
-	public inline function setValue(f:Float) {
+	public inline function setValue(f:Float):Void {
 		operation = opValue;
 		symbol = null;
 		value = f;
 		left = null; right = null;
 	}
 	
-	public inline function setOperation(s:String, ?left:TermNode, ?right:TermNode) {
+	public inline function setOperation(s:String, ?left:TermNode, ?right:TermNode):Void {
 		operation = MathOp.get(s);
 		if (operation != null)
 		{
@@ -286,7 +286,7 @@ class TermNode {
 	 * number of TermNodes inside Tree
 	 * 
 	 */	
-	public function length(?depth:Null<Int>=null) {
+	public function length(?depth:Null<Int>=null):Int {
 		if (depth == null) depth = -1;
 		return switch(symbol) {
 			case s if (isValue): 1;
@@ -664,7 +664,7 @@ class TermNode {
 		else throw("Error in _toBytes");
 	}
 	
-	inline function _writeString(s:String, b:BytesOutput) {
+	inline function _writeString(s:String, b:BytesOutput):Void {
 		b.writeByte((s.length<255) ? s.length: 255);
 		for (i in 0...((s.length<255) ? s.length: 255)) b.writeByte(symbol.charCodeAt(i));
 	}
@@ -729,8 +729,5 @@ class TermNode {
 	 * factorizes a mathmatical expression
 	 *
 	 */
-	public function factorize():TermNode {
-		TermTransform.factorize(this);
-		return(this);
-	}
+	public function factorize():TermNode return TermTransform.factorize(this);
 }

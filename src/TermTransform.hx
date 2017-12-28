@@ -16,7 +16,14 @@ class TermTransform {
 	 * 
 	 */
 	static public inline function simplify(t:TermNode):TermNode {
-		t.set(expand(t));
+		var tnew:TermNode = t.copy();
+		_simplify(tnew);
+		return tnew;
+	}
+	
+	static inline function _simplify(t:TermNode):Void {
+		_expand(t);
+		
 		var len:Int = -1;
 		var len_old:Int = 0;
 		while (len != len_old) {
@@ -29,14 +36,14 @@ class TermTransform {
 			len_old = len;
 			len = t.length();
 		}
-		return t;
 	}
 	
-	// TODO: take care, simplify changes both TermNodes on call !!!
-	// TODO: removing this ugly function and using "isEqual()" rather then !!!
+	// TODO: removing this calls in subfunctions could be better to understand algorithms-recursions !!!
 	static function isEqualAfterSimplify(t1:TermNode, t2:TermNode):Bool {
-		// old method: if (this.simplify().toString() == t.simplify().toString()) return true else return false;
-		return t1.simplify().isEqual(t2.simplify(), false, true);
+		// ----> take care, _simplify changes both TermNodes on call !!!
+		_simplify(t1);
+		_simplify(t2);
+		return t1.isEqual(t2, false, true);
 	}
 	
 	static function simplifyStep(t:TermNode):Void {	
@@ -49,7 +56,7 @@ class TermTransform {
 					return;
 				}
 				else if (t.right.isValue) {
-					t.setValue(t.result); // calculate operation with values on both sides
+					t.setValue(t.result); // calculate result of operation with values on both sides
 					return;
 				}
 			}
@@ -59,18 +66,18 @@ class TermTransform {
 			case '+':
 				if (t.left.isValue && t.left.value == 0) t.copyNodeFrom(t.right);       // 0+a -> a
 				else if (t.right.isValue && t.right.value == 0) t.copyNodeFrom(t.left); // a+0 -> a
-				else if (t.left.symbol == 'ln' && t.right.symbol == 'ln') {         // ln(a)+ln(b) -> ln(a*b)
+				else if (t.left.symbol == 'ln' && t.right.symbol == 'ln') {             // ln(a)+ln(b) -> ln(a*b)
 					t.setOperation('ln',
 						newOperation('*', t.left.left.copy(), t.right.left.copy())
 					);
 				}                                         
 				else if (t.left.symbol == '/' && t.right.symbol == '/' && isEqualAfterSimplify(t.left.right, t.right.right)) {
-					t.setOperation('/',                                           // a/b+c/b -> (a+c)/b
+					t.setOperation('/',                                                 // a/b+c/b -> (a+c)/b
 						newOperation('+', t.left.left.copy(), t.right.left.copy()),
 						t.left.right.copy()
 					);
 				}
-				else if (t.left.symbol == '/' && t.right.symbol == '/') {            // a/b+c/d -> (a*d+c*b)/(b*d)
+				else if (t.left.symbol == '/' && t.right.symbol == '/') {               // a/b+c/d -> (a*d+c*b)/(b*d)
 					t.setOperation('/',
 						newOperation('+',
 							newOperation('*', t.left.left.copy(), t.right.right.copy()),
@@ -81,23 +88,23 @@ class TermTransform {
 				}
 				arrangeAddition(t);
 				if(t.symbol == '+') {
-					factorize(t);
+					_factorize(t);
 				}
 
 			case '-':
 				if (t.right.isValue && t.right.value == 0) t.copyNodeFrom(t.left);  // a-0 -> a
-				else if (t.left.symbol == 'ln' && t.right.symbol == 'ln') {     // ln(a)-ln(b) -> ln(a/b)
+				else if (t.left.symbol == 'ln' && t.right.symbol == 'ln') {         // ln(a)-ln(b) -> ln(a/b)
 					t.setOperation('ln',
 						newOperation('/', t.left.left.copy(), t.right.left.copy())
 					);
 				}
 				else if (t.left.symbol == '/' && t.right.symbol == '/' && isEqualAfterSimplify(t.left.right, t.right.right)) {
-					t.setOperation('/',                                        // a/b-c/b -> (a-c)/b
+					t.setOperation('/',                                             // a/b-c/b -> (a-c)/b
 						newOperation('-', t.left.left.copy(), t.right.left.copy()),
 						t.left.right.copy()
 					);
 				}
-				else if (t.left.symbol == '/' && t.right.symbol == '/') {        //a/b-c/d -> (a*d-c*b)/(b*d)
+				else if (t.left.symbol == '/' && t.right.symbol == '/') {           //a/b-c/d -> (a*d-c*b)/(b*d)
 					t.setOperation('/', 
 						newOperation('-',
 							newOperation('*', t.left.left.copy(), t.right.right.copy()),
@@ -108,25 +115,25 @@ class TermTransform {
 				}
 				arrangeAddition(t);
 				if(t.symbol == '-') {
-					factorize(t);
+					_factorize(t);
 				}
 
 			case '*':
 				if (t.left.isValue) {
 					if (t.left.value == 1) t.copyNodeFrom(t.right); // 1*a -> a
-					else if (t.left.value == 0) t.setValue(0);    // 0*a -> 0
+					else if (t.left.value == 0) t.setValue(0);      // 0*a -> 0
 				}
 				else if (t.right.isValue) {
 					if (t.right.value == 1) t.copyNodeFrom(t.left); // a*1 -> a
-					else if (t.right.value == 0) t.setValue(0);   // a*0 -> a
+					else if (t.right.value == 0) t.setValue(0);     // a*0 -> a
 				}
-				else if (t.left.symbol == '/') {                // (a/b)*c -> (a*c)/b
+				else if (t.left.symbol == '/') {                    // (a/b)*c -> (a*c)/b
 					t.setOperation('/',
 						newOperation('*', t.right.copy(), t.left.left.copy()),
 						t.left.right.copy()
 					);
 				}
-				else if (t.right.symbol == '/') {               // a*(b/c) -> (a*b)/c
+				else if (t.right.symbol == '/') {                   // a*(b/c) -> (a*b)/c
 					t.setOperation('/',
 						newOperation('*', t.left.copy(), t.right.left.copy()),
 						t.right.right.copy()
@@ -137,7 +144,7 @@ class TermTransform {
 				}
 
 		case '/':
-				if (isEqualAfterSimplify(t.left, t.right)) { // x/x -> 1
+				if (isEqualAfterSimplify(t.left, t.right)) {                 // x/x -> 1
 					t.setValue(1);
 				}
 				else {
@@ -149,12 +156,12 @@ class TermTransform {
 						);
 					} 
 					else if (t.right.isValue && t.right.value == 1) t.copyNodeFrom(t.left); // a/1 -> a
-					else if (t.left.symbol == '/') {                     // (1/x)/b -> 1/(x*b)
+					else if (t.left.symbol == '/') {                         // (1/x)/b -> 1/(x*b)
 						t.setOperation('/', t.left.left.copy(),
 							newOperation('*', t.left.right.copy(), t.right.copy())
 						);
 					}
-					else if (t.right.symbol == '/') {                    // b/(1/x) -> b*x
+					else if (t.right.symbol == '/') {                        // b/(1/x) -> b*x
 						t.setOperation('/',
 							newOperation('*', t.right.right.copy(), t.left.copy()),
 							t.right.left.copy()
@@ -173,13 +180,13 @@ class TermTransform {
 
 			case '^':
 				if (t.left.isValue) {
-					if (t.left.value == 1) t.setValue(1);         // 1^a -> 1
-					else if (t.left.value == 0) t.setValue(0);    // 0^a -> 0
+					if (t.left.value == 1) t.setValue(1);           // 1^a -> 1
+					else if (t.left.value == 0) t.setValue(0);      // 0^a -> 0
 				} else if (t.right.isValue) {
 					if (t.right.value == 1) t.copyNodeFrom(t.left); // a^1 -> a 
-					else if (t.right.value == 0) t.setValue(1);   // a^0 -> 1
+					else if (t.right.value == 0) t.setValue(1);     // a^0 -> 1
 				}
-				else if (t.left.symbol == '^') {                // (a^b)^c -> a^(b*c)
+				else if (t.left.symbol == '^') {                    // (a^b)^c -> a^(b*c)
 					t.setOperation('^', t.left.left.copy(),
 						newOperation('*', t.left.right.copy(), t.right.copy())
 					);
@@ -192,7 +199,7 @@ class TermTransform {
 					t.setValue(1);
 				}
 				else {
-					t.setOperation('/',                         // log(a,b) -> ln(b)/ln(a)
+					t.setOperation('/',                             // log(a,b) -> ln(b)/ln(a)
 						newOperation('ln', t.right.copy()),
 						newOperation('ln', t.left.copy())
 					);
@@ -292,7 +299,7 @@ class TermTransform {
 	 * reduce a fraction 
 	 * 
 	 */
-	static public function simplifyfraction(t:TermNode)
+	static function simplifyfraction(t:TermNode)
 	{
 		var numerator:Array<TermNode> = new Array();
 		traverseMultiplication(t.left, numerator);
@@ -330,9 +337,14 @@ class TermTransform {
 	 * expands a mathmatical expression recursivly into a polynomial
 	 *
 	 */
-	static public function expand(t2:TermNode):TermNode {
-		var t:TermNode=new TermNode();
-		t.set(t2.copy());
+	static public function expand(t:TermNode):TermNode {
+		var tnew:TermNode = t.copy();
+		_expand(tnew);
+		return tnew;
+	}
+	
+	static function _expand(t:TermNode):Void {
+		
 		var len:Int = -1;
 		var len_old:Int = 0;
 		while(len != len_old) {
@@ -341,31 +353,30 @@ class TermTransform {
 			}
 			else {
 				if(t.left != null) {
-					t.left.set(expand(t.left));
+					_expand(t.left);
 				}
 				if(t.right != null) {
-					t.right.set(expand(t.right));
+					_expand(t.right);
 			
 				}
 			}
 			len_old = len;
 			len = t.length();
 		}
-		return t;
 	}
 
 	/*
 	 * expands a mathmatical expression into a polynomial -> use only if top symbol=*
 	 * 
 	 */
-	static function expandStep(t:TermNode)
+	static function expandStep(t:TermNode):Void
 	{
 		var left:TermNode = t.left;
 		var right:TermNode = t.right;
 
 		if (left.symbol == "+" || left.symbol == "-") {
 			if (right.symbol == "+" || right.symbol == "-") {
-				if (left.symbol == "+" && right.symbol == "+") { //(a+b)*(c+d)
+				if (left.symbol == "+" && right.symbol == "+") { // (a+b)*(c+d)
 					t.setOperation('+',
 						newOperation('+',
 							newOperation('*', left.left.copy(), right.left.copy()),
@@ -377,7 +388,7 @@ class TermTransform {
 						)
 					);
 				}	
-				else if (left.symbol == "+" && right.symbol == "-") { //(a+b)*(c-d)
+				else if (left.symbol == "+" && right.symbol == "-") { // (a+b)*(c-d)
 					t.setOperation('+',
 						newOperation('-',
 							newOperation('*', left.left.copy(), right.left.copy()),
@@ -389,7 +400,7 @@ class TermTransform {
 						)
 					);
 				}
-				else if (left.symbol == "-" && right.symbol == "+") { //(a-b)*(c+d)
+				else if (left.symbol == "-" && right.symbol == "+") { // (a-b)*(c+d)
 					t.setOperation('-',
 						newOperation('+',
 							newOperation('*', left.left.copy(), right.left.copy()),
@@ -401,7 +412,7 @@ class TermTransform {
 						)
 					);
 				}
-				else if (left.symbol == "-" && right.symbol == "-") { //(a-b)*(c-d)
+				else if (left.symbol == "-" && right.symbol == "-") { // (a-b)*(c-d)
 					t.setOperation('-',
 						newOperation('-',
 							newOperation('*', left.left.copy(), right.left.copy()),
@@ -416,13 +427,13 @@ class TermTransform {
 			}
 			else
 			{
-				if (left.symbol == "+") { //(a+b)*c
+				if (left.symbol == "+") { // (a+b)*c
 					t.setOperation('+',
 						newOperation('*', left.left.copy(), right.copy()),
 						newOperation('*', left.right.copy(), right.copy())
 					);
 				}
-				else if (left.symbol == "-") { //(a-b)*c
+				else if (left.symbol == "-") { // (a-b)*c
 					t.setOperation('-',
 						newOperation('*', left.left.copy(), right.copy()),
 						newOperation('*', left.right.copy(), right.copy())
@@ -431,13 +442,13 @@ class TermTransform {
 			}
 		}
 		else if (right.symbol == "+" || right.symbol == "-") {
-			if (right.symbol == "+") { //a*(b+c)
+			if (right.symbol == "+") { // a*(b+c)
 				t.setOperation('+',
 					newOperation('*', left.copy(), right.left.copy()),
 					newOperation('*', left.copy(), right.right.copy())
 				);
 			}
-			else if (right.symbol == "-") { //a*(b-c)
+			else if (right.symbol == "-") { // a*(b-c)
 				t.setOperation('-',
 					newOperation('*', left.copy(), right.left.copy()),
 					newOperation('*', left.copy(), right.right.copy())
@@ -447,14 +458,20 @@ class TermTransform {
 	}
 
 	/*
-	 * factorize a term -> a*c+a*b=a*(c+b)
+	 * factorize a term: a*c+a*b -> a*(c+b)
 	 *
 	 */
-	static public function factorize(t:TermNode) {
+	static public function factorize(t:TermNode):TermNode {
+		var tnew:TermNode = t.copy();
+		_factorize(tnew);
+		return tnew;
+	}
+	
+	static function _factorize(t:TermNode):Void {
 	  	var mult_matrix:Array<Array<TermNode>> = new Array();
 	 	var add:Array<TermNode> = new Array();
 		
-		//build matrix - addition in columns - multiplication in rows 
+		// build matrix - addition in columns - multiplication in rows 
 		traverseAddition(t, add);
 		var add_length_old:Int = 0;
 		for(i in add) {
@@ -468,7 +485,7 @@ class TermTransform {
 			}
 		}
 		
-		//find and extract common factors
+		// find and extract common factors
 		var part_of_all:Array<TermNode> = new Array();
 		factorize_extract_common(mult_matrix, part_of_all);
 		if(part_of_all.length != 0) {
@@ -492,8 +509,8 @@ class TermTransform {
 		}
 	}
 	
-	//delete common factors of mult_matrix and add them to part_of_all	
-	static function factorize_extract_common(mult_matrix:Array<Array<TermNode>>, part_of_all:Array<TermNode>) {
+	// delete common factors of mult_matrix and add them to part_of_all	
+	static function factorize_extract_common(mult_matrix:Array<Array<TermNode>>, part_of_all:Array<TermNode>):Void {
 		var bool:Bool = false;
 		var matrix_length_old:Int = -1;
 		var i:TermNode=TermNode.fromString("42");
@@ -545,19 +562,19 @@ class TermTransform {
 		}
 	}
 	
-	//deletes d from every row in mult_matrix once
-	static function delete_last_from_matrix(mult_matrix:Array<Array<TermNode>>, d:TermNode) {
+	// deletes d from every row in mult_matrix once
+	static function delete_last_from_matrix(mult_matrix:Array<Array<TermNode>>, d:TermNode):Void {
 		for(i in mult_matrix) {
 			if(i.length>1) {
 				for(j in 1...i.length+1) {
-					if(isEqualAfterSimplify(i[i.length-j], d)) { //a*x -> a
+					if(isEqualAfterSimplify(i[i.length-j], d)) { // a*x -> a
 						for(h in 0...j-1) {
 							i[i.length-j+h].set(i[i.length-j+h+1]);
 						}
 						i.pop();
 						break;
 					}
-					else if(i[i.length-j].symbol == '^' && isEqualAfterSimplify(i[i.length-j].left, d)) { //x^n -> x^(n-1)
+					else if(i[i.length-j].symbol == '^' && isEqualAfterSimplify(i[i.length-j].left, d)) { // x^n -> x^(n-1)
 						i[i.length-j].right.set(newOperation('-', i[i.length-j].right.copy(), newValue(1)));
 						break;
 					}
@@ -567,7 +584,7 @@ class TermTransform {
 					}		
 				}
 			}
-			else if(i[0].symbol == '^' && isEqualAfterSimplify(i[0].left, d)) { //x^n -> x^(n-1)
+			else if(i[0].symbol == '^' && isEqualAfterSimplify(i[0].left, d)) { // x^n -> x^(n-1)
 				i[0].right.set(newOperation('-', i[0].right.copy(), newValue(1)));
 			}
 			else {
@@ -576,7 +593,7 @@ class TermTransform {
 		}
 	}
 	
-	//compare function for Array.sort()
+	// compare function for Array.sort()
 	static function formsort_compare(t1:TermNode, t2:TermNode):Int
 	{	
 		if (formsort_priority(t1) > formsort_priority(t2)) {
@@ -633,7 +650,7 @@ class TermTransform {
 	 * sort a Tree consisting of products
 	 * 
 	 */
-	static public function arrangeMultiplication(t:TermNode)
+	static function arrangeMultiplication(t:TermNode):Void
 	{
 		var mult:Array<TermNode> = new Array();
 		traverseMultiplication(t, mult);
@@ -645,7 +662,7 @@ class TermTransform {
 	 * sort a Tree consisting of addition and subtraction
 	 *
 	 */
-	static public function arrangeAddition(t:TermNode)
+	static function arrangeAddition(t:TermNode):Void
 	{
 		var addlength_old:Int = -1;
 		var add:Array<TermNode> = new Array();
