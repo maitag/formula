@@ -298,14 +298,6 @@ class TermTransform {
 		traverseMultiplication(t.left, numerator);
 		var denominator:Array<TermNode> = new Array();
 		traverseMultiplication(t.right, denominator);
-		trace("-----------------");
-		for (n in numerator) {
-			trace("num: "+n.toString());
-		}
-		for (d in denominator) {
-			trace("deno: "+d.toString());
-		}
-		
 		for (n in numerator) {
 			for (d in denominator) {
 				if (isEqualAfterSimplify(n, d)) {
