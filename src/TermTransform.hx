@@ -16,8 +16,7 @@ class TermTransform {
 	 * 
 	 */
 	static public inline function simplify(t:TermNode):TermNode {
-		t=expand(t);
-		
+		t.set(expand(t));
 		var len:Int = -1;
 		var len_old:Int = 0;
 		while (len != len_old) {
@@ -299,6 +298,14 @@ class TermTransform {
 		traverseMultiplication(t.left, numerator);
 		var denominator:Array<TermNode> = new Array();
 		traverseMultiplication(t.right, denominator);
+		trace("-----------------");
+		for (n in numerator) {
+			trace("num: "+n.toString());
+		}
+		for (d in denominator) {
+			trace("deno: "+d.toString());
+		}
+		
 		for (n in numerator) {
 			for (d in denominator) {
 				if (isEqualAfterSimplify(n, d)) {
@@ -331,27 +338,28 @@ class TermTransform {
 	 * expands a mathmatical expression recursivly into a polynomial
 	 *
 	 */
-	static public function expand(t:TermNode):TermNode {
-		var tnew:TermNode=t.copy();
+	static public function expand(t2:TermNode):TermNode {
+		var t:TermNode=new TermNode();
+		t.set(t2.copy());
 		var len:Int = -1;
 		var len_old:Int = 0;
 		while(len != len_old) {
-			if (tnew.symbol == '*') {
-				expandStep(tnew);
+			if (t.symbol == '*') {
+				expandStep(t);
 			}
 			else {
-				if(tnew.left != null) {
-					expand(tnew.left);
+				if(t.left != null) {
+					t.left.set(expand(t.left));
 				}
-				if(tnew.right != null) {
-					expand(tnew.right);
+				if(t.right != null) {
+					t.right.set(expand(t.right));
 			
 				}
 			}
 			len_old = len;
-			len = tnew.length();
+			len = t.length();
 		}
-		return tnew;
+		return t;
 	}
 
 	/*
