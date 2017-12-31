@@ -410,6 +410,8 @@ class TermNode {
 
 	static var nameReg:EReg = ~/^([a-z]+)[:=]/i;
 	static var nameRegFull:EReg = ~/^([a-z]+)$/i;
+	
+	static var signReg:EReg = ~/^([-+]+)/i;
 
 	/*
 	 * Build Tree up from String Math Expression
@@ -466,12 +468,25 @@ class TermNode {
 				e = paramReg.matched(1);
 				t = newParam(e, (params==null) ? null : params.get(e));
 			}
-			else if (twoSideOpReg.match(s)) { // start with +- 
-				e = twoSideOpReg.matched(1);
-				if (e == "-") {
-					t = newValue(0); e = ""; negate = true;
-				}
-				else if (e != "+") throw("Missing left operand.");
+			else if (signReg.match(s)) { // start with +- 
+				e = signReg.matched(1);
+				s = s.substr(e.length);
+				e = ~/\+/g.replace(e, '');
+				if (e.length % 2 > 0) {
+					//s = "0-" + s;
+					if (numberReg.match(s)) { // followed by float number
+						e = numberReg.matched(1);
+						t = newValue(-Std.parseFloat(e));
+					} else {     // negative signed
+						t = newValue(0); 
+						s = "-" + s;
+						e = "";
+						negate = true;
+					}
+				} else continue; // positive signed
+			}
+			else if (twoSideOpReg.match(s)) { // start with other two side op 
+				throw("Missing left operand.");
 			}
 			else {
 				e = getBrackets(s);    // term inside brackets

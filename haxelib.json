@@ -2,11 +2,11 @@
 	"name": "formula",
 	"url": "https://github.com/maitag/formula",
 	"license": "MIT",
-	"tags": ["math", "expression", "derivate", "derivation"],
-	"description": "math expression parser and more",
-	"version": "0.3.4",
+	"tags": ["math", "expression", "parser", "derivate"],
+	"description": "math expression parser, evaluator and more",
+	"version": "0.3.5",
 	"classPath": "src/",
-	"releasenote": "works",
-	"contributors": ["maitag", "samusake"],
+	"releasenote": "Initial release",
+	"contributors": ["maitag"],
 	"dependencies": {}
 }

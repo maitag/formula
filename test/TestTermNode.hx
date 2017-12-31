@@ -83,16 +83,23 @@ class TestTermNode extends haxe.unit.TestCase
 	public function testFromString()
 	{
 		assertEquals(fromString(" 3"), "3");
+		assertEquals(fromString("+3"), "3");
 		assertEquals(fromString("-3"), "-3");
-		assertEquals(fromString("- -3"), "--3");
+		assertEquals(fromString("--3"), "3");
+		assertEquals(fromString("---3"), "-3");
 		assertEquals(fromString("1.5 "), "1.5");
 		assertEquals(fromString("1.50"), "1.5");
 		assertEquals(fromString("10.5"), "10.5");
 		assertEquals(fromString("1 + 2"), "1+2");
 		assertEquals(fromString("1+2*3"), "1+(2*3)");
 		assertEquals(fromString("- (1 + 2)"), "-(1+2)");
+		assertEquals(fromString("(1 + 2)"), "1+2");
+		assertEquals(fromString("--(1 + 2)"), "1+2");
+		assertEquals(fromString("-++-+-(1 + 2)"), "-(1+2)");
+		assertEquals(fromString("+ (1 + 2)"), "1+2");
 		assertEquals(fromString("sin(x)"), "sin(x)");
 		assertEquals(fromString("- sin(x)"), "-sin(x)");
+		assertEquals(fromString("+ sin(x)"), "sin(x)");
 		assertEquals(fromString("cos(x+1)"), "cos(x+1)");
 		assertEquals(fromString("tan( x )"), "tan(x)");
 		assertEquals(fromString("asin(x)"), "asin(x)");
@@ -102,6 +109,8 @@ class TestTermNode extends haxe.unit.TestCase
 		assertEquals(fromString("log(2,x)"), "log(2,x)");
 		assertEquals(fromString("max(2,3 )"), "max(2,3)");
 		assertEquals(fromString("min( 2,3)"), "min(2,3)");
+		assertEquals(fromString("abs( --- 1 )"), "abs(-1)");
+		assertEquals(fromString("abs( --- x )"), "abs(-x)");
 		assertEquals(fromString("1+a^x*3"), "1+((a^x)*3)");
 		assertEquals(fromString("a^b^c"), "(a^b)^c");
 		assertEquals(fromString("a/b/c"), "(a/b)/c");
@@ -116,6 +125,8 @@ class TestTermNode extends haxe.unit.TestCase
 	}
 	public function testErrorFromString()
 	{
+		assertEquals(errorFromString("+*3"), 1);
+		assertEquals(errorFromString("-*3"), 1);
 		assertEquals(errorFromString("((1+2*3)"), 1);
 		assertEquals(errorFromString("(1+(2*3)+(4-5)"), 1);
 		assertEquals(errorFromString("1+(2*3))"), 1);
