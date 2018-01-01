@@ -95,9 +95,9 @@ class TestTermNode extends haxe.unit.TestCase
 		assertEquals(fromString("- (1 + 2)"), "-(1+2)");
 		assertEquals(fromString("(1 + 2)"), "1+2");
 		assertEquals(fromString("--(1 + 2)"), "1+2");
-		assertEquals(fromString("-++-+-(1 + 2)"), "-(1+2)");
+		assertEquals(fromString("-++- +- (1 + 2)"), "-(1+2)");
 		assertEquals(fromString("+ (1 + 2)"), "1+2");
-		assertEquals(fromString("sin(x)"), "sin(x)");
+		assertEquals(fromString("sin(x) "), "sin(x)");
 		assertEquals(fromString("- sin(x)"), "-sin(x)");
 		assertEquals(fromString("+ sin(x)"), "sin(x)");
 		assertEquals(fromString("cos(x+1)"), "cos(x+1)");
@@ -109,18 +109,18 @@ class TestTermNode extends haxe.unit.TestCase
 		assertEquals(fromString("log(2,x)"), "log(2,x)");
 		assertEquals(fromString("max(2,3 )"), "max(2,3)");
 		assertEquals(fromString("min( 2,3)"), "min(2,3)");
-		assertEquals(fromString("abs( --- 1 )"), "abs(-1)");
-		assertEquals(fromString("abs( --- x )"), "abs(-x)");
-		assertEquals(fromString("1+a^x*3"), "1+((a^x)*3)");
-		assertEquals(fromString("a^b^c"), "(a^b)^c");
-		assertEquals(fromString("a/b/c"), "(a/b)/c");
-		assertEquals(fromString("a/b*c"), "(a/b)*c");
-		assertEquals(fromString("a/b*c+1"), "((a/b)*c)+1");
+		assertEquals(fromString("abs( --  - 1 )"), "abs(-1)");
+		assertEquals(fromString("abs( - -- x )"), "abs(-x)");
+		assertEquals(fromString("1+a ^ x*3"), "1+((a^x)*3)");
+		assertEquals(fromString("a^ b^ c"), "(a^b)^c");
+		assertEquals(fromString("a/b/ c"), "(a/b)/c");
+		assertEquals(fromString("a/b *c"), "(a/b)*c");
+		assertEquals(fromString("a /b*c+1"), "((a/b)*c)+1");
 	}
 	
 	inline function errorFromString(s:String):Int {
 		var e:Int = 0;
-		try TermNode.fromString(s) catch (msg:String) e = 1;
+		try TermNode.fromString(s) catch (error:Dynamic) e = 1;
 		return e;
 	}
 	public function testErrorFromString()
@@ -141,5 +141,7 @@ class TestTermNode extends haxe.unit.TestCase
 		assertEquals(errorFromString("/1"), 1);
 		assertEquals(errorFromString("^1"), 1);
 		assertEquals(errorFromString("%1"), 1);
+		assertEquals(errorFromString("a1"), 1);
+		assertEquals(errorFromString("sin (3)"), 1);
 	}
 }

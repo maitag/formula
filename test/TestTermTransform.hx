@@ -12,17 +12,16 @@ class TestTermTransform extends haxe.unit.TestCase
 		return TermNode.fromString(s).factorize().toString();
 	}
 
-	public function testExpand(){
+	public function testExpand() {
 		assertEquals(expand("a*(b+c)"), "(a*b)+(a*c)");
 		assertEquals(expand("(a+b)*(a-b)"), "((a*a)-(a*b))+((b*a)-(b*b))");
 		assertEquals(expand("(a+b)*c"), "(a*c)+(b*c)");
 		assertEquals(expand("(x)*(a-(b+c))"), "(x*a)-((x*b)+(x*c))");
 		assertEquals(expand("(0+1+2)*(3+4+5)"), "((((0*3)+(0*4))+((1*3)+(1*4)))+((0*5)+(1*5)))+(((2*3)+(2*4))+(2*5))");
-		assertEquals(expand("a*(-b-c)"), "((a*0)-(a*b))-(a*c)");
-	
+		assertEquals(expand("a*(-b-c)"), "((a*0)-(a*b))-(a*c)");	
 	}
 
-	public function testfactorize(){
+	public function testfactorize() {
 		assertEquals(factorize("x+x"), "x*(1+1)");
 		assertEquals(factorize("-x+x"), "x*(-1+1)");
 		assertEquals(factorize("-x-x"), "x*(-1-1)");
@@ -37,8 +36,7 @@ class TestTermTransform extends haxe.unit.TestCase
 		assertEquals(factorize("x+x^2"), "x*(1+(x^(2-1)))");
 	}
 
-	public function testSimplify()
-	{	
+	public function testSimplify() {
 		assertEquals(simplify("0+x"), "x");
 		assertEquals(simplify("x+0"), "x");
 		assertEquals(simplify("1*x"), "x");
@@ -51,7 +49,9 @@ class TestTermTransform extends haxe.unit.TestCase
 		assertEquals(simplify("1^x"), "1");
 		assertEquals(simplify("x^0"), "1");
 		assertEquals(simplify("x^1"), "x");
+	}
 	
+	public function testSimplify1() {
 		assertEquals(simplify("(a/b)/c"), "a/(c*b)");
 		assertEquals(simplify("a/(b/c)"), "(c*a)/b");
 		assertEquals(simplify("(0-a)/b"), "-(a/b)");
@@ -66,13 +66,18 @@ class TestTermTransform extends haxe.unit.TestCase
 		assertEquals(simplify("(a*ln(b))/ln(b)"), "a");
 		assertEquals(simplify("x/x"), "1");
 		assertEquals(simplify("b/(a*b)"), "1/a");
-
+	}
+	
+	public function testSimplify2() {
 		assertEquals(simplify("log(a,b)"), "ln(b)/ln(a)");
 		assertEquals(simplify("log(a,a)"), "1");
 		assertEquals(simplify("ln(a)+ln(b)"), "ln(b*a)");
 		assertEquals(simplify("ln(a)-ln(b)"), "ln(a/b)");
 		assertEquals(simplify("log(a,b)+log(c,d)"), "((ln(c)*ln(b))+(ln(d)*ln(a)))/(ln(c)*ln(a))");
 		
+	}
+	
+	public function testSimplify3() {
 		assertEquals(simplify("(x^a)^b"), "x^(b*a)");
 		assertEquals(simplify("(a+b)*c"), "c*(b+a)");
 		assertEquals(simplify("(a-b)*c"), "c*-(b-a)");

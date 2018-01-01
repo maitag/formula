@@ -240,19 +240,35 @@ f.debug(); // f = a+(x/5) -> (1-2)+((3*4)/5)
 
 // simplify reduces operations
 a = a.simplify();
-trace( f );             // -1+((3*4)/5)
+trace( f );  // -1+((3*4)/5)
 
 // using math functions
 f = Formula.sin(c * a) + Formula.max(f, 3);
 f.name = "F";
 f.debug(); // F = sin(5*a)+max(f,3) -> sin(5*-1)+max((a+(x/5)),3) -> sin(5*-1)+max((-1+((3*4)/5)),3)
+
+// error handling
+c = "4";
+f = "3 * c";
+try f.bind(c) catch(msg:String) trace('Error: $msg'); // Error: Can't bind to unnamed parameter.
+
+var s:String = "4 + (3 - )";
+trace(s);
+try {
+	f = s;
+} catch (error:Dynamic) {
+	var spaces:String = "";
+	for (i in 0...error.pos) spaces += " ";
+	trace(spaces + "^");
+	trace('Error: ${error.msg}'); // Error: Missing right operand.
+}
+
 ```
+More Samples can be found in [formula-samples repository](https://github.com/maitag/formula-samples)  
 
 
 ## Todo
 
-- position of error while thrown string-parsing-error
-- more useful unit tests
 - more ways to simplify and transform terms
 - comparing terms for math-equality
 - remove unnecessary parentheses
