@@ -202,7 +202,7 @@ trace( f.toString(0) ); // 2.5*(sin(x-a)^2)
 // fast calculation at runtime
 trace( f.result );      // 0
 
-// derivation           // 2.5*((sin(x-a)^2)*(2*(cos(x-a)/sin(x-a))))
+// derivation           // 2.5*(((2*(sin(x-a)^2))*cos(x-a))/sin(x-a))
 trace( f.derivate("x").simplify().toString(0) );
 
 // change value (keeps parameter bindings)
@@ -239,7 +239,7 @@ trace( f.params() ); // [ "a", "x" ]
 f.debug(); // f = a+(x/5) -> (1-2)+((3*4)/5)
 
 // simplify reduces operations
-a = a.simplify();
+a.set(a.simplify());
 trace( f );  // -1+((3*4)/5)
 
 // using math functions
