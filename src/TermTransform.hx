@@ -551,7 +551,7 @@ class TermTransform {
 					}
 				}
 				if(bool == true && exponentiation_counter < mult_matrix.length) {
-					part_of_all.push(newValue(42));
+					part_of_all.push(new TermNode());
 					part_of_all[part_of_all.length-1].set(i);
 					var helper:TermNode = new TermNode();
 					helper.set(i);
@@ -717,7 +717,7 @@ class TermTransform {
 						i.setOperation('-', newValue(0), i.copy());
 					}
 				}
-				t.setOperation('-', newValue(0), newValue(42));
+				t.setOperation('-', newValue(0), new TermNode());
 				traverseAdditionBack(t.right, add);
 				return;
 			}
