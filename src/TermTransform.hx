@@ -490,10 +490,10 @@ class TermTransform {
 		factorize_extract_common(mult_matrix, part_of_all);
 		if(part_of_all.length != 0) {
 			var new_add:Array<TermNode> = new Array();
-			var helper:TermNode = TermNode.newValue(42);
+			var helper:TermNode = new TermNode();
 			for(i in mult_matrix) {
 				traverseMultiplicationBack(helper, i);
-				var v:TermNode = TermNode.newValue(42);
+				var v:TermNode = new TermNode();
 				v.set(helper);
 				new_add.push(v);
 			}
@@ -503,7 +503,7 @@ class TermTransform {
 				}
 			}
 
-			t.setOperation('*', newValue(42), newValue(42));
+			t.setOperation('*', new TermNode(), new TermNode());
 			traverseMultiplicationBack(t.left, part_of_all);
 			traverseAdditionBack(t.right, new_add);
 		}
@@ -513,7 +513,7 @@ class TermTransform {
 	static function factorize_extract_common(mult_matrix:Array<Array<TermNode>>, part_of_all:Array<TermNode>):Void {
 		var bool:Bool = false;
 		var matrix_length_old:Int = -1;
-		var i:TermNode=TermNode.newValue(42);
+		var i:TermNode=new TermNode();
 		var exponentiation_counter:Int = 0;
 		while(matrix_length_old != mult_matrix[0].length) {
 			matrix_length_old = mult_matrix[0].length;
@@ -553,7 +553,7 @@ class TermTransform {
 				if(bool == true && exponentiation_counter < mult_matrix.length) {
 					part_of_all.push(newValue(42));
 					part_of_all[part_of_all.length-1].set(i);
-					var helper:TermNode = TermNode.newValue(42);
+					var helper:TermNode = new TermNode();
 					helper.set(i);
 					delete_last_from_matrix(mult_matrix, helper);
 					break;
