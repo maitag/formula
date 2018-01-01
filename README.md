@@ -1,13 +1,18 @@
 # Formula
-handle mathematical expressions at [haxe-runtime](https://haxe.org).  
+handle mathematical expressions at [haxe](https://haxe.org)-runtime.  
 
-This tool has its roots in [old C symbolic math stuff](https://github.com/maitag/lyapunov-c)  
+This tool has its roots in [old C symbolic math stuff](https://github.com/maitag/lyapunov-c).  
 
 It can form derivatives, simplify terms and  
 handle parameters to connect Formulas together.  
 
 
-### Installation
+## Installation
+```
+haxelib install Formula
+```
+
+or use the latest developement version from github:
 ```
 haxelib git Formula https://github.com/maitag/formula.git
 ```
@@ -182,7 +187,7 @@ Formula.fromBytes(b:Bytes):Formula
 ```
 
 
-## Examples
+## Samples
 ```
 var x:Formula, a:Formula, b:Formula, c:Formula, f:Formula;
 
@@ -233,10 +238,10 @@ f.name = "f";
 
 // show parameters
 // c has no name, so operation will not generate param for f
-trace( f.params() ); // [ "a", "x" ]
+trace( f.params() );  // [ "a", "x" ]
 
 // debugging Formulas
-f.debug(); // f = a+(x/5) -> (1-2)+((3*4)/5)
+f.debug();  // f = a+(x/5) -> (1-2)+((3*4)/5)
 
 // simplify reduces operations
 a.set(a.simplify());
@@ -245,7 +250,7 @@ trace( f );  // -1+((3*4)/5)
 // using math functions
 f = Formula.sin(c * a) + Formula.max(f, 3);
 f.name = "F";
-f.debug(); // F = sin(5*a)+max(f,3) -> sin(5*-1)+max((a+(x/5)),3) -> sin(5*-1)+max((-1+((3*4)/5)),3)
+f.debug();  // F = sin(5*a)+max(f,3) -> sin(5*-1)+max((a+(x/5)),3) -> sin(5*-1)+max((-1+((3*4)/5)),3)
 
 // error handling
 c = "4";
@@ -264,20 +269,21 @@ try {
 }
 
 ```
-More Samples can be found in [formula-samples repository](https://github.com/maitag/formula-samples)  
+More can be found in [formula-samples](https://github.com/maitag/formula-samples) repository.  
 
 
 ## Todo
 
-- more ways to simplify and transform terms
+- remove of unnecessary parentheses in string output
+- cleaner algorithms for term-transformations
+- more ways to customize the simplification of terms
 - comparing terms for math-equality
-- remove unnecessary parentheses
-- !-operator
 
 
 ### Possible tasks in future
 
 - handling other datatypes for values (integer, fixed-point numbers, vectors, matrices, complex numbers)
+- more math operations (hyperbolic functions, logic operators)
 - handle recursive parameter bindings (something like x(n+1) = x(n) ...)
 - definite integrals (or even indefinite later on)
 - gpu-optimization for parallel calculations
