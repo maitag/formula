@@ -287,3 +287,4 @@ More can be found in [formula-samples](https://github.com/maitag/formula-samples
 - handle recursive parameter bindings (something like x(n+1) = x(n) ...)
 - definite integrals (or even indefinite later on)
 - gpu-optimization for parallel calculations
+- putting in the `?`-operator
