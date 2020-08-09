@@ -67,7 +67,7 @@ f = "sin(b)";  // other formula can be bound to 'b' later
 Now define another Formula object `x` to connect to variable `b` with the 'bind()' method:
 ```
 var x:Formula = 0;
-f.bind( ["b" => x] ); 
+f.bind( x, "b" );
 ```
 
 Formula `x` does not necessarily has to have the same name as the variable inside `f`,  
@@ -77,8 +77,9 @@ x.name = "b";
 f.bind(x);
 ```
 
-To bind more than one variable at once, proceed like this: `f.bind( ["b" => x, "c" => c] );`  
-
+To bind more than one variable at once you can proceed like this: `f.bindMap( ["b" => x, "c" => c] );`  
+Alternatively use arrays of formulas and to what parameters it should bind: `f.bindArray( [x, c], ["b", "c"] );`
+or if all formulas have the same names as expected: `f.bindArray( [x, c] );`
 
 ### Output formulas:
 
@@ -111,12 +112,15 @@ trace( f.result() ); // 0
 
 ### Unbinding of parameters:
 ```
+// unbind a connected formula
 f.unbind(x);
-// or f.unbind("b");
 
-// unbind more than one with array usage:
-f.unbind( [x, y] );
-// or f.unbind( ["b", "c"] );
+// unbind the formula thats connected to a variable name
+f.unbindParam("b");
+
+// unbind more than one formula with array usage:
+f.unbindArray( [x, c] );
+f.unbindParamArray( ["b", "c"] );
 
 // unbind all with:
 f.unbindAll();
@@ -135,15 +139,31 @@ name:String (get and set)
 result:Float (get only)
 	calculation result of the math expression
 	
-bind(params:Dynamic):Formula
+bind(formula:Formula, ?paramName:String):Formula
 	link a variable inside of this Formula to another Formula
 
-unbind(params:Dynamic):Formula
-	delete the connection between a variable and the linked Formula
+bindArray(formulas:Array<Formula>, ?paramNames:Array<String>):Formula
+	link variables inside of this Formula to another Formulas
+
+bindMap(formulaMap:Map<String, Formula>):Formula
+	link variables inside of this Formula to another Formulas
+	where the mapkey is equal to the name of the variable
+
+unbind(formula:Formula):Formula
+	delete all connections of the linked Formula
+
+unbindArray(formulas:Array<Formula>):Formula
+	delete all connections of the linked Formulas
+
+unbindParam(paramName:String):Formula
+	delete all connections to linked formulas for a given variable name
+
+unbindParamArray(paramNames:Array<String>):Formula
+	delete all connections to linked formulas for the given variable names
 
 unbindAll():Formula
 	deletes the connection between all variables of the Formula and all linked Formulas
-	
+
 depth():Int
 	returns the max depth of parameter bindings
 
@@ -200,7 +220,7 @@ f = "2.5 * sin(x-a)^2";
 x.name = "x";
 
 // bind Formulas as parameters to other Formula
-f.bind(["x" => x, "a" => a]);
+f.bindMap(["x" => x, "a" => a]);
 
 trace( f.toString(0) ); // 2.5*(sin(x-a)^2)
 
@@ -287,4 +307,3 @@ More can be found in [formula-samples](https://github.com/maitag/formula-samples
 - handle recursive parameter bindings (something like x(n+1) = x(n) ...)
 - definite integrals (or even indefinite later on)
 - gpu-optimization for parallel calculations
-- putting in the `?`-operator

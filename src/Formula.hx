@@ -18,64 +18,91 @@ abstract Formula(TermNode) from TermNode to TermNode
 	
 	public inline function set(a:Formula):Formula return this.set(a);
 
-	public function bind(params:Dynamic):Formula {
-		var map:Map<String, Formula> = new Map();
-		var arr:Array<Formula> = new Array();
-		
-		if( Std.is(params, Type.getClass(map)) ) {
-			map = cast params;
-		}
-		else if ( Std.is(params, Type.getClass(arr)) ) {
-			arr = cast params;
-			for (p in arr) if (p.name == null) throw "Can't bind to unnamed parameters.";
-			map = [ for (p in arr) p.name => p ];
-		} 
-		else if ( Std.is(params, TermNode) || Std.is(params, Formula) ) {
-			var p:Formula = cast params;
-			if (p.name == null) throw "Can't bind to unnamed parameter.";
-			map = [ p.name => p ];
-		} 
+    /**
+        Link a variable inside of this formula to another formula
+
+        @param  formula formula that will be linked into
+        @param  paramName (optional) name of the variable to link with (e.g. if formula have no or different name) 
+    **/
+	public function bind(formula:Formula, ?paramName:String):Formula {
+		if (paramName != null) return this.bind( [paramName => formula] );
 		else {
-			throw "Unbind parameter isn't of type: Formula, Array<Formula> or Map<String, Formula>.";
-		}
-		return this.bind(map);
-	}
-	
-	public function unbind(params:Dynamic):Formula {
-		var map:Map<Formula, String> = new Map();
-		var arrString:Array<String> = new Array();
-		var arrFormula:Array<Formula> = new Array();
-		
-		if( Std.is(params, Type.getClass(map)) ) {
-			map = cast params;
-			return this.unbindTerm(map);
-		}
-		else if( Std.is(params, Type.getClass(arrString)) ) {
-			arrString = cast params;
-			return this.unbind(arrString);
-		}
-		else if ( Std.is(params, String)) {
-			var p:String = cast params;
-			arrString = [ p ];
-			return this.unbind(arrString);
-		} 
-		else if( Std.is(params, Type.getClass(arrFormula)) ) {
-			arrFormula = cast params;
-			for (p in arrFormula) if (p.name == null) throw "Can't unbind unnamed parameters.";
-			map = [ for (p in arrFormula) p => p.name ];
-			return this.unbindTerm(map);
-		}
-		else if ( Std.is(params, TermNode) || Std.is(params, Formula) ) {
-			var p:Formula = cast params;
-			if (p.name == null) throw "Can't unbind unnamed parameter.";
-			map = [p => p.name];
-			return this.unbindTerm(map);
-		} 
-		else {
-			throw "Unbind parameter isn't of type: Formula, String, Array<String>, Array<Formula> or Map<Formula, String>.";
+			if (formula.name == null) throw 'Can\'t bind unnamed formula:"${formula.toString()}" as parameter.';
+			return this.bind( [formula.name => formula] );
 		}
 	}
 	
+    /**
+        Link variables inside of this formula to another formulas
+
+        @param  formulas array of formulas to link to variables
+        @param  paramNames (optional) names of the variables to link with (e.g. if formulas have no or different names) 
+    **/
+	public function bindArray(formulas:Array<Formula>, ?paramNames:Array<String>):Formula {
+		var map = new Map<String, Formula>();
+		if (paramNames != null) {
+			if (paramNames.length != formulas.length) throw 'paramNames need to have the same length as formulas for bindArray().';
+			for (i in 0...formulas.length)
+				map.set(paramNames[i], formulas[i]);
+		}
+		else {
+			for (formula in formulas) {
+				if (formula.name == null) throw 'Can\'t bind unnamed formula:"${formula.toString()}" as parameter.';
+				map.set(formula.name, formula);
+			} 
+		}
+		return this.bind(map);			
+	}
+	
+    /**
+        Link variables inside of this formula to another formulas
+
+        @param  formulaMap map of formulas where the keys have same names as the variables to link with
+    **/
+	public inline function bindMap(formulaMap:Map<String, Formula>):Formula {
+		return this.bind(formulaMap);
+	}
+	
+	// ------------ unbind -------------
+	
+    /**
+        Delete all connections of the linked formula
+
+        @param  formula formula that has to be unlinked
+    **/
+	public inline function unbind(formula:Formula):Formula {
+		return this.unbindTerm( [formula] );
+	}
+	
+    /**
+        Delete all connections of the linked formulas
+
+        @param  formulas array of formulas that has to be unlinked
+    **/
+	public function unbindArray(formulas:Array<Formula>):Formula {
+		return this.unbindTerm(formulas);
+	}
+
+    /**
+        Delete all connections to linked formulas for a given variable name
+
+        @param  paramName name of the variable where the connected formula has to unlink from
+    **/
+	public inline function unbindParam(paramName:String):Formula {
+		return this.unbind( [paramName] );
+	}
+	
+    /**
+        Delete all connections to linked formulas for the given variable names
+
+        @param  paramNames array of variablenames where the connected formula has to unlink from
+    **/
+	public inline function unbindParamArray(paramNames:Array<String>):Formula {
+		return this.unbind(paramNames);
+	}
+
+	// -----------------------------------
+
 	inline public function toString(?depth:Null<Int> = null, ?plOut:String = null):String return this.toString(depth, plOut);
 	inline public static function fromBytes(b:Bytes):Formula return TermNode.fromBytes(b);
 	

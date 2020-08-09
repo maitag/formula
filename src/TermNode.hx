@@ -209,7 +209,7 @@ class TermNode {
 	 */	
 	public inline function unbind(params:Array<String>):TermNode {
 		if (isParam) {
-			if (params.indexOf(symbol)>=0) left = null;
+			if (params.indexOf(symbol) >= 0) left = null;
 		}
 		else {
 			if (left != null) left.unbind(params);
@@ -223,20 +223,18 @@ class TermNode {
 	 * unbind terms
 	 * 
 	 */	
-	public inline function unbindTerm(params:Map<Formula, String>):TermNode {
-		if (left != null) {
-			if (params.get(left) != null)
-				left = newParam(params.get(left));
-			else left.unbindTerm(params);
+	public inline function unbindTerm(params:Array<TermNode>):TermNode {
+		if (isParam) {
+			if (left != null) {
+				if (params.indexOf(left) >= 0) left = null;
+			}
 		}
-		if (right != null) {
-			if (params.get(right) != null)
-				right = newParam(params.get(right));
-			else right.unbindTerm(params);
-		}
+		else {
+			if (left != null) left.unbindTerm(params);
+			if (right != null) right.unbindTerm(params);
+		}		
 		return this;
 	}
-	
 	
 	/*
 	 * unbind all terms that is bind to parameter-names
