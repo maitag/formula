@@ -9,12 +9,12 @@ handle parameters to connect Formulas together.
 
 ## Installation
 ```
-haxelib install Formula
+haxelib install formula
 ```
 
 or use the latest developement version from github:
 ```
-haxelib git Formula https://github.com/maitag/formula.git
+haxelib git formula https://github.com/maitag/formula.git
 ```
 
 
