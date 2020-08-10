@@ -1,14 +1,14 @@
 class TestTermTransform extends haxe.unit.TestCase
 {
-	inline function simplify(s:String):String {
+	function simplify(s:String):String {
 		return TermNode.fromString(s).simplify().toString();
 	}
 
-	inline function expand(s:String):String {
+	function expand(s:String):String {
 		return TermNode.fromString(s).expand().toString();
 	}
 
-	inline function factorize(s:String):String {
+	function factorize(s:String):String {
 		return TermNode.fromString(s).factorize().toString();
 	}
 

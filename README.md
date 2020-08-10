@@ -17,6 +17,23 @@ or use the latest developement version from github:
 haxelib git Formula https://github.com/maitag/formula.git
 ```
 
+
+## Testing
+
+To perform benchmarks or unit-tests call the `text.hx` hxp script. 
+  
+install hxp via:
+```
+haxelib install hxp
+haxelib run hxp --install-hxp-alias
+```
+
+then simple call `hpx help` into projectfolder to see options.
+  
+If you use `hxp bench` to compare performance versus hscripts math-expression parsing  
+you need to install [hscript](https://lib.haxe.org/p/hscript) from haxelib first!
+
+
 ## Documentation
 __Formula__ class is a [haxe-abstract](https://haxe.org/manual/types-abstract.html) to support operator-overloading for the underlaying __TermNode__ class,  
 therefore prefer this one for instantiation:
@@ -103,10 +120,10 @@ f.debug(); // f = sin(b) -> sin(0)
 
 ### Calculating results:
 
-The result of a formula expression can be calculated with the `result()` method.  
+The result of a formula expression can be calculated with the `result` getter method.  
 Use this if no unbound variables are left:
 ```
-trace( f.result() ); // 0
+trace( f.result ); // 0
 ```
 
 

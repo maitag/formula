@@ -7,7 +7,7 @@ class TestTermNode extends haxe.unit.TestCase
 		assertEquals(a.result, 2.0);
 	}
 	
-	inline function opResult(symbol:String, ?left:Float, ?right:Float):Float {
+	function opResult(symbol:String, ?left:Float, ?right:Float):Float {
 		return TermNode.newOperation(symbol,
 			(left != null)  ? TermNode.newValue(left)  : null,
 			(right != null) ? TermNode.newValue(right) : null
@@ -35,7 +35,7 @@ class TestTermNode extends haxe.unit.TestCase
 		
 	}
 	
-	inline function equal(a:String, b:String, ?compareNames=false, ?compareParams=false):Bool {
+	function equal(a:String, b:String, ?compareNames=false, ?compareParams=false):Bool {
 		return TermNode.fromString(a).isEqual( TermNode.fromString(b), compareNames, compareParams);
 	}
 	public function testEqual()
@@ -77,7 +77,7 @@ class TestTermNode extends haxe.unit.TestCase
 	}
 	
 	
-	inline function fromString(s:String):String {
+	function fromString(s:String):String {
 		return TermNode.fromString(s).toString();
 	}
 	public function testFromString()
@@ -118,7 +118,7 @@ class TestTermNode extends haxe.unit.TestCase
 		assertEquals(fromString("a /b*c+1"), "((a/b)*c)+1");
 	}
 	
-	inline function errorFromString(s:String):Int {
+	function errorFromString(s:String):Int {
 		var e:Int = 0;
 		try TermNode.fromString(s) catch (error:Dynamic) e = 1;
 		return e;

@@ -6,7 +6,7 @@
 	"description": "math expression parser, evaluator and more",
 	"version": "0.4.1",
 	"classPath": "src/",
-	"releasenote": "fixing for haxe 4 and improved binding methods",
+	"releasenote": "haxe 4 fixes, improved binding methods, hxp testing and benchmarking",
 	"contributors": ["maitag"],
 	"dependencies": {}
 }

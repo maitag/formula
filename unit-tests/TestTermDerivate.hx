@@ -1,6 +1,6 @@
 class TestTermDerivate extends haxe.unit.TestCase
 {
-	public function derivate(s:String):String {
+	function derivate(s:String):String {
 		return TermNode.fromString(s).derivate("x").toString();
 	}
 	public function testDerivate()
