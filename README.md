@@ -98,6 +98,24 @@ To bind more than one variable at once you can proceed like this: `f.bindMap( ["
 Alternatively use arrays of formulas and to what parameters it should bind: `f.bindArray( [x, c], ["b", "c"] );`
 or if all formulas have the same names as expected: `f.bindArray( [x, c] );`
 
+### Unbinding of parameters:
+```
+// unbind a connected formula
+f.unbind(x);
+
+// unbind the formula thats connected to a variable name
+f.unbindParam("b");
+
+// unbind more than one formula with array usage:
+f.unbindArray( [x, c] );
+f.unbindParamArray( ["b", "c"] );
+
+// unbind all with:
+f.unbindAll();
+trace(f); // "sin(b)"
+```
+
+
 ### Output formulas:
 
 In a String context Formula will return the full dissolved mathmatical expression (includes all bindings):
@@ -124,24 +142,6 @@ The result of a formula expression can be calculated with the `result` getter me
 Use this if no unbound variables are left:
 ```
 trace( f.result ); // 0
-```
-
-
-### Unbinding of parameters:
-```
-// unbind a connected formula
-f.unbind(x);
-
-// unbind the formula thats connected to a variable name
-f.unbindParam("b");
-
-// unbind more than one formula with array usage:
-f.unbindArray( [x, c] );
-f.unbindParamArray( ["b", "c"] );
-
-// unbind all with:
-f.unbindAll();
-trace(f); // "sin(b)"
 ```
 
 
@@ -181,8 +181,8 @@ unbindParamArray(paramNames:Array<String>):Formula
 unbindAll():Formula
 	deletes the connection between all variables of the Formula and all linked Formulas
 
-resolveAll(depth:Int = -1):Formula
-	resolves all bindings into formula down to the depth level,
+resolveAll(?depth:Int):Formula
+	resolves all bindings into formula or optional to a specified the depth level,
 	removes parameters and replaces it with copies of the linked formulas
 
 hasBinding(formula:Formula):Bool
@@ -198,10 +198,10 @@ depth():Int
 	returns the max depth of parameter bindings
 
 set(a:Formula):Formula
-	copy all from another Formula to this (keeps the own name if it is defined)
+	copy all from another Formula to this (keeps it's own name if defined)
 
-copy(depth:Int = -1):Formula
-	returns a copy of this Formula down to the depth level
+copy(?depth:Int):Formula
+	returns a full copy of this Formula or optional to a specified depth level
 
 toString(?depth:Null<Int>, ?plOut:String):String
 	returns the mathmatical expression in form of a string
@@ -266,12 +266,12 @@ trace( f.toString(1) ); // 2.5*(sin(atan(a)-(1+(2*3)))^2)
 trace( f.toString(2) ); // 2.5*(sin(atan((1+(2*3)))-(1+(2*3)))^2)
 
 // unbind parameter
-x.unbind("a");
-f.unbind(["a", "x"]); // unbind accepts array of param-names
-f.unbind(a);          // unbind accepts Formula
-f.unbind([x => "x", a => "x"]);  // unbind accepts Map<Formula,String>
-f.unbind([a , x]);    // unbind accepts array of Formulas
-f.unbindAll();        // or unbind all params
+f.unbind(a);                    // unbind a Formula
+f.unbindParam("x");             // unbind by param-name
+// or alternatively: 
+//f.unbindArray([a , x]);         // unbind array of Formulas
+//f.unbindParamArray(["a", "x"]); // unbind array of param-names
+//f.unbindAll();                  // or unbind all params
 
 trace( f );  // 2.5*(sin(x-a)^2)
 
