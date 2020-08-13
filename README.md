@@ -20,9 +20,9 @@ haxelib git formula https://github.com/maitag/formula.git
 
 ## Testing
 
-To perform benchmarks or unit-tests call the `text.hx` hxp script. 
+To perform benchmarks or unit-tests call the `text.hx` [hxp](https://lib.haxe.org/p/hxp) script. 
   
-install hxp via:
+install [hxp](https://lib.haxe.org/p/hxp) via:
 ```
 haxelib install hxp
 haxelib run hxp --install-hxp-alias
@@ -147,8 +147,8 @@ trace(f); // "sin(b)"
 
 ## Formula API
 ```
-new(s:String, ?params:Dynamic)
-	creates an Formula object based on the string s
+new(formula:String)
+	creates an Formula object based on the string formula
 
 name:String (get and set)
 	Formula name
@@ -181,17 +181,27 @@ unbindParamArray(paramNames:Array<String>):Formula
 unbindAll():Formula
 	deletes the connection between all variables of the Formula and all linked Formulas
 
-depth():Int
-	returns the max depth of parameter bindings
+resolveAll(depth:Int = -1):Formula
+	resolves all bindings into formula down to the depth level,
+	removes parameters and replaces it with copies of the linked formulas
+
+hasBinding(formula:Formula):Bool
+	returns true if this contains a binding to formula
+
+hasParam(paramName:String):Bool
+	returns true if formula contains a param with specified name
 
 params():Array<String>
 	returns an array of parameter-names
 
+depth():Int
+	returns the max depth of parameter bindings
+
 set(a:Formula):Formula
 	copy all from another Formula to this (keeps the own name if it is defined)
 
-copy():Formula
-	returns a copy of this Formula
+copy(depth:Int = -1):Formula
+	returns a copy of this Formula down to the depth level
 
 toString(?depth:Null<Int>, ?plOut:String):String
 	returns the mathmatical expression in form of a string
@@ -202,19 +212,19 @@ toString(?depth:Null<Int>, ?plOut:String):String
 debug()
 	debugging output to see all bindings
 
-derivate(p:String):Formula
-	returns the derivate of this mathmatical expression
+derivate(paramName:String):Formula
+	returns new formula that is derivate to the variable paramName
 
 simplify():Formula
-	tries various ways to make the term appear simpler
-	and also normalizes it
+	tries various ways to make the term appear simpler and also normalizes it
 	(use with caution because this process is not trivial and could be changed in later versions)
+	returns the result as new formula
 
 expand():Formula
-	mathematically expands the term into a polynomial
+	mathematically expands into a polynomial and returns it as new formula
 
 factorize():Formula
-	factorizes a mathmatical expression
+	factorizes and returns it as new formula
 
 toBytes():Bytes
 	packs Formula into haxe.io.Bytes for more efficiently storage

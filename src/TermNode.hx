@@ -27,12 +27,14 @@ class TermNode {
 	
 	public var name(get, set):String;  // name is stored into a param-TermNode at root of the tree
 	inline function get_name():String return (isName) ? symbol : null;
+	public static inline function checkValidName(name:String) if (!nameRegFull.match(name)) throw('Not allowed characters for name $name".');
 	inline function set_name(name:String):String {
 		if (name == null && isName) {
 			copyNodeFrom(left);
 		}
 		else {
-			if (!nameRegFull.match(name)) throw('Not allowed characters for name $name".');
+			//if (!nameRegFull.match(name)) throw('Not allowed characters for name $name".');
+			checkValidName(name);
 			if (isName) symbol = name else setName(name, copyNode());
 		}
 		return name;
@@ -85,7 +87,6 @@ class TermNode {
 	 */
 	public var result(get, null):Float; // result of tree calculation
 	inline function get_result():Float return operation(this);
-
 	
 	/*
 	 * Constructors
@@ -123,6 +124,7 @@ class TermNode {
 	 * 
 	 */
 	public inline function set(term:TermNode):TermNode {
+		// TODO: new param to keep the existing bindings if there is same parameters
 		if (isName) {
 			if (!term.isName) left = term.copy();
 			else if (term.left != null) left = term.left.copy();
@@ -131,7 +133,7 @@ class TermNode {
 		else {
 			if (!term.isName) copyNodeFrom(term.copy());
 			else if (term.left != null) copyNodeFrom(term.left.copy());
-			//else return null;
+			//else return null; // TODO: check if that can ever been!
 		}
 		return this;
 	}
@@ -186,6 +188,19 @@ class TermNode {
 		return ret;
 	}
 	
+	/*
+	 * check if term has a param
+	 * 
+	 */	
+	public function hasParam(paramName:String):Bool {
+		if (isParam && symbol == paramName) return true;
+		if (left != null )
+			if (left.hasParam(paramName)) return true;
+		if (right != null)
+			if (right.hasParam(paramName)) return true;
+		return false;
+	}
+	
 	
 	/*
 	 * bind terms to parameters
@@ -237,23 +252,63 @@ class TermNode {
 	}
 	
 	/*
+	 * check if a term is binded to
+	 * 
+	 */	
+	public function hasBinding(term:TermNode):Bool {
+		if (isParam && left == term) return true;
+		if (left != null)
+			if (left.hasBinding(term)) return true;
+		if (right != null)
+			if (right.hasBinding(term)) return true;		
+		return false;
+	}
+	
+	/*
 	 * unbind all terms that is bind to parameter-names
 	 * 
 	 */	
 	public inline function unbindAll():TermNode {
-		return unbind(params());
+		if (isParam) left = null;
+		else {
+			if (left != null) left.unbindAll();
+			if (right != null) right.unbindAll();
+		}
+		return this;
 	}	
 	
+	
 	/*
-	 * returns a clone of full Tree, starting with this TermNode
+	 * returns a new Term where all bindings are resolved down to
+	 * the specified depth 
+	 */
+	public inline function resolveAll(depth:Int = -1):TermNode {
+		// TODO: check better way
+		if (isValue) return TermNode.newValue(value);
+		else if (isName) return TermNode.newName(symbol, (left!=null) ? left.resolveAll(depth) : null);
+		else if (isParam) {
+			if (left == null) return TermNode.newParam(symbol, left);
+			else if (depth == 0)
+				return (left.isName) ? left.left : left;
+			else if (depth > 0)
+				return (left.isName) ? left.left.copy(depth).resolveAll(depth-1) : left.copy(depth).resolveAll(depth - 1);
+			else 
+				return (left.isName) ? left.left.resolveAll(depth - 1) : left.resolveAll(depth - 1);
+		}
+		else return TermNode.newOperation(symbol, (left!=null) ? left.resolveAll(depth) : null, (right!=null) ? right.resolveAll(depth) : null);
+	}
+	
+	/*
+	 * returns a recursive copy by starting with this TermNode
+	 * depth can be used to define how deep it should copy the param-linked formulas
 	 * 
 	 */	
-	public function copy():TermNode // TODO: depth params like in toString
+	public function copy(depth:Int = -1):TermNode
 	{
 		if (isValue) return TermNode.newValue(value);
-		else if (isName) return TermNode.newName(symbol, (left!=null) ? left.copy() : null);
-		else if (isParam) return TermNode.newParam(symbol, (left!=null) ? left.copy() : null);
-		else return TermNode.newOperation(symbol, (left!=null) ? left.copy() : null, (right!=null) ? right.copy() : null);
+		else if (isName) return TermNode.newName(symbol, (left!=null) ? left.copy(depth) : null);
+		else if (isParam) return TermNode.newParam(symbol, (left!=null) ? ((depth == 0) ? left : left.copy(depth-1)) : null);
+		else return TermNode.newOperation(symbol, (left!=null) ? left.copy(depth) : null, (right!=null) ? right.copy(depth) : null);
 	}
 
 	/*
@@ -263,16 +318,16 @@ class TermNode {
 	function copyNode():TermNode
 	{
 		if (isValue) return TermNode.newValue(value);
-		else if (isName) return TermNode.newName(symbol, (left!=null) ? left : null);
-		else if (isParam) return TermNode.newParam(symbol, (left!=null) ? left : null);
-		else return TermNode.newOperation(symbol, left, (right!=null) ? right : null);
+		else if (isName) return TermNode.newName(symbol, left);
+		else if (isParam) return TermNode.newParam(symbol, left);
+		else return TermNode.newOperation(symbol, left, right);
 	}
 
 	/*
 	 * copy all from other TermNode to this
 	 * 
 	 */	
-	public inline function copyNodeFrom(t:TermNode) {
+	public inline function copyNodeFrom(t:TermNode):Void {
 		if (t.isValue) setValue(t.value);
 		else if (t.isName) setName(t.symbol, t.left);
 		else if (t.isParam) setParam(t.symbol, t.left);
@@ -743,7 +798,7 @@ class TermNode {
 	 * creates a new term that is derivate of a given term 
 	 * 
 	 */
-	public function derivate(p:String):TermNode return TermDerivate.derivate(this, p);
+	public function derivate(paramName:String):TermNode return TermDerivate.derivate(this, paramName);
 	
 	/*
 	 * Simplify: trims the length of a math expression

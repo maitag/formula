@@ -8,15 +8,25 @@ import haxe.io.Bytes;
  */
 
 
-@:forward( name, result, depth, params, unbindAll, toBytes, debug, copy, derivate, simplify, expand, factorize)
+@:forward( name, result, depth, params, hasParam, hasBinding, resolveAll, unbindAll, toBytes, debug, copy, derivate, simplify, expand, factorize)
 abstract Formula(TermNode) from TermNode to TermNode
 {	
-	inline public function new(s:String, ?params:Dynamic) {
-		this = TermNode.fromString(s);
-		if (params!=null) bind(params);
+    /**
+        Creates a new formula from a String, e.g. new("1+2") or new("f: 1+2") where "f" is the name of formula
+
+        @param  formulaString the String that representing the math expression
+    **/
+	inline public function new(formulaString:String) {
+		this = TermNode.fromString(formulaString);
 	}
 	
-	public inline function set(a:Formula):Formula return this.set(a);
+    /**
+        Copy all from another Formula to this (keeps the own name if it is defined)
+		Keeps the bindings where this formula is linked into by a parameter.
+
+        @param  formula the source formula from where the value is copyed
+    **/
+	public inline function set(formula:Formula):Formula return this.set(formula);
 
     /**
         Link a variable inside of this formula to another formula
@@ -25,7 +35,10 @@ abstract Formula(TermNode) from TermNode to TermNode
         @param  paramName (optional) name of the variable to link with (e.g. if formula have no or different name) 
     **/
 	public function bind(formula:Formula, ?paramName:String):Formula {
-		if (paramName != null) return this.bind( [paramName => formula] );
+		if (paramName != null) {
+			TermNode.checkValidName(paramName);
+			return this.bind( [paramName => formula] );
+		}
 		else {
 			if (formula.name == null) throw 'Can\'t bind unnamed formula:"${formula.toString()}" as parameter.';
 			return this.bind( [formula.name => formula] );
@@ -42,8 +55,10 @@ abstract Formula(TermNode) from TermNode to TermNode
 		var map = new Map<String, Formula>();
 		if (paramNames != null) {
 			if (paramNames.length != formulas.length) throw 'paramNames need to have the same length as formulas for bindArray().';
-			for (i in 0...formulas.length)
+			for (i in 0...formulas.length) {
+				TermNode.checkValidName(paramNames[i]);
 				map.set(paramNames[i], formulas[i]);
+			}
 		}
 		else {
 			for (formula in formulas) {
@@ -89,6 +104,7 @@ abstract Formula(TermNode) from TermNode to TermNode
         @param  paramName name of the variable where the connected formula has to unlink from
     **/
 	public inline function unbindParam(paramName:String):Formula {
+		TermNode.checkValidName(paramName);
 		return this.unbind( [paramName] );
 	}
 	
@@ -103,7 +119,17 @@ abstract Formula(TermNode) from TermNode to TermNode
 
 	// -----------------------------------
 
+    /**
+        Creates a new formula from a String, e.g. new("1+2") or new("f: 1+2") where "f" is the name of formula
+
+        @param  depth (optional) how deep the variable-bindings should be resolved
+        @param  plOut (optional) creates formula for a special language (only "glsl" at now)
+    **/
 	inline public function toString(?depth:Null<Int> = null, ?plOut:String = null):String return this.toString(depth, plOut);
+
+    /**
+        Creates a formula from a packet Bytes representation
+    **/
 	inline public static function fromBytes(b:Bytes):Formula return TermNode.fromBytes(b);
 	
 	@:to inline public function toStr():String return this.toString(0);
