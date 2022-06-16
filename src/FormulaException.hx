@@ -11,8 +11,8 @@ package;
 class FormulaException extends haxe.Exception
 {
 	public function new(msg:String, pos:Int) {
-		this.pos = pos;
 		super(msg);
+		this.pos = pos;
 	}
 	
 	public var msg(get, never):String;
