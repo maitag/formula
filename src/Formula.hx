@@ -40,7 +40,6 @@ abstract Formula(TermNode) from TermNode to TermNode
 			return this.bind( [paramName => formula] );
 		}
 		else {
-			//if (formula.name == null) throw 'Can\'t bind unnamed formula:"${formula.toString()}" as parameter.';
 			if (formula.name == null) ErrorMsg.cantBindUnnamed(this, formula);
 			return this.bind( [formula.name => formula] );
 		}
@@ -55,7 +54,6 @@ abstract Formula(TermNode) from TermNode to TermNode
 	public function bindArray(formulas:Array<Formula>, ?paramNames:Array<String>):Formula {
 		var map = new Map<String, Formula>();
 		if (paramNames != null) {
-			//if (paramNames.length != formulas.length) throw 'paramNames need to have the same length as formulas for bindArray().';
 			if (paramNames.length != formulas.length) ErrorMsg.bindArrayWrongLengths(formulas.length, paramNames.length);
 			for (i in 0...formulas.length) {
 				TermNode.checkValidName(paramNames[i]);
@@ -64,7 +62,6 @@ abstract Formula(TermNode) from TermNode to TermNode
 		}
 		else {
 			for (formula in formulas) {
-				//if (formula.name == null) throw 'Can\'t bind unnamed formula:"${formula.toString()}" as parameter.';
 				if (formula.name == null) ErrorMsg.cantBindUnnamed(this, formula);
 				map.set(formula.name, formula);
 			} 

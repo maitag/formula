@@ -75,12 +75,16 @@ class Test extends hxp.Script {
 		var base = new HXML ({
 			cp: [ "src", "unit-tests" ],
 			#if (haxe_ver >= "4.0.0")
-			libs: [ "hx3compat" ],
+			libs: [ "hx3compat" ], // need for old unit-tests
 			#end
 			main: "Test",
 			dce: FULL,
 			debug: false
 		});
+		
+		#if (haxe_ver >= "4.0.0")
+		base.define("no-deprecation-warnings"); // need for old unit-tests
+		#end
 		
 		for (target in targets) {
 			Log.info("build " + target + " target...");

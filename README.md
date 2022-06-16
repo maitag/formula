@@ -302,17 +302,17 @@ f.debug();  // F = sin(5*a)+max(f,3) -> sin(5*-1)+max((a+(x/5)),3) -> sin(5*-1)+
 // error handling
 c = "4";
 f = "3 * c";
-try f.bind(c) catch(msg:String) trace('Error: $msg'); // Error: Can't bind to unnamed parameter.
+try f.bind(c) catch(e:FormulaException) trace(e.msg); // Error: Can't bind to unnamed parameter...
 
 var s:String = "4 + (3 - )";
 trace(s);
 try {
 	f = s;
-} catch (error:Dynamic) {
+} catch (e:FormulaException) {
 	var spaces:String = "";
 	for (i in 0...error.pos) spaces += " ";
 	trace(spaces + "^");
-	trace('Error: ${error.msg}'); // Error: Missing right operand.
+	trace(e.msg); // Error: Missing right operand.
 }
 
 ```

@@ -27,7 +27,7 @@ class TermNode {
 	
 	public var name(get, set):String;  // name is stored into a param-TermNode at root of the tree
 	inline function get_name():String return (isName) ? symbol : null;
-	public static inline function checkValidName(name:String) if (!nameRegFull.match(name)) throw('Not allowed characters for name $name".');
+	public static inline function checkValidName(name:String) if (!nameRegFull.match(name)) ErrorMsg.wrongCharInsideName;
 	inline function set_name(name:String):String {
 		if (name == null && isName) {
 			copyNodeFrom(left);
@@ -392,8 +392,8 @@ class TermNode {
 	 * static Function Pointers (to stored in this.operation)
 	 * 
 	 */		
-	static function opName(t:TermNode) :Float if (t.left!=null) return t.left.result else throw('Empty function "${t.symbol}".');
-	static function opParam(t:TermNode):Float if (t.left!=null) return t.left.result else throw('Missing parameter "${t.symbol}".');
+	static function opName(t:TermNode) :Float if (t.left!=null) return t.left.result else ErrorMsg.emptyFunction(t.symbol);
+	static function opParam(t:TermNode):Float if (t.left!=null) return t.left.result else ErrorMsg.missingParameter(t.symbol);
 	static function opValue(t:TermNode):Float return t.value;
 	
 	static var MathOp:Map<String, TermNode->Float> = [
@@ -482,10 +482,10 @@ class TermNode {
 			var name:String = nameReg.matched(1);
 			s = s.substr(name.length + nameReg.matched(2).length);
 			errPos += name.length + nameReg.matched(2).length;
-			if (~/^\s*$/.match(s)) throw({"msg":"Can't parse Term from empty string.","pos":errPos});
+			if (~/^\s*$/.match(s)) ErrorMsg.cantParseFromEmptyString(errPos);
 			return newName(name, parseString(s, errPos, bindings));
 		}
-		if (~/^\s*$/.match(s)) throw({"msg":"Can't parse Term from empty string.","pos":errPos});
+		if (~/^\s*$/.match(s)) ErrorMsg.cantParseFromEmptyString(errPos);
 		return parseString(s, errPos, bindings);
 	}
 	
@@ -523,7 +523,7 @@ class TermNode {
 				e = getBrackets(s, errPos);
 				var p1:String = e.substring(1, comataPos);
 				var p2:String = e.substring(comataPos + 1, e.length - 1);
-				if (comataPos == -1) throw({"msg":f+"() needs two parameter separated by comma.","pos":errPos});
+				if (comataPos == -1) ErrorMsg.operatorNeedTwoArgs(f, errPos);
 				t = newOperation(f, parseString(p1, errPos+1, params), parseString(p2, errPos+1 + comataPos, params) );
 			}
 			else if (paramReg.match(s)) { // parameter
@@ -548,7 +548,7 @@ class TermNode {
 				} else continue; // positive signed
 			}
 			else if (twoSideOpReg.match(s)) { // start with other two side op 
-				throw({"msg":"Missing left operand.","pos":errPos});
+				ErrorMsg.missingLeftOperand(errPos);
 			}
 			else {
 				e = getBrackets(s, errPos);   // term inside brackets
@@ -571,15 +571,15 @@ class TermNode {
 					operations[operations.length - 1].leftOperation = operations[operations.length - 2];
 				}
 			} else if (s.length > 0) {
-				if (s.indexOf(")") == 0) throw({"msg":"No opening bracket.","pos":errPos});
+				if (s.indexOf(")") == 0) ErrorMsg.noOpeningBracket(errPos);
 				if (!(s.indexOf("(") == 0 || numberReg.match(s) || paramReg.match(s) || constantOpReg.match(s) || oneParamOpReg.match(s) || twoParamOpReg.match(s)))
-					throw({"msg":"Wrong char.","pos":errPos});
-				else throw({"msg":"Missing operation.","pos":errPos});
+					ErrorMsg.wrongChar(errPos);
+				else ErrorMsg.missingOperation(errPos);
 			}
 		}
 		
 		if ( operations.length > 0 ) {
-			if ( operations[operations.length-1].right == null ) throw({"msg":"Missing right operand.","pos":errPos-spaces});
+			if ( operations[operations.length-1].right == null ) ErrorMsg.missingRightOperand(errPos-spaces);
 			else {
 				operations.sort(function(a:OperationNode, b:OperationNode):Int
 				{
@@ -607,7 +607,7 @@ class TermNode {
 		var pos:Int = 1;
 		if (s.indexOf("(") == 0) // check that s starts with opening bracket
 		{
-			if (~/^\(\s*\)/.match(s)) throw({"msg":"Empty brackets.", "pos":errPos});
+			if (~/^\(\s*\)/.match(s)) ErrorMsg.emptyBrackets(errPos);
 			
 			var i,j,k:Int;
 			var openBrackets:Int = 1;
@@ -629,13 +629,13 @@ class TermNode {
 				else if ((j>0 && i>0 && j<i)||(j>0 && i<0)) { // found close bracket
 					openBrackets--; pos = j + 1;
 				} else { // no close or open found
-					throw({"msg":"Wrong bracket nesting.","pos":errPos});
+					ErrorMsg.wrongBracketNesting(errPos);
 				}
 			}
 			return s.substring(0, pos);
 		}
-		if (s.indexOf(")") == 0) throw({"msg":"No opening bracket.", "pos":errPos});
-		else throw({"msg":"Wrong char.","pos":errPos});
+		if (s.indexOf(")") == 0) ErrorMsg.noOpeningBracket(errPos);
+		else ErrorMsg.wrongChar(errPos);
 	}
 	
 	
@@ -745,9 +745,9 @@ class TermNode {
 					right._toBytes(b);
 				}
 			}
-			else throw("Error in _toBytes");
+			else ErrorMsg.intoBytes();
 		}
-		else throw("Error in _toBytes");
+		else ErrorMsg.intoBytes();
 	}
 	
 	inline function _writeString(s:String, b:BytesOutput):Void {
@@ -774,7 +774,7 @@ class TermNode {
 				if (oneParamOpRegFull.match(op)) TermNode.newOperation( op, _fromBytes(b) );
 				else if (twoSideOpRegFull.match(op) || twoParamOpRegFull.match(op) ) TermNode.newOperation( op, _fromBytes(b), _fromBytes(b) );
 				else TermNode.newOperation( op );
-			default: throw("Error in _fromBytes");
+			default: ErrorMsg.fromBytes(); null;
 		}
 	}
 	

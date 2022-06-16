@@ -1,5 +1,4 @@
 package;
-import haxe.Exception;
 
 /**
  * collect all error messages
@@ -7,81 +6,84 @@ import haxe.Exception;
  * by Sylvio Sell, Rostock 2022
  */
 
-
-class ErrorMsg 
+class ErrorMsg
 {
-
-	static inline function msg(s) {
+	static inline function error(msg:String, pos:Int = 0) {
 		#if (haxe_ver >= "4.1.0")
-			throw new Exception("Error: " + s);
+			throw new FormulaException(msg, pos);
 		#else
-			throw(s);
+			throw({msg:msg, pos:pos});
 		#end
 	}
+		
 	
+	// --------------- Formula ----------------
 	
-	
-	// ----- Formula ------
 	public static inline function cantBindUnnamed(formula:Formula, bindFormula:Formula)
-		msg('Can\'t bind unnamed formula: \'${bindFormula.toString()}\'. Specify the available parameter: \'${formula.params().join("\' ,\'")}\' or name the formula to one.');
+		error('Can\'t bind unnamed formula: \'${bindFormula.toString()}\'. Specify the available parameter: \'${formula.params().join("\' ,\'")}\' or name the formula to one.');
 		
 	public static inline function bindArrayWrongLengths(nf:Int, np:Int)
-		msg('The array-length of formulas ($nf) have to be the same as paramNames ($np) for bindArray().');
+		error('The array-length of formulas ($nf) have to be the same as paramNames ($np) for bindArray().');
 
 	
-	
-	
-	// ----- TermNode -----
-	public static inline function noValidOperation(s:String)
-		msg('"$s" is no valid operation.');
-
 		
-	// TODO:	
+	// --------------- TermNode ---------------
 	
-	//('Not allowed characters for name $name".');
+	public static inline function noValidOperation(s:String)
+		error('"$s" is no valid operation.');
+
+	public static inline function wrongCharInsideName(name:String)
+		error('Wrong character inside name "$name".');
 	
-	//('Empty function "${t.symbol}".');
+	public static inline function emptyFunction(s:String)
+		error('Empty function "$s".');
 	
-	//('Missing parameter "${t.symbol}".');
-	
-	
-	
-	//({"msg":"Can't parse Term from empty string.","pos":errPos});
-	
-	//({"msg":"Can't parse Term from empty string.","pos":errPos})
-	
-	//({"msg":f+"() needs two parameter separated by comma.","pos":errPos});
-	
-	//({"msg":"Missing left operand.","pos":errPos});
-	
-	//({"msg":"No opening bracket.","pos":errPos});
-	
-	//({"msg":"Wrong char.","pos":errPos});
-	
-	//({"msg":"Missing operation.","pos":errPos});
-	
-	//({"msg":"Missing right operand.","pos":errPos-spaces});
-	
-	//({"msg":"Empty brackets.", "pos":errPos});
-	
-	//({"msg":"Wrong bracket nesting.","pos":errPos});
-	
-	//({"msg":"No opening bracket.", "pos":errPos});
-	
-	//({"msg":"Wrong char.","pos":errPos});
+	public static inline function missingParameter(s:String)
+		error('Missing parameter "$s".');
 	
 	
+	// formula parsing
+	public static inline function cantParseFromEmptyString(pos:Int)
+		error("Can't parse Term from empty string.", pos);
 	
-	// internal errors by en/decoding to/from Bytes
+	public static inline function operatorNeedTwoArgs(op:String, pos:Int)
+		error('Operation "$op()" needs two arguments separated by comma.', pos);
 	
-	//("Error in _toBytes");
-	//("Error in _fromBytes");
+	public static inline function missingLeftOperand(pos:Int)
+		error("Missing left operand.", pos);
+	
+	public static inline function noOpeningBracket(pos:Int)
+		error("No opening bracket.", pos);
+	
+	public static inline function wrongChar(pos:Int)
+		error("rong char.", pos);
+	
+	public static inline function missingOperation(pos:Int)
+		error("Missing operation.", pos);
+	
+	public static inline function missingRightOperand(pos:Int)
+		error("Missing right operand.", pos);
+	
+	public static inline function emptyBrackets(pos:Int)
+		error("Empty brackets.", pos);
+	
+	public static inline function wrongBracketNesting(pos:Int)
+		error("Wrong bracket nesting.", pos);
+		
+	
+	// by en/decoding to/from Bytes
+	public static inline function intoBytes()
+		error("Can't encode into Bytes");
+		
+	public static inline function fromBytes()
+		error("Can't decode from Bytes");
+	
+		
+			
+	// --------------- TermDerivate ---------------
+	
+	public static inline function notImplementedFor(s:String)
+		error('derivation of "$s" not implemented');
 	
 	
-	
-	
-	
-	// ----- TermDerivate -----
-	
-	//('derivation of "${t.symbol}" not implemented');	
 }

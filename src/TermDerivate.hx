@@ -131,7 +131,7 @@ class TermDerivate {
 					newOperation('/', t.left.copy(), newOperation('abs', t.left.copy()) )
 				);
 				
-			default: throw('derivation of "${t.symbol}" not implemented');	
+			default: ErrorMsg.notImplementedFor(t.symbol); null;
 		}
 
 	}
