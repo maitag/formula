@@ -33,7 +33,6 @@ class TermNode {
 			copyNodeFrom(left);
 		}
 		else {
-			//if (!nameRegFull.match(name)) throw('Not allowed characters for name $name".');
 			checkValidName(name);
 			if (isName) symbol = name else setName(name, copyNode());
 		}
@@ -165,7 +164,7 @@ class TermNode {
 			this.left = left;
 			this.right = right;
 		}
-		else throw ('"$s" is no valid operation.');
+		else ErrorMsg.noValidOperation(s);
 	}
 
 	/*
