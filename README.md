@@ -305,14 +305,13 @@ f = "3 * c";
 try f.bind(c) catch(e:FormulaException) trace(e.msg); // Error: Can't bind to unnamed parameter...
 
 var s:String = "4 + (3 - )";
-trace(s);
 try {
 	f = s;
 } catch (e:FormulaException) {
-	var spaces:String = "";
-	for (i in 0...error.pos) spaces += " ";
-	trace(spaces + "^");
 	trace(e.msg); // Error: Missing right operand.
+	var spaces = ""; for (i in 0...e.pos) spaces += " ";
+	trace(s);
+	trace(spaces + "^");
 }
 
 ```
@@ -322,6 +321,7 @@ More can be found in [formula-samples](https://github.com/maitag/formula-samples
 ## Todo
 
 - remove of unnecessary parentheses in string output
+- option for parsing in/out to reduce notation of number-params multiplication like: "2x + 3y"
 - cleaner algorithms for term-transformations
 - more ways to customize the simplification of terms
 - comparing terms for math-equality

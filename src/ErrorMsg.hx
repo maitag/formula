@@ -56,7 +56,7 @@ class ErrorMsg
 		error("No opening bracket.", pos);
 	
 	public static inline function wrongChar(pos:Int)
-		error("rong char.", pos);
+		error("Wrong char.", pos);
 	
 	public static inline function missingOperation(pos:Int)
 		error("Missing operation.", pos);
@@ -73,17 +73,17 @@ class ErrorMsg
 	
 	// by en/decoding to/from Bytes
 	public static inline function intoBytes()
-		error("Can't encode into Bytes");
+		error("Can't encode into Bytes.");
 		
 	public static inline function fromBytes()
-		error("Can't decode from Bytes");
+		error("Can't decode from Bytes.");
 	
 		
 			
 	// --------------- TermDerivate ---------------
 	
 	public static inline function notImplementedFor(s:String)
-		error('derivation of "$s" not implemented');
+		error('Derivation of "$s" is not implemented.');
 	
 	
 }
