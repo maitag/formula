@@ -186,6 +186,7 @@ class Test extends hxp.Script {
 							case WINDOWS: hlPath = Path.combine (hlPath, "windows");
 							case MAC: hlPath = Path.combine (hlPath, "mac");
 						}
+						if (System.hostArchitecture != X86) hlPath += "64";
 						
 						//Log.info("Can't get path to hashlink binary ('HLPATH' env) so copying hashlink from Lime library: " + hlPath);
 						System.recursiveCopy(hlPath, "bin/hl");
