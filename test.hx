@@ -14,14 +14,15 @@ import hxp.*;
 
 class Test extends hxp.Script {
 	
-	public function new()
-	{
+	public function new() {
+		
 		super();
-
+		
 		var targets:Array<String>;
 		
 		if (commandArgs.length == 0) targets = ['all'];
-		else targets = commandArgs;
+		else targets = commandArgs.map(function(s) return s.toLowerCase());
+		Log.info(targets[0]);
 		
 		// replace 'all' with all available targets
 		if (targets.indexOf('all') != -1) {
@@ -132,7 +133,7 @@ class Test extends hxp.Script {
 
 	
 	private function build (target:String, base:HXML) {
-
+		
 		switch (target) {
 			
 			case "neko":
@@ -162,7 +163,7 @@ class Test extends hxp.Script {
 	}
 
 	private function run (target:String, base:HXML) {
-
+		
 		switch (target) {
 			
 			case "neko":
@@ -182,9 +183,9 @@ class Test extends hxp.Script {
 						hlPath = Path.combine (hlPath, "templates/bin/hl");
 						
 						switch (System.hostPlatform) {
-							case LINUX: hlPath = Path.combine (hlPath, "linux");
-							case WINDOWS: hlPath = Path.combine (hlPath, "windows");
-							case MAC: hlPath = Path.combine (hlPath, "mac");
+							case LINUX: hlPath = Path.combine (hlPath, "Linux");
+							case WINDOWS: hlPath = Path.combine (hlPath, "Windows");
+							case MAC: hlPath = Path.combine (hlPath, "Mac");
 						}
 						if (System.hostArchitecture != X86) hlPath += "64";
 						
@@ -217,10 +218,9 @@ class Test extends hxp.Script {
 		}
 		
 	}
-
 	
-	private function removeDoubles(a:Array<String>)
-	{
+	private function removeDoubles(a:Array<String>) {
+	
 		var i = a.length;
 		var j:Int;
 		while (i-- > 0) {
