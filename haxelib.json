@@ -4,9 +4,9 @@
 	"license": "MIT",
 	"tags": ["math", "expression", "parser", "derivate"],
 	"description": "math expression parser, evaluator and more",
-	"version": "0.4.2",
+	"version": "0.4.3",
 	"classPath": "src/",
-	"releasenote": "better errorhandling",
+	"releasenote": "fix problem for building with no-inline",
 	"contributors": ["maitag"],
 	"dependencies": {}
 }

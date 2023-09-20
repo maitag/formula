@@ -80,6 +80,7 @@ class Test extends hxp.Script {
 			#end
 			main: "Test",
 			dce: FULL,
+			//noInline: true,
 			debug: false
 		});
 		
